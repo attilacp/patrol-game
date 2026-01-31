@@ -1,4 +1,4 @@
-// js/auth.js - Sistema de Autenticação do Patrol Game
+// js/auth.js - Sistema de Autenticação do Patrol Game CORRIGIDO
 console.log('🔐 auth.js carregando...');
 
 class AuthSystem {
@@ -10,30 +10,32 @@ class AuthSystem {
   init() {
     console.log('🔐 Iniciando sistema de autenticação...');
     
-    // Observar mudanças no estado de autenticação
-    firebase.auth().onAuthStateChanged((user) => {
-      console.log('🔄 Estado de autenticação mudou:', user ? user.email : 'Nenhum usuário');
-      
-      if (user) {
-        console.log('✅ Usuário logado:', user.email);
-        this.currentUser = user;
-        this.showGameScreen();
+    // Esperar um pouco para o DOM carregar
+    setTimeout(() => {
+      // Observar mudanças no estado de autenticação
+      firebase.auth().onAuthStateChanged((user) => {
+        console.log('🔄 Estado de autenticação mudou:', user ? user.email : 'Nenhum usuário');
         
-        // Salvar no localStorage para persistência
-        localStorage.setItem('patrol_user', JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName
-        }));
-      } else {
-        console.log('👋 Nenhum usuário logado');
-        this.currentUser = null;
-        localStorage.removeItem('patrol_user');
-        this.showLoginScreen();
-      }
-    });
-    
-    this.setupEventListeners();
+        if (user) {
+          console.log('✅ Usuário logado:', user.email);
+          this.currentUser = user;
+          this.showGameScreen();
+          
+          // Salvar no localStorage para persistência
+          localStorage.setItem('patrol_user', JSON.stringify({
+            uid: user.uid,
+            email: user.email
+          }));
+        } else {
+          console.log('👋 Nenhum usuário logado');
+          this.currentUser = null;
+          localStorage.removeItem('patrol_user');
+          this.showLoginScreen();
+        }
+      });
+      
+      this.setupEventListeners();
+    }, 100);
   }
   
   setupEventListeners() {
@@ -44,8 +46,6 @@ class AuthSystem {
     if (loginBtn) {
       console.log('✅ Botão de login encontrado');
       loginBtn.addEventListener('click', () => this.loginWithEmail());
-    } else {
-      console.error('❌ Botão de login NÃO encontrado!');
     }
     
     // Criar conta
@@ -69,31 +69,32 @@ class AuthSystem {
       resetBtn.addEventListener('click', () => this.resetPassword());
     }
     
-    // Logout - IMPORTANTE: Configurar dinamicamente
-    setTimeout(() => {
-      const logoutBtn = document.getElementById('logout-btn');
-      if (logoutBtn) {
-        console.log('✅ Botão de logout encontrado');
-        logoutBtn.addEventListener('click', () => this.logout());
-      } else {
-        console.error('❌ Botão de logout NÃO encontrado!');
-      }
-    }, 1000);
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      console.log('✅ Botão de logout encontrado');
+      logoutBtn.addEventListener('click', () => this.logout());
+    }
   }
   
   async loginWithEmail() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    
-    console.log('🔐 Tentando login com:', email);
+    const email = document.getElementById('login-email');
+    const password = document.getElementById('login-password');
     
     if (!email || !password) {
+      this.showError('Campos de email/senha não encontrados');
+      return;
+    }
+    
+    console.log('🔐 Tentando login com:', email.value);
+    
+    if (!email.value || !password.value) {
       this.showError('Digite email e senha');
       return;
     }
     
     try {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
+      await firebase.auth().signInWithEmailAndPassword(email.value, password.value);
       console.log('✅ Login realizado com sucesso');
     } catch (error) {
       console.error('❌ Erro no login:', error);
@@ -102,23 +103,28 @@ class AuthSystem {
   }
   
   async signupWithEmail() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    
-    console.log('📝 Tentando criar conta:', email);
+    const email = document.getElementById('login-email');
+    const password = document.getElementById('login-password');
     
     if (!email || !password) {
+      this.showError('Campos de email/senha não encontrados');
+      return;
+    }
+    
+    console.log('📝 Tentando criar conta:', email.value);
+    
+    if (!email.value || !password.value) {
       this.showError('Digite email e senha');
       return;
     }
     
-    if (password.length < 6) {
+    if (password.value.length < 6) {
       this.showError('Senha precisa ter pelo menos 6 caracteres');
       return;
     }
     
     try {
-      await firebase.auth().createUserWithEmailAndPassword(email, password);
+      await firebase.auth().createUserWithEmailAndPassword(email.value, password.value);
       console.log('✅ Conta criada com sucesso');
       alert('🎉 Conta criada! Você já está logado.');
     } catch (error) {
@@ -140,17 +146,17 @@ class AuthSystem {
   }
   
   async resetPassword() {
-    const email = document.getElementById('login-email').value;
+    const email = document.getElementById('login-email');
     
-    if (!email) {
+    if (!email || !email.value) {
       this.showError('Digite seu email para recuperar a senha');
       return;
     }
     
     try {
-      await firebase.auth().sendPasswordResetEmail(email);
+      await firebase.auth().sendPasswordResetEmail(email.value);
       alert('📧 Email de recuperação enviado! Verifique sua caixa de entrada.');
-      console.log('✅ Email de recuperação enviado para:', email);
+      console.log('✅ Email de recuperação enviado para:', email.value);
     } catch (error) {
       console.error('❌ Erro ao resetar senha:', error);
       this.showError(this.getErrorMessage(error.code));
@@ -181,9 +187,6 @@ class AuthSystem {
     if (logoutBtn) {
       logoutBtn.style.display = 'none';
     }
-    
-    // Limpar campos (opcional)
-    document.getElementById('login-password').value = '';
   }
   
   showGameScreen() {
@@ -205,8 +208,6 @@ class AuthSystem {
     if (logoutBtn) {
       logoutBtn.style.display = 'block';
       console.log('✅ Botão de logout mostrado');
-    } else {
-      console.error('❌ Botão de logout NÃO encontrado para mostrar!');
     }
   }
   
@@ -234,37 +235,15 @@ class AuthSystem {
       'auth/user-not-found': 'Usuário não encontrado',
       'auth/wrong-password': 'Senha incorreta',
       'auth/email-already-in-use': 'Email já cadastrado',
-      'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres)',
-      'auth/network-request-failed': 'Erro de conexão com a internet',
-      'auth/too-many-requests': 'Muitas tentativas. Tente mais tarde.',
-      'auth/operation-not-allowed': 'Método de login não permitido'
+      'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres)'
     };
     
-    return messages[errorCode] || 'Erro desconhecido: ' + errorCode;
-  }
-  
-  getCurrentUser() {
-    return this.currentUser;
-  }
-  
-  getUserUID() {
-    return this.currentUser ? this.currentUser.uid : null;
+    return messages[errorCode] || 'Erro: ' + errorCode;
   }
 }
 
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 DOM carregado, iniciando auth system...');
-  
-  // Verificar se já está logado (localStorage)
-  const savedUser = localStorage.getItem('patrol_user');
-  if (savedUser) {
-    console.log('💾 Usuário salvo encontrado:', JSON.parse(savedUser).email);
-  }
-  
-  // Inicializar sistema de autenticação
   window.authSystem = new AuthSystem();
-  
-  console.log('✅ Sistema de autenticação inicializado');
 });
-
