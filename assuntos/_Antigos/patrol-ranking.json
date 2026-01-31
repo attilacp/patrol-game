@@ -1,0 +1,261 @@
+{
+  "players": {
+    "a2": {
+      "name": "a2",
+      "team": "BRAVO",
+      "correctAnswers": 14,
+      "questionsAnswered": 17,
+      "sessions": 2,
+      "performance": 82,
+      "lastPlayed": "2025-12-01T20:19:37.852Z",
+      "conqueredMissions": [
+        {
+          "id": 8,
+          "name": "Patrulhamento do Espírito Santo",
+          "icon": "🇧🇷"
+        }
+      ]
+    },
+    "a1": {
+      "name": "a1",
+      "team": "ALFA",
+      "correctAnswers": 16,
+      "questionsAnswered": 18,
+      "sessions": 2,
+      "performance": 89,
+      "lastPlayed": "2025-12-01T20:19:37.852Z",
+      "conqueredMissions": [
+        {
+          "id": 15,
+          "name": "Patrulhamento da Paraíba",
+          "icon": "🇧🇷"
+        }
+      ]
+    },
+    "Attila": {
+      "name": "Attila",
+      "team": "ALFA",
+      "correctAnswers": 60,
+      "questionsAnswered": 70,
+      "sessions": 4,
+      "performance": 86,
+      "lastPlayed": "2025-11-19T19:33:31.771Z",
+      "conqueredMissions": [
+        {
+          "id": 20,
+          "name": "Patrulhamento do Rio Grande do Norte",
+          "icon": "🇧🇷"
+        },
+        {
+          "id": 31,
+          "name": "Monitoramento de Contrabandistas",
+          "icon": "📱"
+        },
+        {
+          "id": 30,
+          "name": "Combate aos Crimes Ambientais nas Rodovias",
+          "icon": "🌳"
+        },
+        {
+          "id": 16,
+          "name": "Patrulhamento do Paraná",
+          "icon": "🇧🇷"
+        }
+      ]
+    },
+    "Jorge": {
+      "name": "Jorge",
+      "team": "BRAVO",
+      "correctAnswers": 32,
+      "questionsAnswered": 48,
+      "sessions": 4,
+      "performance": 67,
+      "lastPlayed": "2025-11-19T19:33:31.771Z",
+      "conqueredMissions": []
+    },
+    "Fernando": {
+      "name": "Fernando",
+      "team": "CHARLIE",
+      "correctAnswers": 6,
+      "questionsAnswered": 12,
+      "sessions": 1,
+      "performance": 50,
+      "lastPlayed": "2025-11-19T19:33:31.771Z",
+      "conqueredMissions": []
+    }
+  },
+  "sessions": [
+    {
+      "id": "2025-11-19T00:37:48.727Z",
+      "date": "2025-11-19T00:37:48.727Z",
+      "teams": [
+        {
+          "name": "BRAVO",
+          "score": 15,
+          "players": [
+            "a2"
+          ],
+          "questionsAnswered": 15,
+          "questionsWrong": 0,
+          "conqueredMissions": []
+        },
+        {
+          "name": "ALFA",
+          "score": 1,
+          "players": [
+            "a1"
+          ],
+          "questionsAnswered": 3,
+          "questionsWrong": 2,
+          "conqueredMissions": []
+        }
+      ],
+      "totalQuestions": 114
+    },
+    {
+      "id": "2025-11-19T18:01:18.340Z",
+      "date": "2025-11-19T18:01:18.340Z",
+      "teams": [
+        {
+          "name": "ALFA",
+          "score": 15,
+          "players": [
+            "Attila"
+          ],
+          "questionsAnswered": 16,
+          "questionsWrong": 1,
+          "conqueredMissions": []
+        },
+        {
+          "name": "BRAVO",
+          "score": 7,
+          "players": [
+            "Jorge"
+          ],
+          "questionsAnswered": 9,
+          "questionsWrong": 2,
+          "conqueredMissions": []
+        }
+      ],
+      "totalQuestions": 553
+    },
+    {
+      "id": "2025-11-19T18:17:00.573Z",
+      "date": "2025-11-19T18:17:00.573Z",
+      "teams": [
+        {
+          "name": "ALFA",
+          "score": 15,
+          "players": [
+            "Attila"
+          ],
+          "questionsAnswered": 17,
+          "questionsWrong": 2,
+          "conqueredMissions": []
+        },
+        {
+          "name": "BRAVO",
+          "score": 4,
+          "players": [
+            "Jorge"
+          ],
+          "questionsAnswered": 8,
+          "questionsWrong": 4,
+          "conqueredMissions": []
+        }
+      ],
+      "totalQuestions": 553
+    },
+    {
+      "id": "2025-11-19T18:47:27.712Z",
+      "date": "2025-11-19T18:47:27.712Z",
+      "teams": [
+        {
+          "name": "BRAVO",
+          "score": 10,
+          "players": [
+            "Jorge"
+          ],
+          "questionsAnswered": 15,
+          "questionsWrong": 5,
+          "conqueredMissions": []
+        },
+        {
+          "name": "ALFA",
+          "score": 15,
+          "players": [
+            "Attila"
+          ],
+          "questionsAnswered": 17,
+          "questionsWrong": 2,
+          "conqueredMissions": []
+        }
+      ],
+      "totalQuestions": 772
+    },
+    {
+      "id": "2025-11-19T19:33:31.771Z",
+      "date": "2025-11-19T19:33:31.771Z",
+      "teams": [
+        {
+          "name": "ALFA",
+          "score": 15,
+          "players": [
+            "Attila"
+          ],
+          "questionsAnswered": 20,
+          "questionsWrong": 5,
+          "conqueredMissions": []
+        },
+        {
+          "name": "CHARLIE",
+          "score": 6,
+          "players": [
+            "Fernando"
+          ],
+          "questionsAnswered": 12,
+          "questionsWrong": 6,
+          "conqueredMissions": []
+        },
+        {
+          "name": "BRAVO",
+          "score": 11,
+          "players": [
+            "Jorge"
+          ],
+          "questionsAnswered": 16,
+          "questionsWrong": 5,
+          "conqueredMissions": []
+        }
+      ],
+      "totalQuestions": 901
+    },
+    {
+      "id": "2025-12-01T20:19:37.851Z",
+      "date": "2025-12-01T20:19:37.851Z",
+      "teams": [
+        {
+          "name": "ALFA",
+          "score": 15,
+          "players": [
+            "a1"
+          ],
+          "questionsAnswered": 15,
+          "questionsWrong": 0,
+          "conqueredMissions": []
+        },
+        {
+          "name": "BRAVO",
+          "score": -1,
+          "players": [
+            "a2"
+          ],
+          "questionsAnswered": 2,
+          "questionsWrong": 2,
+          "conqueredMissions": []
+        }
+      ],
+      "totalQuestions": 114
+    }
+  ]
+}

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PATROL - Jogo de Perguntas e Respostas</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/performance.css">
+</head>
+<body>
+    <div class="container">
+        <div id="config-screen" class="screen active">
+            <h1>PATROL</h1>
+            
+            <div class="config-main-area">
+                <div class="team-config">
+                    <h3>Equipes</h3>
+                    <div id="teams-container">
+                        <div class="team-input">
+                            <input type="text" placeholder="Nome da Equipe" value="ALFA">
+                            <input type="text" placeholder="Jogadores (opcional)">
+                            <button class="remove-team" onclick="removeTeam(this)">🗑️</button>
+                        </div>
+                    </div>
+                    <button id="add-team-btn">➕ Adicionar Equipe</button>
+                    <div id="team-error" class="error-message">⚠️ Configure pelo menos uma equipe</div>
+                </div>
+
+                <div class="file-upload-container">
+                    <div class="file-upload">
+                        <h3>Perguntas</h3>
+                        <input type="file" id="excel-file" accept=".xlsx, .xls">
+                        <div id="file-status">📁 Nenhum arquivo selecionado</div>
+                        <div id="file-error" class="error-message">⚠️ Carregue um arquivo de perguntas</div>
+                        
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="random-order">
+                            <label for="random-order">Ordem aleatória de perguntas e equipes</label>
+                        </div>
+                    </div>
+
+                    <div class="subjects-config">
+                        <h3>Assuntos Carregados</h3>
+                        <div class="subjects-controls">
+                            <button onclick="toggleAllSubjects(true)" class="subjects-btn">✓ Selecionar Todos</button>
+                            <button onclick="toggleAllSubjects(false)" class="subjects-btn">✗ Desmarcar Todos</button>
+                            <button onclick="clearAllSubjects()" class="subjects-btn">🗑️ Limpar Tudo</button>
+                        </div>
+                        <div id="subjects-container" class="subjects-container">
+                            <div class="no-subjects">Nenhum assunto carregado</div>
+                        </div>
+                    </div>
+
+                    <div class="performance-config-container">
+                        <div>
+                            <span>📊</span> Performance por Assunto
+                            <div class="performance-header-controls">
+                                <button onclick="exportPerformanceToExcel()" class="performance-header-btn" title="Exportar Performance">
+                                    📥
+                                </button>
+                                <button onclick="triggerPerformanceImport()" class="performance-header-btn" title="Importar Performance">
+                                    📤
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            Importe/exporte dados de performance para acompanhamento histórico.
+                        </div>
+                        <div>
+                            Os dados são salvos automaticamente durante o jogo.
+                        </div>
+                        <input type="file" id="import-performance-file" accept=".csv">
+                    </div>
+
+                    <button id="start-game-btn" disabled>🎮 Iniciar Jogo</button>
+                    
+                    <div class="ranking-button-container">
+                        <button id="open-notes-config" class="notes-btn">📝 Bloco de Notas</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <h1>PATROL</h1>
+            
+            <div class="question-main-area">
+                <div class="question-area">
+                    <div class="question-header">
+                        <div class="question-counter">
+                            Pergunta <span id="question-number">1</span>/<span id="total-questions">0</span>
+                        </div>
+                        <div id="team-turn" class="team-turn">🎯 Aguardando início...</div>
+                        <div class="question-header-buttons">
+                            <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
+                            <button id="back-to-config" class="config-btn">⚙️ Config</button>
+                        </div>
+                    </div>
+                    
+                    <div id="question-text">Aguardando carregamento das perguntas...</div>
+                    
+                    <div class="answer-buttons">
+                        <button id="certo-btn" class="answer-btn certo-btn">✅ CERTO</button>
+                        <button id="errado-btn" class="answer-btn errado-btn">❌ ERRADO</button>
+                        <button id="skip-btn" class="skip-btn">⏭️ Pular</button>
+                        <button id="next-question-btn" class="next-btn" style="display: none;">⏭️ Próxima</button>
+                        <button id="podium-btn" class="podium-btn" style="display: none;">🏆 Pódio</button>
+                    </div>
+                    
+                    <div id="correct-answer" class="correct-answer"></div>
+                    <div id="commentary" class="commentary"></div>
+                </div>
+
+                <div class="active-team-sidebar">
+                    <div id="active-team-display"></div>
+                </div>
+            </div>
+
+            <div class="teams-area">
+                <div id="teams-display"></div>
+            </div>
+        </div>
+
+        <div id="podium-screen" class="screen">
+            <h1>PATROL</h1>
+            <div class="podium-screen">
+                <div class="podium-title">🏆 PÓDIO</div>
+                <div id="podium-container" class="podium-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notes-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 Bloco de Notas</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="notes-tabs-container">
+                    <div class="notes-tabs" id="notes-tabs"></div>
+                </div>
+                <div class="notes-content" id="notes-content"></div>
+                <div class="notes-controls">
+                    <button id="save-notes" class="notes-action-btn">💾 Salvar Tudo</button>
+                    <button id="export-notes" class="notes-action-btn">📥 Exportar Tudo</button>
+                    <button id="import-notes" class="notes-action-btn">📤 Importar Tudo</button>
+                    <button id="clear-notes" class="notes-action-btn">🗑️ Limpar Esta Aba</button>
+                </div>
+                <input type="file" id="import-notes-file" accept=".json">
+            </div>
+        </div>
+    </div>
+
+    <!-- Biblioteca XLSX (SEMPRE primeiro) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- JavaScript - ORDEM CRÍTICA DE CARREGAMENTO -->
+    <script src="js/external.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/teams.js"></script>
+    <script src="js/teams-performance/core.js"></script>
+    <script src="js/teams-performance/tracking.js"></script>
+    <script src="js/teams-performance/import-export.js"></script>
+    <script src="js/teams-performance/display.js"></script>
+    <script src="js/teams-performance/init.js"></script>
+    <script src="js/game/core.js"></script>
+    <script src="js/answers/core.js"></script>
+    <script src="js/answers/correct.js"></script>
+    <script src="js/answers/wrong.js"></script>
+    <script src="js/answers/skip.js"></script>
+    <script src="js/answers/checkAnswer.js"></script>
+    <script src="js/answers/winner.js"></script>
+    <script src="js/game/podium.js"></script>
+    <script src="js/game/notes.js"></script>
+    <script src="js/bombQuestion/penaltyModal.js"></script>
+    <script src="js/bombQuestion/fileLoader.js"></script>
+    <script src="js/bombQuestion/ui-manager.js"></script>
+    <script src="js/bombQuestion/selector.js"></script>
+    <script src="js/bombQuestion/game-manager.js"></script>
+    <script src="js/bombQuestion/core-base.js"></script>
+    <script src="js/bombQuestion/config.js"></script>
+    <script src="js/bombQuestion/main.js"></script>
+    <script src="js/fileUpload/main.js"></script>
+    <script src="js/fileUpload/core.js"></script>
+    <script src="js/fileUpload/subjects.js"></script>
+    <script src="js/fileUpload/status.js"></script>
+    <script src="js/gameEvents/main.js"></script>
+    <script src="js/gameEvents/core.js"></script>
+    <script src="js/gameEvents/answerButtons.js"></script>
+    <script src="js/gameEvents/controlButtons.js"></script>
+    <script src="js/gameEvents/teamTurn.js"></script>
+    <script src="js/gameEvents/keyboard.js"></script>
+    <script src="js/main/buttonTester.js"></script>
+    <script src="js/main/notesLoader.js"></script>
+    <script src="js/main/configEvents.js"></script>
+    <script src="js/main/configScreen.js"></script>
+    <script src="js/main/gameStart.js"></script>
+    <script src="js/debug.js"></script>
+    <script src="js/main/init.js"></script>
+</body>
+</html>

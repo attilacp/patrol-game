@@ -1,0 +1,67 @@
+patrol-game/
+├── index.html                              # Página principal do jogo
+├── css/
+│   ├── style.css                           # Arquivo principal que importa todos os outros CSS
+│   ├── base.css                            # Variáveis CSS, reset, estilos fundamentais e animações básicas
+│   ├── animations.css                      # Animações gerais do sistema
+│   ├── responsive.css                      # Regras responsivas gerais
+│   ├── buttons.css                         # Estilos de todos os botões do sistema
+│   ├── forms.css                           # Estilos de formulários, inputs e controles
+│   ├── modal.css                           # Estilos do modal do bloco de notas
+│   ├── bomb-question.css                   # Estilos específicos da Pergunta Bomba
+│   ├── cards.css                           # Estilos de cards de equipes
+│   ├── podium.css                          # Estilos da tela de pódio
+│   ├── ranking.css                         # Estilos da tela de ranking
+│   ├── ranking-fixes.css                   # Correções específicas do ranking
+│   ├── main.css                            # Estrutura principal das telas e grid system
+│   ├── config.css                          # Estilos da tela de configuração
+│   ├── game.css                            # Estilos da tela do jogo
+│   └── teams.css                           # Estilos dos cards de equipes
+├── js/
+│   ├── utils.js                            # Funções utilitárias gerais (shuffle, debounce, etc.)
+│   ├── teams.js                            # Gerenciamento completo de equipes
+│   ├── teams-performance/
+│   │   ├── core.js           # Funções básicas e storage
+│   │   ├── tracking.js       # Atualização de performance
+│   │   ├── import-export.js  # Importação/exportação/notificação
+│   │   ├── display.js        # Exibição e formatação
+│   │   └── init.js          # Inicialização completa
+│   ├── answers/                            # Sistema de respostas
+│   │   ├── core.js                         # Núcleo do sistema de respostas
+│   │   ├── correct.js                      # Lógica de resposta correta
+│   │   ├── wrong.js                        # Lógica de resposta errada
+│   │   ├── skip.js                         # Lógica para pular pergunta
+│   │   ├── checkAnswer.js                  # Verificação de resposta
+│   │   └── winner.js                       # Mensagem e lógica do vencedor
+│   ├── game/
+│   │   ├── audio.js                        # Sistema de sons e efeitos auditivos
+│   │   ├── core.js                         # Núcleo principal do jogo
+│   │   ├── podium.js                       # Sistema de pódio e finalização
+│   │   ├── ranking.js                      # Sistema completo de ranking
+│   │   └── notes.js                        # Sistema de bloco de notas com abas
+│   ├── bombQuestion/                       # Sistema de Perguntas Bomba
+│   │   ├── penaltyModal.js                 # Modal de penalidade da PB
+│   │   ├── fileLoader.js                   # Carregamento de arquivos Excel de PB
+│   │   ├── dragDropManager.js              # Sistema de arrastar e soltar
+│   │   ├── displayManager.js               # Exibição da Pergunta Bomba
+│   │   ├── selector.js                     # Seleção inteligente de perguntas
+│   │   ├── checker.js                      # Verificação de respostas (aceita duplicadas)
+│   │   ├── state-manager.js                # Gerenciamento de estado da PB
+│   │   ├── core-base.js                    # Classe base principal do sistema
+│   │   ├── config.js                       # Configuração da Pergunta Bomba
+│   │   └── main.js                         # Inicialização do sistema de PB
+│   └── main/
+│       ├── init.js                         # Inicialização geral do sistema
+│       ├── fileUpload.js                   # Sistema completo de upload de arquivos
+│       ├── gameStart.js                    # Sistema de início do jogo
+│       ├── configScreen.js                 # Configuração da tela de configuração
+│       ├── configEvents.js                 # Event listeners da tela de configuração
+│       ├── bombConfig.js                   # Configuração da Pergunta Bomba na UI
+│       ├── gameEvents.js                   # Event listeners da tela do jogo
+│       ├── gameInitializer.js              # Inicialização da tela do jogo
+│       ├── notesLoader.js                  # Carregamento do sistema de notas
+│       ├── buttonTester.js                 # Sistema de teste e fallback para botões
+│       └── rankingEvents.js                # Event listeners da tela de ranking
+└── assets/
+    └── icons/
+        └── (opcional - apenas se ainda houver ícones sendo usados)
