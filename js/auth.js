@@ -1,249 +1,150 @@
-// js/auth.js - Sistema de Autenticação do Patrol Game CORRIGIDO
-console.log('🔐 auth.js carregando...');
+// js/auth.js - VERSÃO COM PRIORIDADE MÁXIMA
+console.log('🔐 auth.js CARREGADO - PRIORIDADE MÁXIMA');
 
-class AuthSystem {
-  constructor() {
-    this.currentUser = null;
-    this.init();
+// NÃO esperar DOMContentLoaded - executar IMEDIATAMENTE
+(function() {
+  console.log('🚀 Iniciando auth IMEDIATAMENTE');
+  
+  // Verificar se Firebase está pronto
+  if (!window.firebase) {
+    console.error('❌ Firebase não carregado ainda');
+    setTimeout(() => window.location.reload(), 1000);
+    return;
   }
   
-  init() {
-    console.log('🔐 Iniciando sistema de autenticação...');
+  // Função principal
+  function initializeAuth() {
+    console.log('🔐 Configurando sistema de autenticação...');
     
-    // Esperar um pouco para o DOM carregar
+    // 1. Configurar botões
+    setupButtons();
+    
+    // 2. Observar estado de login
+    firebase.auth().onAuthStateChanged(handleAuthStateChange);
+    
+    // 3. Forçar mostrar login primeiro
     setTimeout(() => {
-      // Observar mudanças no estado de autenticação
-      firebase.auth().onAuthStateChanged((user) => {
-        console.log('🔄 Estado de autenticação mudou:', user ? user.email : 'Nenhum usuário');
-        
-        if (user) {
-          console.log('✅ Usuário logado:', user.email);
-          this.currentUser = user;
-          this.showGameScreen();
-          
-          // Salvar no localStorage para persistência
-          localStorage.setItem('patrol_user', JSON.stringify({
-            uid: user.uid,
-            email: user.email
-          }));
-        } else {
-          console.log('👋 Nenhum usuário logado');
-          this.currentUser = null;
-          localStorage.removeItem('patrol_user');
-          this.showLoginScreen();
-        }
-      });
-      
-      this.setupEventListeners();
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        showLoginScreen();
+      } else {
+        showGameScreen();
+      }
     }, 100);
   }
   
-  setupEventListeners() {
-    console.log('🔧 Configurando event listeners...');
+  function handleAuthStateChange(user) {
+    console.log('👤 Estado auth:', user ? user.email : 'Nenhum usuário');
     
-    // Login com email/senha
-    const loginBtn = document.getElementById('login-btn');
-    if (loginBtn) {
-      console.log('✅ Botão de login encontrado');
-      loginBtn.addEventListener('click', () => this.loginWithEmail());
-    }
-    
-    // Criar conta
-    const signupBtn = document.getElementById('signup-btn');
-    if (signupBtn) {
-      console.log('✅ Botão de criar conta encontrado');
-      signupBtn.addEventListener('click', () => this.signupWithEmail());
-    }
-    
-    // Login com Google
-    const googleBtn = document.getElementById('google-login-btn');
-    if (googleBtn) {
-      console.log('✅ Botão Google encontrado');
-      googleBtn.addEventListener('click', () => this.loginWithGoogle());
-    }
-    
-    // Reset de senha
-    const resetBtn = document.getElementById('reset-btn');
-    if (resetBtn) {
-      console.log('✅ Botão reset senha encontrado');
-      resetBtn.addEventListener('click', () => this.resetPassword());
-    }
-    
-    // Logout
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-      console.log('✅ Botão de logout encontrado');
-      logoutBtn.addEventListener('click', () => this.logout());
+    if (user) {
+      showGameScreen();
+    } else {
+      showLoginScreen();
     }
   }
   
-  async loginWithEmail() {
-    const email = document.getElementById('login-email');
-    const password = document.getElementById('login-password');
-    
-    if (!email || !password) {
-      this.showError('Campos de email/senha não encontrados');
-      return;
-    }
-    
-    console.log('🔐 Tentando login com:', email.value);
-    
-    if (!email.value || !password.value) {
-      this.showError('Digite email e senha');
-      return;
-    }
-    
-    try {
-      await firebase.auth().signInWithEmailAndPassword(email.value, password.value);
-      console.log('✅ Login realizado com sucesso');
-    } catch (error) {
-      console.error('❌ Erro no login:', error);
-      this.showError(this.getErrorMessage(error.code));
-    }
-  }
-  
-  async signupWithEmail() {
-    const email = document.getElementById('login-email');
-    const password = document.getElementById('login-password');
-    
-    if (!email || !password) {
-      this.showError('Campos de email/senha não encontrados');
-      return;
-    }
-    
-    console.log('📝 Tentando criar conta:', email.value);
-    
-    if (!email.value || !password.value) {
-      this.showError('Digite email e senha');
-      return;
-    }
-    
-    if (password.value.length < 6) {
-      this.showError('Senha precisa ter pelo menos 6 caracteres');
-      return;
-    }
-    
-    try {
-      await firebase.auth().createUserWithEmailAndPassword(email.value, password.value);
-      console.log('✅ Conta criada com sucesso');
-      alert('🎉 Conta criada! Você já está logado.');
-    } catch (error) {
-      console.error('❌ Erro ao criar conta:', error);
-      this.showError(this.getErrorMessage(error.code));
-    }
-  }
-  
-  async loginWithGoogle() {
-    try {
-      console.log('🔐 Tentando login com Google...');
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await firebase.auth().signInWithPopup(provider);
-      console.log('✅ Login com Google realizado');
-    } catch (error) {
-      console.error('❌ Erro no login Google:', error);
-      this.showError('Erro ao entrar com Google');
-    }
-  }
-  
-  async resetPassword() {
-    const email = document.getElementById('login-email');
-    
-    if (!email || !email.value) {
-      this.showError('Digite seu email para recuperar a senha');
-      return;
-    }
-    
-    try {
-      await firebase.auth().sendPasswordResetEmail(email.value);
-      alert('📧 Email de recuperação enviado! Verifique sua caixa de entrada.');
-      console.log('✅ Email de recuperação enviado para:', email.value);
-    } catch (error) {
-      console.error('❌ Erro ao resetar senha:', error);
-      this.showError(this.getErrorMessage(error.code));
-    }
-  }
-  
-  logout() {
-    console.log('🚪 Fazendo logout...');
-    firebase.auth().signOut();
-  }
-  
-  showLoginScreen() {
-    console.log('📱 Mostrando tela de login...');
+  function showLoginScreen() {
+    console.log('📱 FORÇANDO tela de login...');
     
     // Esconder todas as telas
-    document.querySelectorAll('.screen').forEach(screen => {
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(screen => {
       screen.classList.remove('active');
     });
     
-    // Mostrar tela de login
+    // Mostrar login
     const loginScreen = document.getElementById('login-screen');
     if (loginScreen) {
       loginScreen.classList.add('active');
+      console.log('✅ Tela de login ativada');
+    } else {
+      console.error('❌ Elemento #login-screen não encontrado!');
     }
     
-    // ESCONDER botão de logout
+    // Esconder logout
     const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-      logoutBtn.style.display = 'none';
-    }
+    if (logoutBtn) logoutBtn.style.display = 'none';
   }
   
-  showGameScreen() {
-    console.log('🎮 Mostrando tela do jogo...');
+  function showGameScreen() {
+    console.log('🎮 Mostrando jogo...');
     
-    // Esconder todas as telas
-    document.querySelectorAll('.screen').forEach(screen => {
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(screen => {
       screen.classList.remove('active');
     });
     
-    // Mostrar tela de configuração
     const configScreen = document.getElementById('config-screen');
     if (configScreen) {
       configScreen.classList.add('active');
     }
     
-    // MOSTRAR botão de logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.style.display = 'block';
+  }
+  
+  function setupButtons() {
+    console.log('🔧 Configurando botões...');
+    
+    // Login
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+      loginBtn.onclick = function() {
+        const email = document.getElementById('login-email')?.value;
+        const password = document.getElementById('login-password')?.value;
+        
+        if (email && password) {
+          firebase.auth().signInWithEmailAndPassword(email, password)
+            .catch(error => alert('Erro: ' + error.message));
+        } else {
+          alert('Digite email e senha');
+        }
+      };
+    }
+    
+    // Criar conta
+    const signupBtn = document.getElementById('signup-btn');
+    if (signupBtn) {
+      signupBtn.onclick = function() {
+        const email = document.getElementById('login-email')?.value;
+        const password = document.getElementById('login-password')?.value;
+        
+        if (email && password) {
+          if (password.length < 6) {
+            alert('Senha precisa 6+ caracteres');
+            return;
+          }
+          firebase.auth().createUserWithEmailAndPassword(email, password)
+            .catch(error => alert('Erro: ' + error.message));
+        } else {
+          alert('Digite email e senha');
+        }
+      };
+    }
+    
+    // Logout
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-      logoutBtn.style.display = 'block';
-      console.log('✅ Botão de logout mostrado');
+      logoutBtn.onclick = function() {
+        firebase.auth().signOut();
+      };
+    }
+    
+    // Google
+    const googleBtn = document.getElementById('google-login-btn');
+    if (googleBtn) {
+      googleBtn.onclick = function() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider)
+          .catch(error => alert('Erro Google: ' + error.message));
+      };
     }
   }
   
-  showError(message) {
-    console.error('❌ Erro de autenticação:', message);
-    
-    const errorDiv = document.getElementById('login-error');
-    if (errorDiv) {
-      errorDiv.textContent = message;
-      errorDiv.style.display = 'block';
-      
-      // Esconder após 5 segundos
-      setTimeout(() => {
-        errorDiv.style.display = 'none';
-      }, 5000);
-    } else {
-      alert('Erro: ' + message);
-    }
+  // Executar quando o DOM estiver pronto
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAuth);
+  } else {
+    initializeAuth();
   }
-  
-  getErrorMessage(errorCode) {
-    const messages = {
-      'auth/invalid-email': 'Email inválido',
-      'auth/user-disabled': 'Conta desativada',
-      'auth/user-not-found': 'Usuário não encontrado',
-      'auth/wrong-password': 'Senha incorreta',
-      'auth/email-already-in-use': 'Email já cadastrado',
-      'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres)'
-    };
-    
-    return messages[errorCode] || 'Erro: ' + errorCode;
-  }
-}
-
-// Inicializar quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 DOM carregado, iniciando auth system...');
-  window.authSystem = new AuthSystem();
-});
+})();

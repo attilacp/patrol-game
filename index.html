@@ -17,7 +17,8 @@
                 <h2>🔐 Entrar no Jogo</h2>
                 
                 <div class="login-form">
-                    
+                    <input type="email" id="login-email" placeholder="Seu email" class="login-input">
+                    <input type="password" id="login-password" placeholder="Sua senha" class="login-input">
                     <button id="login-btn" class="login-btn">🎮 Entrar</button>
                     <button id="signup-btn" class="signup-btn">📝 Criar Conta</button>
                     <button id="reset-btn" class="reset-btn">🔓 Esqueci a senha</button>
@@ -191,31 +192,34 @@
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
 
-    <script>
-        // CONFIGURAÇÕES DO FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyAW2k1dGsT1a23_9BTHnMM6UV5mo85GfoI",
-            authDomain: "patrol-6cfc0.firebaseapp.com",
-            projectId: "patrol-6cfc0",
-            storageBucket: "patrol-6cfc0.firebasestorage.app",
-            messagingSenderId: "79534174974",
-            appId: "1:79534174974:web:78ad46f7b8f4e71c0d6baf",
-            measurementId: "G-CFGFH5EPB2"
-        };
-        
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        
-        // Tornar disponível globalmente
-        window.firebase = firebase;
-        window.auth = firebase.auth();
-        window.db = firebase.database();
-        
-        console.log('✅ Firebase configurado!');
-    </script>
+<script>
+    // CONFIGURAÇÕES DO FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyAW2k1dGsT1a23_9BTHnMM6UV5mo85GfoI",
+        authDomain: "patrol-6cfc0.firebaseapp.com",
+        projectId: "patrol-6cfc0",
+        storageBucket: "patrol-6cfc0.firebasestorage.app",
+        messagingSenderId: "79534174974",
+        appId: "1:79534174974:web:78ad46f7b8f4e71c0d6baf",
+        measurementId: "G-CFGFH5EPB2"
+    };
+    
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    
+    // Tornar disponível globalmente
+    window.firebase = firebase;
+    window.auth = firebase.auth();
+    window.db = firebase.database();
+    
+    console.log('✅ Firebase configurado!');
+</script>
+
+<!-- AUTH.JS COM PRIORIDADE MÁXIMA -->
+<script src="js/auth.js"></script>
 
     <!-- ===== JAVASCRIPT DO JOGO ===== -->
     <!-- ORDEM CRÍTICA DE CARREGAMENTO -->
@@ -260,9 +264,6 @@
     <script src="js/main/configScreen.js"></script>
     <script src="js/main/gameStart.js"></script>
     <script src="js/debug.js"></script>
-    
-    <!-- Sistema de Autenticação (NOVO) -->
-    <script src="js/auth.js"></script>
     
     <!-- Inicialização do Sistema -->
     <script src="js/main/init.js"></script>
