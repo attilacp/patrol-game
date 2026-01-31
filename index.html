@@ -9,7 +9,37 @@
 </head>
 <body>
     <div class="container">
-        <div id="config-screen" class="screen active">
+        <!-- ===== TELA DE LOGIN (NOVA - PRIMEIRA TELA) ===== -->
+        <div id="login-screen" class="screen active">
+            <h1>PATROL</h1>
+            
+            <div class="login-container">
+                <h2>🔐 Entrar no Jogo</h2>
+                
+                <div class="login-form">
+                    
+                    <button id="login-btn" class="login-btn">🎮 Entrar</button>
+                    <button id="signup-btn" class="signup-btn">📝 Criar Conta</button>
+                    <button id="reset-btn" class="reset-btn">🔓 Esqueci a senha</button>
+                </div>
+                
+                <div class="login-options">
+                    <p>Ou entre com:</p>
+                    <button id="google-login-btn" class="google-btn">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                        Conta Google
+                    </button>
+                </div>
+                
+                <div class="login-error" id="login-error"></div>
+            </div>
+        </div>
+
+        <!-- ===== TELA DE CONFIGURAÇÃO (SEGUNDA TELA) ===== -->
+        <div id="config-screen" class="screen">
+            <!-- Botão de Logout -->
+            <button id="logout-btn" class="logout-btn" style="display: none;">🚪 Sair</button>
+            
             <h1>PATROL</h1>
             
             <div class="config-main-area">
@@ -81,6 +111,7 @@
             </div>
         </div>
 
+        <!-- ===== TELA DO JOGO ===== -->
         <div id="game-screen" class="screen">
             <h1>PATROL</h1>
             
@@ -121,6 +152,7 @@
             </div>
         </div>
 
+        <!-- ===== TELA DE PÓDIO ===== -->
         <div id="podium-screen" class="screen">
             <h1>PATROL</h1>
             <div class="podium-screen">
@@ -130,6 +162,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL DE NOTAS ===== -->
     <div id="notes-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -152,10 +185,40 @@
         </div>
     </div>
 
+    <!-- ===== BIBLIOTECAS EXTERNAS ===== -->
     <!-- Biblioteca XLSX (SEMPRE primeiro) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- JavaScript - ORDEM CRÍTICA DE CARREGAMENTO -->
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+
+    <script>
+        // CONFIGURAÇÕES DO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAW2k1dGsT1a23_9BTHnMM6UV5mo85GfoI",
+            authDomain: "patrol-6cfc0.firebaseapp.com",
+            projectId: "patrol-6cfc0",
+            storageBucket: "patrol-6cfc0.firebasestorage.app",
+            messagingSenderId: "79534174974",
+            appId: "1:79534174974:web:78ad46f7b8f4e71c0d6baf",
+            measurementId: "G-CFGFH5EPB2"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Tornar disponível globalmente
+        window.firebase = firebase;
+        window.auth = firebase.auth();
+        window.db = firebase.database();
+        
+        console.log('✅ Firebase configurado!');
+    </script>
+
+    <!-- ===== JAVASCRIPT DO JOGO ===== -->
+    <!-- ORDEM CRÍTICA DE CARREGAMENTO -->
     <script src="js/external.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/teams.js"></script>
@@ -197,6 +260,11 @@
     <script src="js/main/configScreen.js"></script>
     <script src="js/main/gameStart.js"></script>
     <script src="js/debug.js"></script>
+    
+    <!-- Sistema de Autenticação (NOVO) -->
+    <script src="js/auth.js"></script>
+    
+    <!-- Inicialização do Sistema -->
     <script src="js/main/init.js"></script>
 </body>
 </html>
