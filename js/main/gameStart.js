@@ -1,6 +1,36 @@
 function startGame() {
     console.log('Botão Iniciar Jogo clicado');
     
+    // ATUALIZAR STATUS DA SALA NO FIREBASE (se for mestre)
+    if (window.roomSystem && window.roomSystem.isMaster && window.roomSystem.currentRoom) {
+        console.log('🎮 Mestre está iniciando jogo para sala:', window.roomSystem.currentRoom);
+        
+        try {
+            // Atualizar status da sala para 'playing'
+            const roomRef = firebase.database().ref('rooms/' + window.roomSystem.currentRoom);
+            await roomRef.child('status').set('playing');
+            console.log('✅ Status da sala atualizado para "playing" no Firebase');
+            
+            // Criar dados do jogo
+            const gameState = {
+                startedAt: Date.now(),
+                currentQuestionIndex: 0,
+                currentTeamIndex: 0,
+                scores: {},
+                mestre: window.roomSystem.playerName,
+                roomCode: window.roomSystem.currentRoom
+            };
+            
+            await roomRef.child('gameState').set(gameState);
+            console.log('✅ Estado do jogo salvo no Firebase');
+            
+        } catch (error) {
+            console.error('❌ Erro ao atualizar Firebase:', error);
+            alert('Erro ao sincronizar com Firebase: ' + error.message);
+            return;
+        }
+    }
+    
     window.questions = [];
     
     if (window.subjects) {
@@ -46,6 +76,17 @@ function startGame() {
     if (window.teams.length === 0) {
         alert('Erro: Configure pelo menos uma equipe com nome.');
         return;
+    }
+    
+    // Atualizar totalQuestions no Firebase
+    if (window.roomSystem && window.roomSystem.isMaster && window.roomSystem.currentRoom) {
+        try {
+            await firebase.database().ref('rooms/' + window.roomSystem.currentRoom + '/gameState/totalQuestions')
+                .set(window.questions.length);
+            console.log('✅ Total de perguntas atualizado no Firebase:', window.questions.length);
+        } catch (error) {
+            console.error('❌ Erro ao atualizar total de perguntas:', error);
+        }
     }
     
     // Carregar performance salva se existir
@@ -149,6 +190,11 @@ if (typeof updateTotalQuestionsCount !== 'undefined') {
     };
 }
 
-window.startGame = startGame;
+// Tornar startGame assíncrona
+const originalStartGame = window.startGame;
+window.startGame = async function() {
+    return await startGame();
+};
+
 window.applyRecurrence = applyRecurrence;
 window.countQuestionsWithoutRecurrence = countQuestionsWithoutRecurrence;
