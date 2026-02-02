@@ -90,6 +90,11 @@ class RoomSystem {
                 this.setupRoomListeners();
                 
                 alert(`🎉 Sala criada!\nCódigo: ${roomCode}\nCompartilhe com os jogadores.`);
+                
+                // Ir para tela de configuração
+                if (window.authSystem) {
+                    window.authSystem.showConfigScreen();
+                }
             })
             .catch(error => {
                 console.error('❌ Erro ao criar sala:', error);
@@ -166,6 +171,11 @@ class RoomSystem {
                         
                         // Atualizar UI
                         this.updateRoomUI(roomData);
+                        
+                        // Ir para tela do jogo
+                        if (window.authSystem) {
+                            window.authSystem.showGameScreen();
+                        }
                     })
                     .catch(error => {
                         console.error('❌ Erro ao entrar na sala:', error);
@@ -256,11 +266,16 @@ class RoomSystem {
     
     removeRoomListeners() {
         // Remover todos os listeners
-        this.roomListeners.forEach(({ ref, listener }) => {
-            ref.off('value', listener);
+        this.roomListeners.forEach(item => {
+            if (item.ref && item.listener) {
+                item.ref.off('value', item.listener);
+            }
         });
-        this.actionListeners.forEach(({ ref, listener }) => {
-            ref.off('child_added', listener);
+        
+        this.actionListeners.forEach(item => {
+            if (item.ref && item.listener) {
+                item.ref.off('child_added', item.listener);
+            }
         });
         
         this.roomListeners = [];
@@ -278,11 +293,17 @@ class RoomSystem {
         
         // Atualizar informações do mestre
         if (roomData.master) {
-            document.getElementById('master-name')?.textContent = roomData.master.name;
+            const masterNameElement = document.getElementById('master-name');
+            if (masterNameElement) {
+                masterNameElement.textContent = roomData.master.name;
+            }
         }
         
         // Atualizar código da sala
-        document.getElementById('current-room-code')?.textContent = this.currentRoom;
+        const codeElement = document.getElementById('current-room-code');
+        if (codeElement) {
+            codeElement.textContent = this.currentRoom;
+        }
     }
     
     updatePlayersList(players) {
@@ -344,7 +365,10 @@ class RoomSystem {
         }
         
         // Mostrar código em vários lugares
-        document.getElementById('current-room-code').textContent = roomCode;
+        const codeElement = document.getElementById('current-room-code');
+        if (codeElement) {
+            codeElement.textContent = roomCode;
+        }
         
         // Copiar código para área de transferência (opcional)
         const copyBtn = document.createElement('button');
@@ -364,9 +388,9 @@ class RoomSystem {
             alert('Código copiado!');
         };
         
-        const codeContainer = document.getElementById('current-room-code').parentNode;
-        if (!codeContainer.querySelector('button')) {
-            codeContainer.appendChild(copyBtn);
+        const codeContainer = document.getElementById('current-room-code');
+        if (codeContainer && !codeContainer.parentNode.querySelector('button')) {
+            codeContainer.parentNode.appendChild(copyBtn);
         }
     }
     
@@ -437,7 +461,6 @@ class RoomSystem {
         // Apenas mestre pode avançar pergunta
         if (this.isMaster) {
             this.showNotification(`${action.playerName} pediu para pular`);
-            // Aqui você chamaria window.nextQuestion() se quiser
         }
     }
     
@@ -463,7 +486,8 @@ class RoomSystem {
     
     handleStartGameAction(action) {
         // Apenas mestre pode iniciar jogo
-        if (action.playerId === this.players[action.playerId]?.isMaster && this.players[action.playerId]) {
+        const player = this.players[action.playerId];
+        if (player && player.isMaster) {
             // Mudar status da sala para playing
             firebase.database().ref('rooms/' + this.currentRoom + '/status').set('playing');
             
@@ -476,7 +500,8 @@ class RoomSystem {
     
     handleRoomUpdate(roomData) {
         // Verificar se status mudou
-        if (roomData.status === 'playing' && document.getElementById('game-screen')?.classList.contains('active')) {
+        const gameScreen = document.getElementById('game-screen');
+        if (roomData.status === 'playing' && gameScreen && gameScreen.classList.contains('active')) {
             // Jogo começou, atualizar interface
             this.updateGameInterface(roomData.gameState);
         }
@@ -492,9 +517,13 @@ class RoomSystem {
     updateGameInterface(gameState) {
         // Aqui você atualizaria a interface do jogo com os dados sincronizados
         if (gameState && gameState.currentQuestion) {
-            document.getElementById('question-text').textContent = gameState.currentQuestion.enunciado;
-            document.getElementById('question-number').textContent = gameState.questionIndex + 1;
-            document.getElementById('total-questions').textContent = gameState.totalQuestions;
+            const questionText = document.getElementById('question-text');
+            const questionNumber = document.getElementById('question-number');
+            const totalQuestions = document.getElementById('total-questions');
+            
+            if (questionText) questionText.textContent = gameState.currentQuestion.enunciado;
+            if (questionNumber) questionNumber.textContent = gameState.questionIndex + 1;
+            if (totalQuestions) totalQuestions.textContent = gameState.totalQuestions;
         }
     }
     
