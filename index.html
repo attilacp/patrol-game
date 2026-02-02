@@ -87,7 +87,7 @@
                     <p class="room-success">✔ Compartilhe este código com os jogadores</p>
                     <div id="players-list"></div>
                     <button id="start-game-btn-lobby" class="lobby-btn start-btn">
-                        🚀 Iniciar Jogo
+                        🚀 Ir para Configuração
                     </button>
                 </div>
             </div>
@@ -219,7 +219,7 @@
             </div>
             
             <!-- Chat multiplayer -->
-            <div id="game-chat" class="game-chat">
+            <div id="game-chat" class="game-chat" style="display: none;">
                 <div class="chat-container">
                     <h4>💬 Chat da Partida</h4>
                     <div id="chat-messages" class="chat-messages"></div>
@@ -298,13 +298,10 @@
     <!-- AUTH.JS COM LOBBY -->
     <script src="js/auth.js"></script>
 
-    <!-- SISTEMA DE SALAS DIVIDIDO -->
+    <!-- SISTEMA DE SALAS SIMPLIFICADO -->
     <script src="js/rooms/core.js"></script>
     <script src="js/rooms/room-manager.js"></script>
-    <script src="js/rooms/listeners.js"></script>
-    <script src="js/rooms/actions.js"></script>
     <script src="js/rooms/ui.js"></script>
-    <script src="js/rooms/master-controls.js"></script>
     <script src="js/rooms/init.js"></script>
 
     <!-- ===== JAVASCRIPT DO JOGO ===== -->
