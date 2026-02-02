@@ -18,6 +18,8 @@ patrol-game/
 │   ├── game.css                            # Estilos da tela do jogo
 │   └── teams.css                           # Estilos dos cards de equipes
 ├── js/
+│   ├── auth.js              ← ATUALIZADO (com lobby)
+│   ├── rooms.js             ← NOVO (sistema de salas)
 │   ├── utils.js                            # Funções utilitárias gerais (shuffle, debounce, etc.)
 │   ├── teams.js                            # Gerenciamento completo de equipes
 │   ├── teams-performance/
@@ -39,6 +41,7 @@ patrol-game/
 │   │   ├── podium.js                       # Sistema de pódio e finalização
 │   │   ├── ranking.js                      # Sistema completo de ranking
 │   │   └── notes.js                        # Sistema de bloco de notas com abas
+│   │   ├── multiplayer.js   ← NOVO (sincronização)
 │   ├── bombQuestion/                       # Sistema de Perguntas Bomba
 │   │   ├── penaltyModal.js                 # Modal de penalidade da PB
 │   │   ├── fileLoader.js                   # Carregamento de arquivos Excel de PB

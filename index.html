@@ -6,10 +6,158 @@
     <title>PATROL - Jogo de Perguntas e Respostas</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/performance.css">
+    <style>
+        /* ESTILOS TEMPORÁRIOS PARA LOBBY (depois movemos para style.css) */
+        #lobby-screen {
+            background: linear-gradient(135deg, #002244 0%, #003366);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .lobby-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 4px solid #FFCC00;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .lobby-container h2 {
+            color: #003366;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .lobby-options {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .lobby-option {
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 3px solid #dee2e6;
+        }
+        
+        .lobby-option h3 {
+            color: #003366;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .lobby-btn {
+            background: linear-gradient(145deg, #003366, #002244);
+            color: #FFCC00 !important;
+            border: 3px solid #FFCC00;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        
+        .lobby-btn:hover {
+            background: linear-gradient(145deg, #002244, #001933);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .lobby-input {
+            padding: 16px;
+            border: 3px solid #dee2e6;
+            border-radius: 12px;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .lobby-input:focus {
+            border-color: #003366;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,51,102,0.2);
+        }
+        
+        #room-info {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #28a745;
+            margin-top: 20px;
+        }
+        
+        #current-room-code {
+            background: #003366;
+            color: #FFCC00;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 1.5em;
+            font-weight: 900;
+            letter-spacing: 3px;
+            display: inline-block;
+            margin: 0 10px;
+        }
+        
+        .player-item {
+            background: white;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #003366;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .player-item:before {
+            content: "👤";
+        }
+        
+        .back-to-lobby {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(145deg, #6c757d, #5a6268);
+            border-color: #545b62;
+            color: #FFCC00;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .lobby-options {
+                flex-direction: column;
+            }
+            
+            .lobby-container {
+                padding: 25px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- ===== TELA DE LOGIN (NOVA - PRIMEIRA TELA) ===== -->
+        <!-- ===== TELA DE LOGIN ===== -->
         <div id="login-screen" class="screen active">
             <h1>PATROL</h1>
             
@@ -36,12 +184,58 @@
             </div>
         </div>
 
-        <!-- ===== TELA DE CONFIGURAÇÃO (SEGUNDA TELA) ===== -->
-        <div id="config-screen" class="screen">
-            <!-- Botão de Logout -->
-            <button id="logout-btn" class="logout-btn" style="display: none;">🚪 Sair</button>
+        <!-- ===== TELA DE LOBBY (NOVA) ===== -->
+        <div id="lobby-screen" class="screen">
+            <button id="back-to-lobby-login" class="back-to-lobby">← Voltar</button>
             
             <h1>PATROL</h1>
+            
+            <div class="lobby-container">
+                <h2>🎮 Sala de Jogo</h2>
+                
+                <div class="lobby-options">
+                    <!-- Criar Nova Sala -->
+                    <div class="lobby-option">
+                        <h3>🏁 Criar Nova Partida</h3>
+                        <button id="create-room-btn" class="lobby-btn">
+                            Criar como Mestre 👑
+                        </button>
+                        <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                            Você controla o jogo e as perguntas
+                        </p>
+                    </div>
+                    
+                    <!-- Entrar em Sala Existente -->
+                    <div class="lobby-option">
+                        <h3>🔑 Entrar na Partida</h3>
+                        <input type="text" id="room-code" placeholder="Digite o código" class="lobby-input" maxlength="6">
+                        <button id="join-room-btn" class="lobby-btn">
+                            Entrar como Jogador 🎮
+                        </button>
+                        <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                            Peça o código para quem criou a partida
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Código da Sala (quando mestre) -->
+                <div id="room-info" style="display: none;">
+                    <h3>📋 Código da Sala: <span id="current-room-code">ABC123</span></h3>
+                    <p style="color: #28a745; font-weight: bold;">✔ Compartilhe este código com os jogadores</p>
+                    <div id="players-list"></div>
+                    <button id="start-game-btn-lobby" class="lobby-btn" style="background: linear-gradient(145deg, #28a745, #1e7e34); margin-top: 20px;">
+                        🚀 Iniciar Jogo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TELA DE CONFIGURAÇÃO (APENAS MESTRE) ===== -->
+        <div id="config-screen" class="screen">
+            <button id="back-to-lobby-config" class="back-to-lobby">← Voltar ao Lobby</button>
+            <button id="logout-btn" class="logout-btn" style="display: none;">🚪 Sair</button>
+            
+            <h1>PATROL - Configuração do Mestre</h1>
             
             <div class="config-main-area">
                 <div class="team-config">
@@ -103,7 +297,7 @@
                         <input type="file" id="import-performance-file" accept=".csv">
                     </div>
 
-                    <button id="start-game-btn" disabled>🎮 Iniciar Jogo</button>
+                    <button id="start-game-btn" disabled>🎮 Iniciar Jogo para Todos</button>
                     
                     <div class="ranking-button-container">
                         <button id="open-notes-config" class="notes-btn">📝 Bloco de Notas</button>
@@ -112,9 +306,11 @@
             </div>
         </div>
 
-        <!-- ===== TELA DO JOGO ===== -->
+        <!-- ===== TELA DO JOGO (TODOS OS JOGADORES) ===== -->
         <div id="game-screen" class="screen">
-            <h1>PATROL</h1>
+            <button id="back-to-lobby-game" class="back-to-lobby">← Sair da Partida</button>
+            
+            <h1>PATROL <span id="game-status" style="font-size: 0.6em; color: #FFCC00;">● Conectado</span></h1>
             
             <div class="question-main-area">
                 <div class="question-area">
@@ -125,11 +321,13 @@
                         <div id="team-turn" class="team-turn">🎯 Aguardando início...</div>
                         <div class="question-header-buttons">
                             <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
-                            <button id="back-to-config" class="config-btn">⚙️ Config</button>
+                            <div id="master-controls" style="display: none;">
+                                <button id="master-next-btn" class="config-btn">⏭️ Avançar</button>
+                            </div>
                         </div>
                     </div>
                     
-                    <div id="question-text">Aguardando carregamento das perguntas...</div>
+                    <div id="question-text">Aguardando o mestre iniciar o jogo...</div>
                     
                     <div class="answer-buttons">
                         <button id="certo-btn" class="answer-btn certo-btn">✅ CERTO</button>
@@ -145,11 +343,28 @@
 
                 <div class="active-team-sidebar">
                     <div id="active-team-display"></div>
+                    <!-- Placar em tempo real -->
+                    <div id="live-scoreboard" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 2px solid #003366;">
+                        <h4 style="color: #003366; margin-bottom: 10px;">🏆 Placar ao Vivo</h4>
+                        <div id="scoreboard-content"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="teams-area">
                 <div id="teams-display"></div>
+            </div>
+            
+            <!-- Chat simples -->
+            <div id="game-chat" style="max-width: 800px; margin: 20px auto; display: none;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border: 2px solid #dee2e6;">
+                    <h4 style="color: #003366; margin-bottom: 10px;">💬 Chat da Partida</h4>
+                    <div id="chat-messages" style="height: 150px; overflow-y: auto; margin-bottom: 10px; padding: 10px; background: white; border-radius: 5px;"></div>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="chat-input" placeholder="Digite uma mensagem..." style="flex: 1; padding: 10px; border: 2px solid #dee2e6; border-radius: 5px;">
+                        <button id="send-chat-btn" style="background: #003366; color: #FFCC00; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Enviar</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -192,34 +407,37 @@
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
 
-<script>
-    // CONFIGURAÇÕES DO FIREBASE
-    const firebaseConfig = {
-        apiKey: "AIzaSyAW2k1dGsT1a23_9BTHnMM6UV5mo85GfoI",
-        authDomain: "patrol-6cfc0.firebaseapp.com",
-        projectId: "patrol-6cfc0",
-        storageBucket: "patrol-6cfc0.firebasestorage.app",
-        messagingSenderId: "79534174974",
-        appId: "1:79534174974:web:78ad46f7b8f4e71c0d6baf",
-        measurementId: "G-CFGFH5EPB2"
-    };
-    
-    // Inicializar Firebase
-    firebase.initializeApp(firebaseConfig);
-    
-    // Tornar disponível globalmente
-    window.firebase = firebase;
-    window.auth = firebase.auth();
-    window.db = firebase.database();
-    
-    console.log('✅ Firebase configurado!');
-</script>
+    <script>
+        // CONFIGURAÇÕES DO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAW2k1dGsT1a23_9BTHnMM6UV5mo85GfoI",
+            authDomain: "patrol-6cfc0.firebaseapp.com",
+            projectId: "patrol-6cfc0",
+            storageBucket: "patrol-6cfc0.firebasestorage.app",
+            messagingSenderId: "79534174974",
+            appId: "1:79534174974:web:78ad46f7b8f4e71c0d6baf",
+            measurementId: "G-CFGFH5EPB2"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Tornar disponível globalmente
+        window.firebase = firebase;
+        window.auth = firebase.auth();
+        window.db = firebase.database();
+        
+        console.log('✅ Firebase configurado!');
+    </script>
 
-<!-- AUTH.JS COM PRIORIDADE MÁXIMA -->
-<script src="js/auth.js"></script>
+    <!-- AUTH.JS COM LOBBY -->
+    <script src="js/auth.js"></script>
+
+    <!-- SISTEMA DE SALAS (NOVO) -->
+    <script src="js/rooms.js"></script>
 
     <!-- ===== JAVASCRIPT DO JOGO ===== -->
     <!-- ORDEM CRÍTICA DE CARREGAMENTO -->
@@ -265,7 +483,23 @@
     <script src="js/main/gameStart.js"></script>
     <script src="js/debug.js"></script>
     
+    <!-- MULTIPLAYER (NOVO) -->
+    <script src="js/game/multiplayer.js"></script>
+    
     <!-- Inicialização do Sistema -->
     <script src="js/main/init.js"></script>
+    
+    <!-- INICIALIZAR SISTEMA DE SALAS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar sistema de salas quando auth estiver pronto
+            setTimeout(() => {
+                if (window.authSystem && window.authSystem.currentUser) {
+                    window.roomSystem = new RoomSystem();
+                    console.log('✅ Sistema de salas inicializado');
+                }
+            }, 1000);
+        });
+    </script>
 </body>
 </html>
