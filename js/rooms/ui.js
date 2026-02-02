@@ -1,5 +1,3 @@
-[file name]: rooms/ui.js
-[file content begin]
 // js/rooms/ui.js - Atualização de interface
 console.log('🏠 rooms/ui.js carregando...');
 
@@ -129,10 +127,22 @@ RoomSystem.prototype.updateControlsVisibility = function() {
 };
 
 RoomSystem.prototype.showRoomInfo = function(roomCode) {
+    console.log('📋 Mostrando código da sala:', roomCode);
+    
     const roomInfo = document.getElementById('room-info');
     if (roomInfo) {
         roomInfo.style.display = 'block';
         roomInfo.style.animation = 'slideIn 0.5s ease';
+        console.log('✅ room-info exibido');
+    } else {
+        console.error('❌ Elemento room-info não encontrado');
+    }
+    
+    // Atualizar código no elemento
+    const codeElement = document.getElementById('current-room-code');
+    if (codeElement) {
+        codeElement.textContent = roomCode;
+        console.log('✅ Código atualizado no DOM:', roomCode);
     }
     
     // Adicionar botão para copiar código
@@ -191,6 +201,7 @@ RoomSystem.prototype.addCopyCodeButton = function(roomCode) {
     };
     
     codeContainer.parentNode.appendChild(copyBtn);
+    console.log('✅ Botão copiar adicionado');
 };
 
 RoomSystem.prototype.addChatMessage = function(sender, message) {
@@ -243,4 +254,3 @@ RoomSystem.prototype.checkAllPlayersReady = function() {
 };
 
 console.log('✅ rooms/ui.js carregado com sucesso!');
-[file content end]

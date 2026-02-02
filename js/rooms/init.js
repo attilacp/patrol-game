@@ -91,6 +91,9 @@ function initializeRoomSystem() {
     
     // Adicionar nome do usuário nas telas
     addUserNameToScreens();
+    
+    // TESTE TEMPORÁRIO - REMOVER DEPOIS
+    addTestButton();
 }
 
 function setupLobbyButtons() {
@@ -111,13 +114,39 @@ function setupLobbyButtons() {
             const roomCode = await window.roomSystem.createRoom();
             
             if (roomCode) {
-                // Ir para configuração (mestre)
-                if (window.authSystem) {
-                    window.authSystem.showConfigScreen();
+                // MOSTRAR CÓDIGO DA SALA IMEDIATAMENTE NO LOBBY
+                const roomInfo = document.getElementById('room-info');
+                const roomCodeSpan = document.getElementById('current-room-code');
+                
+                if (roomInfo) {
+                    roomInfo.style.display = 'block';
+                    roomInfo.style.animation = 'fadeIn 0.5s ease';
+                    console.log('✅ room-info exibido');
                 }
+                
+                if (roomCodeSpan) {
+                    roomCodeSpan.textContent = roomCode;
+                    console.log('✅ Código atualizado no DOM:', roomCode);
+                }
+                
+                // Adicionar botão copiar
+                addCopyButtonToRoomCode(roomCode);
+                
+                // Mostrar notificação
+                window.roomSystem.showNotification(`🎉 Sala criada! Código: ${roomCode}`, 'success');
+                
+                // Aguardar 2 segundos antes de ir para configuração
+                setTimeout(() => {
+                    // Ir para configuração (mestre)
+                    if (window.authSystem) {
+                        window.authSystem.showConfigScreen();
+                    }
+                }, 2000);
+                
             } else {
                 createBtn.disabled = false;
                 createBtn.textContent = 'Criar como Mestre 👑';
+                window.roomSystem.showNotification('❌ Erro ao criar sala', 'error');
             }
         };
     }
@@ -144,9 +173,11 @@ function setupLobbyButtons() {
             
             if (success) {
                 // Ir para tela do jogo
-                if (window.authSystem) {
-                    window.authSystem.showGameScreen();
-                }
+                setTimeout(() => {
+                    if (window.authSystem) {
+                        window.authSystem.showGameScreen();
+                    }
+                }, 1000);
             } else {
                 joinBtn.disabled = false;
                 joinBtn.textContent = 'Entrar como Jogador 🎮';
@@ -225,6 +256,162 @@ function addUserNameToScreens() {
     });
     
     console.log('✅ Nome do usuário adicionado às telas:', userName);
+}
+
+function addCopyButtonToRoomCode(roomCode) {
+    const codeContainer = document.getElementById('current-room-code');
+    if (!codeContainer || codeContainer.parentNode.querySelector('.copy-code-btn')) return;
+    
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-code-btn';
+    copyBtn.innerHTML = '📋 Copiar';
+    copyBtn.style.cssText = `
+        background: #003366;
+        color: #FFCC00;
+        border: 2px solid #FFCC00;
+        padding: 5px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-left: 10px;
+        font-size: 12px;
+        font-weight: bold;
+        transition: all 0.3s;
+    `;
+    
+    copyBtn.onmouseenter = () => {
+        copyBtn.style.background = '#002244';
+        copyBtn.style.transform = 'translateY(-2px)';
+    };
+    
+    copyBtn.onmouseleave = () => {
+        copyBtn.style.background = '#003366';
+        copyBtn.style.transform = 'translateY(0)';
+    };
+    
+    copyBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        navigator.clipboard.writeText(roomCode)
+            .then(() => {
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '✅ Copiado!';
+                copyBtn.disabled = true;
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.disabled = false;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Erro ao copiar:', err);
+                copyBtn.innerHTML = '❌ Erro';
+            });
+    };
+    
+    codeContainer.parentNode.appendChild(copyBtn);
+}
+
+// TESTE TEMPORÁRIO - REMOVER DEPOIS
+function addTestButton() {
+    console.log('🧪 Adicionando botão de teste...');
+    
+    setTimeout(() => {
+        const lobbyContainer = document.querySelector('.lobby-container');
+        if (!lobbyContainer) return;
+        
+        const testBtn = document.createElement('button');
+        testBtn.textContent = '🧪 TESTE: Simular Criação de Sala';
+        testBtn.style.cssText = `
+            background: linear-gradient(145deg, #dc3545, #c82333);
+            color: white !important;
+            padding: 12px 24px;
+            margin: 20px auto;
+            border-radius: 10px;
+            border: 3px solid #bd2130;
+            display: block;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        `;
+        
+        testBtn.onmouseenter = () => {
+            testBtn.style.transform = 'translateY(-3px)';
+            testBtn.style.boxShadow = '0 8px 20px rgba(220,53,69,0.3)';
+        };
+        
+        testBtn.onmouseleave = () => {
+            testBtn.style.transform = 'translateY(0)';
+            testBtn.style.boxShadow = 'none';
+        };
+        
+        testBtn.onclick = () => {
+            console.log('🧪 Teste: Simulando criação de sala...');
+            
+            // Simular código de sala
+            const testCode = 'TEST' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            
+            // Mostrar room-info
+            const roomInfo = document.getElementById('room-info');
+            const roomCodeSpan = document.getElementById('current-room-code');
+            
+            if (roomInfo) {
+                roomInfo.style.display = 'block';
+                roomInfo.style.animation = 'fadeIn 0.5s ease';
+                
+                // Atualizar conteúdo
+                if (!roomCodeSpan) {
+                    roomInfo.innerHTML = `
+                        <h3>📋 Código da Sala: <span id="current-room-code" style="color: #FFCC00; background: #003366; padding: 5px 15px; border-radius: 8px; font-family: monospace; letter-spacing: 2px;">${testCode}</span></h3>
+                        <p style="color: #28a745; font-weight: bold;">✔ TESTE: Código gerado com sucesso!</p>
+                        <div id="players-list">
+                            <h4>👥 Jogadores Conectados:</h4>
+                            <div class="player-item master">
+                                <span class="player-icon">👑</span>
+                                <span class="player-name">Você (Mestre)</span>
+                                <span class="player-status">✅ Pronto</span>
+                                <span class="player-score">0 pts</span>
+                            </div>
+                            <div class="player-item">
+                                <span class="player-icon">👤</span>
+                                <span class="player-name">Jogador Teste 1</span>
+                                <span class="player-status">⏳ Aguardando</span>
+                                <span class="player-score">0 pts</span>
+                            </div>
+                        </div>
+                        <button id="start-game-btn-lobby" class="lobby-btn start-btn" style="margin-top: 20px;">
+                            🚀 Ir para Configuração
+                        </button>
+                    `;
+                }
+                
+                console.log('✅ Teste: room-info exibido com código', testCode);
+                
+                // Adicionar botão copiar
+                addCopyButtonToRoomCode(testCode);
+                
+                // Configurar botão "Ir para Configuração"
+                setTimeout(() => {
+                    const startBtn = document.getElementById('start-game-btn-lobby');
+                    if (startBtn) {
+                        startBtn.onclick = () => {
+                            if (window.authSystem) {
+                                window.authSystem.showConfigScreen();
+                            }
+                        };
+                    }
+                }, 100);
+                
+            } else {
+                console.error('❌ Teste: Elemento room-info não encontrado');
+                alert('Erro: Elemento #room-info não encontrado no DOM');
+            }
+        };
+        
+        lobbyContainer.appendChild(testBtn);
+        console.log('✅ Botão de teste adicionado');
+        
+    }, 2000); // Aguardar 2 segundos
 }
 
 // Inicializar quando Firebase estiver pronto
