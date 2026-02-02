@@ -230,10 +230,14 @@ console.log('🔐 auth.js CARREGADO');
                     const roomCode = document.getElementById('room-code')?.value.toUpperCase();
                     if (roomCode && roomCode.length === 6) {
                         if (window.roomSystem) {
-                            window.roomSystem.joinRoom(roomCode);
+                            const isMaster = false; // Jogador nunca é mestre ao entrar
+                            window.roomSystem.joinRoom(roomCode, isMaster);
                             console.log('🔑 Entrando na sala:', roomCode);
-                            // Vai direto para jogo (como jogador)
-                            this.showGameScreen();
+                            
+                            // CORREÇÃO: Jogador fica no LOBBY, não vai para jogo
+                            // Apenas mostra mensagem de sucesso
+                            this.showLobbyScreen();
+                            alert(`✅ Entrou na sala ${roomCode}!\nAguardando o mestre iniciar...`);
                         }
                     } else {
                         alert('Digite um código de 6 letras/números');
