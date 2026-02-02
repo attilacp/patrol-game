@@ -1,4 +1,3 @@
-// file name: main/gameStart.js
 function startGame() {
     console.log('Botão Iniciar Jogo clicado');
     
@@ -7,6 +6,7 @@ function startGame() {
     if (window.subjects) {
         Object.values(window.subjects).forEach(subject => {
             if (subject.enabled && subject.questions.length > 0) {
+                // Apenas na hora de iniciar o jogo aplicamos a recorrência
                 window.questions.push(...applyRecurrence(subject.questions, subject.recurrence));
             }
         });
@@ -47,9 +47,6 @@ function startGame() {
         alert('Erro: Configure pelo menos uma equipe com nome.');
         return;
     }
-    
-    // REMOVIDO: Chamada à função não existente
-    // loadPerformanceForCurrentGame?.();
     
     // Carregar performance salva se existir
     if (typeof loadSavedPerformance === 'function') {
@@ -114,5 +111,44 @@ function applyRecurrence(questions, recurrence) {
     return result;
 }
 
+// Nova função para contar perguntas SEM recorrência (para exibição na configuração)
+function countQuestionsWithoutRecurrence() {
+    let totalQuestions = 0;
+    if (window.subjects) {
+        Object.values(window.subjects).forEach(subject => {
+            if (subject.enabled) {
+                totalQuestions += subject.questions.length; // Conta apenas as perguntas originais
+            }
+        });
+    }
+    return totalQuestions;
+}
+
+// Atualizar a função updateTotalQuestionsCount no utils.js
+if (typeof updateTotalQuestionsCount !== 'undefined') {
+    // Sobrescrever a função existente
+    window.updateTotalQuestionsCount = function() {
+        let totalQuestions = countQuestionsWithoutRecurrence();
+        
+        const totalQuestionsElement = document.getElementById('total-questions');
+        if (totalQuestionsElement) {
+            totalQuestionsElement.textContent = totalQuestions;
+        }
+        return totalQuestions;
+    };
+} else {
+    // Definir nova função
+    window.updateTotalQuestionsCount = function() {
+        let totalQuestions = countQuestionsWithoutRecurrence();
+        
+        const totalQuestionsElement = document.getElementById('total-questions');
+        if (totalQuestionsElement) {
+            totalQuestionsElement.textContent = totalQuestions;
+        }
+        return totalQuestions;
+    };
+}
+
 window.startGame = startGame;
 window.applyRecurrence = applyRecurrence;
+window.countQuestionsWithoutRecurrence = countQuestionsWithoutRecurrence;

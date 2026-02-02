@@ -1,4 +1,4 @@
-// file name: js/answers/skip.js
+// file name: js/answers/skip.js (ATUALIZADO PARA MÚLTIPLOS COMENTÁRIOS)
 function skipQuestion(){
     if(!confirm('⚠️ Pular esta questão?\n\nNão contará para pontuação.')) return;
     
@@ -12,12 +12,31 @@ function skipQuestion(){
         answerElement.className = 'correct-answer';
     }
     
-    // CORREÇÃO: Mostrar comentário se existir
+    // CORREÇÃO: Mostrar múltiplos comentários se existirem
     const commentary = document.getElementById('commentary');
     if(commentary){
         const currentQuestion = window.questions[window.currentQuestionIndex];
-        if(currentQuestion && currentQuestion.comentario){
-            commentary.textContent = currentQuestion.comentario;
+        if(currentQuestion){
+            let allComments = '';
+            
+            // Comentário principal
+            if(currentQuestion.comentario){
+                allComments += currentQuestion.comentario;
+            }
+            
+            // Comentário2
+            if(currentQuestion.comentario2){
+                if(allComments) allComments += '<br><br>';
+                allComments += currentQuestion.comentario2;
+            }
+            
+            // Comentário3
+            if(currentQuestion.comentario3){
+                if(allComments) allComments += '<br><br>';
+                allComments += currentQuestion.comentario3;
+            }
+            
+            commentary.innerHTML = allComments;
             commentary.classList.add('active');
         }
     }

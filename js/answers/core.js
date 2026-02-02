@@ -1,4 +1,4 @@
-// file name: js/answers/core.js
+// file name: js/answers/core.js (ATUALIZADO PARA LIMPAR MÚLTIPLOS COMENTÁRIOS)
 // answers/core.js - COM CONTROLE DE TECLADO E PREVENÇÃO DE DUPLICAÇÃO
 
 if (!window.questions) window.questions = [];
@@ -97,8 +97,9 @@ function showQuestion() {
         
         document.getElementById('question-text').innerHTML = questionHTML;
         
-        // LIMPAR ELEMENTOS DE RESPOSTA
+        // LIMPAR ELEMENTOS DE RESPOSTA E COMENTÁRIOS
         document.getElementById('commentary').textContent = '';
+        document.getElementById('commentary').innerHTML = ''; // Limpar HTML também
         document.getElementById('commentary').classList.remove('active');
         
         document.getElementById('correct-answer').textContent = '';

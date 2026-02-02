@@ -1,0 +1,5 @@
+cd "C:\Users\attil\patrol-game"
+git status
+git add .
+git commit -m "Descrição das mudanças"
+git push origin main

@@ -34,6 +34,9 @@ function updateSubjectsList() {
             assuntosHTML += '</div>';
         }
         
+        // Contar perguntas SEM recorrência
+        const questionCount = subject.questions.length;
+        
         subjectItem.innerHTML = `
             <label class="subject-checkbox">
                 <input type="checkbox" ${subject.enabled ? 'checked' : ''} 
@@ -43,7 +46,7 @@ function updateSubjectsList() {
             <div class="subject-info">
                 <div class="subject-name">${subject.name}</div>
                 <div class="subject-details">
-                    ${subject.questions.length} perguntas • ${subject.fileName}
+                    ${questionCount} perguntas • ${subject.fileName}
                 </div>
                 ${assuntosHTML}
             </div>
@@ -65,6 +68,7 @@ function updateSubjectsList() {
 function updateRecurrence(subjectName, recurrence) {
     if (window.subjects && window.subjects[subjectName]) {
         window.subjects[subjectName].recurrence = recurrence;
+        // Não atualizar contagem aqui, pois a recorrência só afeta o jogo
     }
 }
 
@@ -93,13 +97,13 @@ function removeSubject(subjectName) {
     }
 }
 
-// Atualizar contador total de perguntas
+// Atualizar contador total de perguntas (SEM recorrência)
 function updateTotalQuestionsCount() {
     let totalQuestions = 0;
     if (window.subjects) {
         Object.values(window.subjects).forEach(subject => {
             if (subject.enabled) {
-                totalQuestions += subject.questions.length;
+                totalQuestions += subject.questions.length; // Conta apenas perguntas originais
             }
         });
     }
