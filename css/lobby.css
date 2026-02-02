@@ -1,0 +1,254 @@
+/* css/lobby.css - Estilos específicos do lobby */
+#lobby-screen {
+    background: linear-gradient(135deg, #002244 0%, #003366);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.lobby-container {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    border: 4px solid #FFCC00;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+.lobby-container h2 {
+    color: #003366;
+    margin-bottom: 30px;
+    font-size: 1.8em;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.lobby-options {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.lobby-option {
+    padding: 25px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    border: 3px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.lobby-option:hover {
+    border-color: #003366;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.lobby-option h3 {
+    color: #003366;
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    text-transform: uppercase;
+}
+
+.lobby-hint {
+    margin-top: 10px;
+    color: #666;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.lobby-btn {
+    background: linear-gradient(145deg, #003366, #002244);
+    color: #FFCC00 !important;
+    border: 3px solid #FFCC00;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.lobby-btn:hover {
+    background: linear-gradient(145deg, #002244, #001933);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.lobby-btn.start-btn {
+    background: linear-gradient(145deg, #28a745, #1e7e34);
+    border-color: #155724;
+}
+
+.lobby-btn.start-btn:hover {
+    background: linear-gradient(145deg, #218838, #1c7430);
+}
+
+/* Informações da sala */
+#room-info {
+    background: #e9ecef;
+    padding: 20px;
+    border-radius: 15px;
+    border: 3px solid #28a745;
+    margin-top: 20px;
+    animation: fadeIn 0.5s ease;
+}
+
+#current-room-code {
+    background: #003366;
+    color: #FFCC00;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 1.5em;
+    font-weight: 900;
+    letter-spacing: 3px;
+    display: inline-block;
+    margin: 0 10px;
+    font-family: monospace;
+}
+
+.room-success {
+    color: #28a745;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+/* Lista de jogadores */
+#players-list {
+    margin-top: 20px;
+    text-align: left;
+}
+
+#players-list h4 {
+    color: #003366;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.player-item {
+    background: white;
+    padding: 10px 15px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border-left: 4px solid #003366;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.player-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.player-item.master {
+    border-left-color: #FFCC00;
+    background: #fff3cd;
+}
+
+.player-item:before {
+    content: "👤";
+}
+
+.player-item.master:before {
+    content: "👑";
+}
+
+.player-icon {
+    font-size: 1.2em;
+}
+
+.player-name {
+    flex: 1;
+    font-weight: 600;
+    color: #003366;
+}
+
+.player-status {
+    color: #6c757d;
+    font-size: 0.9em;
+    min-width: 100px;
+    text-align: center;
+}
+
+.player-score {
+    background: #003366;
+    color: #FFCC00;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 0.9em;
+    min-width: 60px;
+    text-align: center;
+}
+
+.no-players {
+    color: #6c757d;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Status da sala */
+.game-status {
+    font-size: 0.6em;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 15px;
+    margin-left: 10px;
+}
+
+/* Botões do Google */
+.google-btn {
+    background: #fff;
+    border: 3px solid #dee2e6;
+    color: #333;
+    padding: 14px 24px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 0 auto;
+    width: 100%;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.google-btn:hover {
+    background: #f8f9fa;
+    border-color: #003366;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+.google-btn img {
+    width: 22px;
+    height: 22px;
+}
+
+/* Mensagens de erro do login */
+.login-error {
+    color: #dc3545;
+    background: #f8d7da;
+    border: 2px solid #f5c6cb;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 20px;
+    display: none;
+    font-weight: 600;
+    text-align: center;
+}

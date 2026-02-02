@@ -1,2 +1,339 @@
-/* css/responsive.css */
-@media (max-width:768px){.performance-row{flex-direction:column;align-items:flex-start;gap:5px}.performance-info{align-self:flex-end;font-size:.75em}}@media (max-width:480px){.performance-display{max-height:300px}}
+/* css/responsive.css - Regras responsivas */
+@media (max-width: 1200px) {
+    .config-main-area {
+        flex-direction: column;
+    }
+    
+    .team-config, .file-upload-container {
+        width: 100%;
+    }
+    
+    .question-main-area {
+        flex-direction: column;
+    }
+    
+    .active-team-sidebar {
+        width: 100%;
+        min-width: auto;
+        order: -1;
+    }
+}
+
+@media (max-width: 992px) {
+    .lobby-container {
+        padding: 25px;
+    }
+    
+    .team-card {
+        width: 100%;
+        height: 550px;
+        margin: 5px 0;
+    }
+    
+    .bomb-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.5em;
+        letter-spacing: 2px;
+    }
+    
+    .lobby-container h2 {
+        font-size: 1.5em;
+    }
+    
+    .lobby-option {
+        padding: 20px;
+    }
+    
+    .team-config h3, .file-upload h3, .subjects-config h3 {
+        font-size: 1.2em;
+        letter-spacing: 1px;
+    }
+    
+    .team-config h3::before, .team-config h3::after,
+    .file-upload h3::before, .file-upload h3::after,
+    .subjects-config h3::before, .subjects-config h3::after {
+        left: 15%;
+        right: 15%;
+    }
+    
+    .question-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .question-header-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .question-header-buttons button {
+        min-width: 100px;
+        padding: 8px 16px !important;
+        font-size: 13px !important;
+    }
+    
+    .team-turn::after {
+        display: none;
+    }
+    
+    .team-card-header {
+        flex-direction: column;
+        height: auto;
+        gap: 10px;
+    }
+    
+    .team-info-left, .team-info-right {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .team-info-right {
+        align-items: center;
+    }
+    
+    .team-score {
+        font-size: 1.5em;
+        padding: 8px 15px;
+    }
+    
+    .performance-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .performance-info {
+        align-self: flex-end;
+        font-size: .75em;
+    }
+    
+    .assunto-container {
+        font-size: .85em;
+        padding: 10px;
+    }
+    
+    .assunto-text {
+        font-size: .85em;
+    }
+    
+    #current-room-code {
+        font-size: 1.2em;
+        letter-spacing: 2px;
+    }
+    
+    .podium-container {
+        height: 300px;
+        gap: 10px;
+    }
+    
+    .podium-place {
+        width: 180px;
+    }
+    
+    .podium-step {
+        width: 150px;
+    }
+    
+    .podium-step-1 {
+        height: 200px;
+    }
+    
+    .podium-step-2 {
+        height: 160px;
+    }
+    
+    .podium-step-3 {
+        height: 130px;
+    }
+    
+    .simple-team-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2.5em;
+    }
+    
+    .podium-name {
+        font-size: 1.2em;
+    }
+    
+    .podium-score {
+        font-size: 1.1em;
+    }
+    
+    .commentary {
+        padding: 16px;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    
+    .commentary p {
+        margin-bottom: 14px;
+        padding-bottom: 14px;
+    }
+    
+    .commentary-section {
+        padding: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .game-chat {
+        margin: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        padding: 25px;
+    }
+    
+    .login-container h2 {
+        font-size: 1.5em;
+    }
+    
+    .login-input, .login-btn, .signup-btn {
+        padding: 14px;
+    }
+    
+    .team-card {
+        height: 500px;
+    }
+    
+    .performance-display {
+        max-height: 300px;
+    }
+    
+    #start-game-btn, #open-notes-config {
+        padding: 15px 30px !important;
+        font-size: 16px !important;
+        min-width: auto !important;
+        max-width: 100% !important;
+    }
+    
+    .answer-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .answer-btn, .skip-btn, .next-btn, .podium-btn {
+        width: 100%;
+        max-width: 250px;
+    }
+    
+    .podium-container {
+        height: 250px;
+        gap: 8px;
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+    }
+    
+    .podium-place {
+        width: 100%;
+        max-width: 250px;
+        margin-bottom: 20px;
+    }
+    
+    .podium-step {
+        width: 100%;
+        height: 60px !important;
+        border-radius: 10px;
+        margin-bottom: 70px;
+    }
+    
+    .podium-step-1 {
+        order: 1;
+    }
+    
+    .podium-step-2 {
+        order: 2;
+    }
+    
+    .podium-step-3 {
+        order: 3;
+    }
+    
+    .podium-badge {
+        top: -40px;
+        font-size: 2.5em;
+    }
+    
+    .simple-team-avatar {
+        width: 70px;
+        height: 70px;
+        font-size: 2em;
+    }
+    
+    .podium-buttons-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .bomb-title {
+        font-size: 1.5em;
+    }
+    
+    .question-item, .answer-item {
+        padding: 12px;
+        font-size: .9em;
+    }
+    
+    .question-number, .answer-letter {
+        font-size: 1em;
+        min-width: 25px;
+    }
+    
+    .panel-title {
+        font-size: 1em;
+        padding: 10px;
+    }
+    
+    .penalty-modal-content {
+        margin: 20% auto;
+        width: 95%;
+    }
+    
+    .commentary {
+        padding: 12px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    .commentary br+br {
+        margin: 15px 0;
+    }
+    
+    .chat-input-container {
+        flex-direction: column;
+    }
+    
+    .user-badge {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin: 10px auto;
+        width: fit-content;
+    }
+}
+
+/* Impressão */
+@media print {
+    .screen:not(.active) {
+        display: none !important;
+    }
+    
+    button, .back-to-lobby, .logout-btn {
+        display: none !important;
+    }
+    
+    .question-area, .team-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}

@@ -3,157 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PATROL - Jogo de Perguntas e Respostas</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>PATROL - Jogo de Perguntas e Respostas Multiplayer</title>
+    
+    <!-- CSS Dividido -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/cards.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/podium.css">
+    <link rel="stylesheet" href="css/bomb-question.css">
     <link rel="stylesheet" href="css/performance.css">
-    <style>
-        /* ESTILOS TEMPORÁRIOS PARA LOBBY (depois movemos para style.css) */
-        #lobby-screen {
-            background: linear-gradient(135deg, #002244 0%, #003366);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .lobby-container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            border: 4px solid #FFCC00;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
-        
-        .lobby-container h2 {
-            color: #003366;
-            margin-bottom: 30px;
-            font-size: 1.8em;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .lobby-options {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .lobby-option {
-            padding: 25px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            border: 3px solid #dee2e6;
-        }
-        
-        .lobby-option h3 {
-            color: #003366;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-        
-        .lobby-btn {
-            background: linear-gradient(145deg, #003366, #002244);
-            color: #FFCC00 !important;
-            border: 3px solid #FFCC00;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-        }
-        
-        .lobby-btn:hover {
-            background: linear-gradient(145deg, #002244, #001933);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        
-        .lobby-input {
-            padding: 16px;
-            border: 3px solid #dee2e6;
-            border-radius: 12px;
-            font-size: 16px;
-            width: 100%;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        
-        .lobby-input:focus {
-            border-color: #003366;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0,51,102,0.2);
-        }
-        
-        #room-info {
-            background: #e9ecef;
-            padding: 20px;
-            border-radius: 15px;
-            border: 3px solid #28a745;
-            margin-top: 20px;
-        }
-        
-        #current-room-code {
-            background: #003366;
-            color: #FFCC00;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 1.5em;
-            font-weight: 900;
-            letter-spacing: 3px;
-            display: inline-block;
-            margin: 0 10px;
-        }
-        
-        .player-item {
-            background: white;
-            padding: 10px 15px;
-            margin: 8px 0;
-            border-radius: 8px;
-            border-left: 4px solid #003366;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .player-item:before {
-            content: "👤";
-        }
-        
-        .back-to-lobby {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: linear-gradient(145deg, #6c757d, #5a6268);
-            border-color: #545b62;
-            color: #FFCC00;
-            padding: 10px 20px;
-            font-size: 14px;
-        }
-        
-        @media (max-width: 768px) {
-            .lobby-options {
-                flex-direction: column;
-            }
-            
-            .lobby-container {
-                padding: 25px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/lobby.css">
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
     <div class="container">
@@ -200,7 +63,7 @@
                         <button id="create-room-btn" class="lobby-btn">
                             Criar como Mestre 👑
                         </button>
-                        <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                        <p class="lobby-hint">
                             Você controla o jogo e as perguntas
                         </p>
                     </div>
@@ -212,7 +75,7 @@
                         <button id="join-room-btn" class="lobby-btn">
                             Entrar como Jogador 🎮
                         </button>
-                        <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                        <p class="lobby-hint">
                             Peça o código para quem criou a partida
                         </p>
                     </div>
@@ -221,9 +84,9 @@
                 <!-- Código da Sala (quando mestre) -->
                 <div id="room-info" style="display: none;">
                     <h3>📋 Código da Sala: <span id="current-room-code">ABC123</span></h3>
-                    <p style="color: #28a745; font-weight: bold;">✔ Compartilhe este código com os jogadores</p>
+                    <p class="room-success">✔ Compartilhe este código com os jogadores</p>
                     <div id="players-list"></div>
-                    <button id="start-game-btn-lobby" class="lobby-btn" style="background: linear-gradient(145deg, #28a745, #1e7e34); margin-top: 20px;">
+                    <button id="start-game-btn-lobby" class="lobby-btn start-btn">
                         🚀 Iniciar Jogo
                     </button>
                 </div>
@@ -233,7 +96,7 @@
         <!-- ===== TELA DE CONFIGURAÇÃO (APENAS MESTRE) ===== -->
         <div id="config-screen" class="screen">
             <button id="back-to-lobby-config" class="back-to-lobby">← Voltar ao Lobby</button>
-            <button id="logout-btn" class="logout-btn" style="display: none;">🚪 Sair</button>
+            <button id="logout-btn" class="logout-btn">🚪 Sair</button>
             
             <h1>PATROL - Configuração do Mestre</h1>
             
@@ -247,7 +110,7 @@
                             <button class="remove-team" onclick="removeTeam(this)">🗑️</button>
                         </div>
                     </div>
-                    <button id="add-team-btn">➕ Adicionar Equipe</button>
+                    <button id="add-team-btn" class="add-team-btn">➕ Adicionar Equipe</button>
                     <div id="team-error" class="error-message">⚠️ Configure pelo menos uma equipe</div>
                 </div>
 
@@ -277,7 +140,7 @@
                     </div>
 
                     <div class="performance-config-container">
-                        <div>
+                        <div class="performance-header">
                             <span>📊</span> Performance por Assunto
                             <div class="performance-header-controls">
                                 <button onclick="exportPerformanceToExcel()" class="performance-header-btn" title="Exportar Performance">
@@ -288,16 +151,16 @@
                                 </button>
                             </div>
                         </div>
-                        <div>
+                        <div class="performance-description">
                             Importe/exporte dados de performance para acompanhamento histórico.
                         </div>
-                        <div>
+                        <div class="performance-note">
                             Os dados são salvos automaticamente durante o jogo.
                         </div>
-                        <input type="file" id="import-performance-file" accept=".csv">
+                        <input type="file" id="import-performance-file" accept=".csv" class="performance-file-input">
                     </div>
 
-                    <button id="start-game-btn" disabled>🎮 Iniciar Jogo para Todos</button>
+                    <button id="start-game-btn" class="start-game-btn" disabled>🎮 Iniciar Jogo para Todos</button>
                     
                     <div class="ranking-button-container">
                         <button id="open-notes-config" class="notes-btn">📝 Bloco de Notas</button>
@@ -310,7 +173,7 @@
         <div id="game-screen" class="screen">
             <button id="back-to-lobby-game" class="back-to-lobby">← Sair da Partida</button>
             
-            <h1>PATROL <span id="game-status" style="font-size: 0.6em; color: #FFCC00;">● Conectado</span></h1>
+            <h1>PATROL <span id="game-status" class="game-status">● Conectado</span></h1>
             
             <div class="question-main-area">
                 <div class="question-area">
@@ -321,7 +184,7 @@
                         <div id="team-turn" class="team-turn">🎯 Aguardando início...</div>
                         <div class="question-header-buttons">
                             <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
-                            <div id="master-controls" style="display: none;">
+                            <div id="master-controls" class="master-controls" style="display: none;">
                                 <button id="master-next-btn" class="config-btn">⏭️ Avançar</button>
                             </div>
                         </div>
@@ -344,8 +207,8 @@
                 <div class="active-team-sidebar">
                     <div id="active-team-display"></div>
                     <!-- Placar em tempo real -->
-                    <div id="live-scoreboard" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 2px solid #003366;">
-                        <h4 style="color: #003366; margin-bottom: 10px;">🏆 Placar ao Vivo</h4>
+                    <div id="live-scoreboard" class="live-scoreboard">
+                        <h4>🏆 Placar ao Vivo</h4>
                         <div id="scoreboard-content"></div>
                     </div>
                 </div>
@@ -355,14 +218,14 @@
                 <div id="teams-display"></div>
             </div>
             
-            <!-- Chat simples -->
-            <div id="game-chat" style="max-width: 800px; margin: 20px auto; display: none;">
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border: 2px solid #dee2e6;">
-                    <h4 style="color: #003366; margin-bottom: 10px;">💬 Chat da Partida</h4>
-                    <div id="chat-messages" style="height: 150px; overflow-y: auto; margin-bottom: 10px; padding: 10px; background: white; border-radius: 5px;"></div>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="chat-input" placeholder="Digite uma mensagem..." style="flex: 1; padding: 10px; border: 2px solid #dee2e6; border-radius: 5px;">
-                        <button id="send-chat-btn" style="background: #003366; color: #FFCC00; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Enviar</button>
+            <!-- Chat multiplayer -->
+            <div id="game-chat" class="game-chat">
+                <div class="chat-container">
+                    <h4>💬 Chat da Partida</h4>
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Digite uma mensagem...">
+                        <button id="send-chat-btn">Enviar</button>
                     </div>
                 </div>
             </div>
@@ -402,7 +265,6 @@
     </div>
 
     <!-- ===== BIBLIOTECAS EXTERNAS ===== -->
-    <!-- Biblioteca XLSX (SEMPRE primeiro) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <!-- Firebase SDK -->
@@ -436,28 +298,40 @@
     <!-- AUTH.JS COM LOBBY -->
     <script src="js/auth.js"></script>
 
-    <!-- SISTEMA DE SALAS (NOVO) -->
-    <script src="js/rooms.js"></script>
+    <!-- SISTEMA DE SALAS DIVIDIDO -->
+    <script src="js/rooms/core.js"></script>
+    <script src="js/rooms/room-manager.js"></script>
+    <script src="js/rooms/listeners.js"></script>
+    <script src="js/rooms/actions.js"></script>
+    <script src="js/rooms/ui.js"></script>
+    <script src="js/rooms/master-controls.js"></script>
+    <script src="js/rooms/init.js"></script>
 
     <!-- ===== JAVASCRIPT DO JOGO ===== -->
     <!-- ORDEM CRÍTICA DE CARREGAMENTO -->
-    <script src="js/external.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/teams.js"></script>
+    <script src="js/external.js"></script>
+    
+    <!-- Performance -->
     <script src="js/teams-performance/core.js"></script>
     <script src="js/teams-performance/tracking.js"></script>
     <script src="js/teams-performance/import-export.js"></script>
     <script src="js/teams-performance/display.js"></script>
     <script src="js/teams-performance/init.js"></script>
+    
+    <!-- Game Core -->
     <script src="js/game/core.js"></script>
     <script src="js/answers/core.js"></script>
+    <script src="js/answers/checkAnswer.js"></script>
     <script src="js/answers/correct.js"></script>
     <script src="js/answers/wrong.js"></script>
     <script src="js/answers/skip.js"></script>
-    <script src="js/answers/checkAnswer.js"></script>
     <script src="js/answers/winner.js"></script>
     <script src="js/game/podium.js"></script>
     <script src="js/game/notes.js"></script>
+    
+    <!-- Bomb Question -->
     <script src="js/bombQuestion/penaltyModal.js"></script>
     <script src="js/bombQuestion/fileLoader.js"></script>
     <script src="js/bombQuestion/ui-manager.js"></script>
@@ -466,40 +340,31 @@
     <script src="js/bombQuestion/core-base.js"></script>
     <script src="js/bombQuestion/config.js"></script>
     <script src="js/bombQuestion/main.js"></script>
+    
+    <!-- File Upload -->
     <script src="js/fileUpload/main.js"></script>
     <script src="js/fileUpload/core.js"></script>
     <script src="js/fileUpload/subjects.js"></script>
     <script src="js/fileUpload/status.js"></script>
+    
+    <!-- Game Events -->
     <script src="js/gameEvents/main.js"></script>
     <script src="js/gameEvents/core.js"></script>
     <script src="js/gameEvents/answerButtons.js"></script>
     <script src="js/gameEvents/controlButtons.js"></script>
     <script src="js/gameEvents/teamTurn.js"></script>
     <script src="js/gameEvents/keyboard.js"></script>
+    
+    <!-- Main -->
     <script src="js/main/buttonTester.js"></script>
     <script src="js/main/notesLoader.js"></script>
     <script src="js/main/configEvents.js"></script>
     <script src="js/main/configScreen.js"></script>
     <script src="js/main/gameStart.js"></script>
+    <script src="js/main/init.js"></script>
     <script src="js/debug.js"></script>
     
-    <!-- MULTIPLAYER (NOVO) -->
+    <!-- MULTIPLAYER -->
     <script src="js/game/multiplayer.js"></script>
-    
-    <!-- Inicialização do Sistema -->
-    <script src="js/main/init.js"></script>
-    
-    <!-- INICIALIZAR SISTEMA DE SALAS -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar sistema de salas quando auth estiver pronto
-            setTimeout(() => {
-                if (window.authSystem && window.authSystem.currentUser) {
-                    window.roomSystem = new RoomSystem();
-                    console.log('✅ Sistema de salas inicializado');
-                }
-            }, 1000);
-        });
-    </script>
 </body>
 </html>
