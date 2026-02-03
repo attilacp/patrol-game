@@ -1,4 +1,4 @@
-// js/rooms/listeners.js - VERSÃO FINAL
+// js/rooms/listeners.js - VERSÃO COMPLETA CORRIGIDA
 console.log('🏠 rooms/listeners.js carregando...');
 
 RoomSystem.prototype.setupRoomListeners = function() {
@@ -35,6 +35,8 @@ RoomSystem.prototype.setupRoomListeners = function() {
 };
 
 RoomSystem.prototype.cleanupAllListeners = function() {
+    console.log('🧹 Limpando TODOS os listeners...');
+    
     // Limpar listeners da sala
     this.roomListeners.forEach(item => {
         if (item.ref && item.listener) {
@@ -42,6 +44,14 @@ RoomSystem.prototype.cleanupAllListeners = function() {
         }
     });
     this.roomListeners = [];
+    
+    // Limpar listeners de ações
+    this.actionListeners.forEach(item => {
+        if (item.ref && item.listener) {
+            item.ref.off('child_added', item.listener);
+        }
+    });
+    this.actionListeners = [];
     
     // Resetar flags
     this.lastStatus = null;
@@ -90,6 +100,14 @@ RoomSystem.prototype.handleStatusChange = function(status) {
         console.log('🎮 Jogo iniciado pelo mestre!');
         this.jogoIniciadoParaJogador = true;
         
+        // Mostrar alerta APENAS UMA VEZ
+        if (!this.alertaMostrado) {
+            this.alertaMostrado = true;
+            setTimeout(() => {
+                alert('🎮 O mestre iniciou o jogo!\n\nSincronizando dados...');
+            }, 500);
+        }
+        
         // Ir para tela do jogo com delay
         setTimeout(() => {
             if (window.authSystem) {
@@ -98,14 +116,6 @@ RoomSystem.prototype.handleStatusChange = function(status) {
                 
                 // Buscar dados do jogo
                 this.fetchGameDataFromFirebase();
-                
-                // Mostrar alerta APENAS UMA VEZ
-                if (!this.alertaMostrado) {
-                    this.alertaMostrado = true;
-                    setTimeout(() => {
-                        alert('🎮 O mestre iniciou o jogo!\n\nSincronizando dados...');
-                    }, 500);
-                }
             }
         }, 1000);
     }
@@ -154,7 +164,9 @@ RoomSystem.prototype.fetchGameDataFromFirebase = async function() {
                     questionsWrong: team.questionsWrong || 0,
                     colorClass: team.colorClass || `team-bg-${(index % 10) + 1}`,
                     turnColorClass: team.turnColorClass || `team-color-${(index % 10) + 1}`,
-                    colorName: team.colorName || window.teamColorSchemes[index % window.teamColorSchemes.length]?.name || 'Padrão'
+                    colorName: team.colorName || window.teamColorSchemes?.[index % window.teamColorSchemes?.length]?.name || 'Padrão',
+                    performanceBySubject: team.performanceBySubject || {},
+                    questionsBySubject: team.questionsBySubject || {}
                 };
             });
         } else {
@@ -163,12 +175,75 @@ RoomSystem.prototype.fetchGameDataFromFirebase = async function() {
             return;
         }
         
+        // APLICAR ORDEM DO FIREBASE (CRÍTICO PARA SINCRONIZAÇÃO)
+        await this.applyFirebaseOrder();
+        
         // INICIAR JOGO PARA JOGADOR
         this.startGameForPlayer();
         
     } catch (error) {
         console.error('❌ ERRO ao buscar dados:', error);
         this.showDataError();
+    }
+};
+
+RoomSystem.prototype.applyFirebaseOrder = async function() {
+    if (!this.currentRoom) return;
+    
+    try {
+        const orderRef = firebase.database().ref('rooms/' + this.currentRoom + '/gameData/order');
+        const orderSnap = await orderRef.once('value');
+        
+        if (orderSnap.exists()) {
+            const orderData = orderSnap.val();
+            console.log('🔄 Aplicando ordem do Firebase:', orderData.isRandom ? 'ALEATÓRIA' : 'SEQUENCIAL');
+            
+            // Reordenar perguntas conforme salvo no Firebase
+            if (orderData.questions && window.questions && window.questions.length > 0) {
+                const originalQuestions = [...window.questions];
+                const reorderedQuestions = [];
+                
+                // orderData.questions contém os índices na ordem correta
+                orderData.questions.forEach(originalIndex => {
+                    if (originalQuestions[originalIndex]) {
+                        reorderedQuestions.push(originalQuestions[originalIndex]);
+                    }
+                });
+                
+                // Se o array resultante tem o mesmo tamanho, aplicar
+                if (reorderedQuestions.length === window.questions.length) {
+                    window.questions = reorderedQuestions;
+                    console.log('✅ Perguntas reordenadas conforme Firebase');
+                } else {
+                    console.warn('⚠️ Tamanho diferente, mantendo ordem original');
+                }
+            }
+            
+            // Reordenar equipes conforme salvo no Firebase
+            if (orderData.teams && window.teams && window.teams.length > 0) {
+                const teamMap = {};
+                window.teams.forEach(team => {
+                    teamMap[team.id] = team;
+                });
+                
+                const reorderedTeams = [];
+                orderData.teams.forEach(teamId => {
+                    if (teamMap[teamId]) {
+                        reorderedTeams.push(teamMap[teamId]);
+                    }
+                });
+                
+                // Aplicar se o tamanho for igual
+                if (reorderedTeams.length === window.teams.length) {
+                    window.teams = reorderedTeams;
+                    console.log('✅ Equipes reordenadas conforme Firebase');
+                }
+            }
+        } else {
+            console.log('ℹ️ Nenhuma ordem específica no Firebase, usando ordem recebida');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao aplicar ordem:', error);
     }
 };
 
@@ -180,11 +255,16 @@ RoomSystem.prototype.startGameForPlayer = function() {
     window.currentTeamIndex = 0;
     window.gameStarted = true;
     window.winnerTeam = null;
+    window.consecutiveCorrect = 0;
+    window.currentQuestionAnswered = false;
+    window.keyboardEnabled = true;
     
     console.log('📊 Dados recebidos:');
     console.log('- Perguntas:', window.questions.length);
     console.log('- Equipes:', window.teams.length);
-    console.log('- Equipe atual:', window.teams[0]?.name);
+    if (window.teams[0]) {
+        console.log('- Primeira equipe:', window.teams[0].name);
+    }
     
     // Atualizar interface
     setTimeout(() => {
@@ -212,6 +292,14 @@ RoomSystem.prototype.startGameForPlayer = function() {
             console.error('❌ showQuestion não disponível');
             // Fallback manual
             this.showQuestionFallback();
+        }
+        
+        // Inicializar sistema de turnos se disponível
+        if (window.turnSystem) {
+            console.log('✅ Sistema de turnos ativo para jogador');
+            
+            // Jogador precisa ouvir mudanças de turno do mestre
+            // O turn-system.js já configura isso automaticamente
         }
         
         console.log('✅ Jogo iniciado para jogador');
@@ -256,6 +344,7 @@ RoomSystem.prototype.updateTeamsDisplayFallback = function() {
     const teamTurn = document.getElementById('team-turn');
     if (teamTurn && window.teams[0]) {
         teamTurn.textContent = `🎯 ${window.teams[0].name} - DE PLANTÃO`;
+        teamTurn.className = 'team-turn ' + (window.teams[0].turnColorClass || 'team-color-1');
     }
 };
 

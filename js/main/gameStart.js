@@ -1,4 +1,4 @@
-// js/main/gameStart.js - VERSÃO FINAL
+// js/main/gameStart.js - VERSÃO COMPLETA CORRIGIDA
 console.log('🚀 gameStart.js carregando...');
 
 // GARANTIR QUE A FUNÇÃO É GLOBAL
@@ -62,7 +62,7 @@ if (typeof window.startGame !== 'function') {
         
         console.log('👥 Equipes coletadas:', window.teams.length);
         
-        // 3. SALVAR NO FIREBASE
+        // 3. SALVAR NO FIREBASE (APENAS MESTRE)
         if (window.roomSystem && window.roomSystem.isMaster && window.roomSystem.currentRoom) {
             try {
                 const roomCode = window.roomSystem.currentRoom;
@@ -74,17 +74,53 @@ if (typeof window.startGame !== 'function') {
                 await roomRef.child('status').set('playing');
                 console.log('✅ Status: playing');
                 
-                // PERGUNTAS
+                // SALVAR PERGUNTAS - COM ORDEM
                 console.log('💾 Salvando perguntas...');
                 await roomRef.child('gameData/questions').set(window.questions);
                 console.log('✅ Perguntas salvas:', window.questions.length);
                 
-                // EQUIPES (com estrutura correta)
+                // SALVAR EQUIPES
                 console.log('💾 Salvando equipes...');
                 await roomRef.child('gameData/teams').set(window.teams);
                 console.log('✅ Equipes salvas:', window.teams.length);
                 
-                // Estado do jogo
+                // VERIFICAR SE TEM ORDEM ALEATÓRIA E SALVAR ORDEM
+                const randomOrderCheckbox = document.getElementById('random-order');
+                const isRandomOrder = randomOrderCheckbox?.checked || false;
+                
+                if (isRandomOrder && typeof shuffleArray === 'function') {
+                    // Embaralhar cópias para não afetar o original ainda
+                    const shuffledTeams = [...window.teams];
+                    const shuffledQuestions = [...window.questions];
+                    
+                    shuffleArray(shuffledTeams);
+                    shuffleArray(shuffledQuestions);
+                    
+                    // Salvar ordem no Firebase
+                    await roomRef.child('gameData/order').set({
+                        teams: shuffledTeams.map(t => t.id),
+                        questions: shuffledQuestions.map((q, i) => i), // Salva índices embaralhados
+                        isRandom: true,
+                        timestamp: Date.now()
+                    });
+                    
+                    console.log('✅ Ordem aleatória salva no Firebase');
+                    
+                    // Aplicar ordem localmente
+                    window.teams = shuffledTeams;
+                    window.questions = shuffledQuestions;
+                } else {
+                    // Salvar ordem sequencial
+                    await roomRef.child('gameData/order').set({
+                        teams: window.teams.map(t => t.id),
+                        questions: window.questions.map((q, i) => i), // Índices normais
+                        isRandom: false,
+                        timestamp: Date.now()
+                    });
+                    console.log('✅ Ordem sequencial salva no Firebase');
+                }
+                
+                // SALVAR ESTADO DO JOGO
                 const gameState = {
                     startedAt: Date.now(),
                     currentQuestionIndex: 0,
@@ -98,18 +134,39 @@ if (typeof window.startGame !== 'function') {
                 await roomRef.child('gameState').set(gameState);
                 console.log('✅ Estado do jogo salvo');
                 
+                // VERIFICAÇÃO (opcional)
+                setTimeout(async () => {
+                    try {
+                        const verifyQuestions = await roomRef.child('gameData/questions').once('value');
+                        const verifyTeams = await roomRef.child('gameData/teams').once('value');
+                        const verifyOrder = await roomRef.child('gameData/order').once('value');
+                        
+                        console.log('🔍 VERIFICAÇÃO:');
+                        console.log('- Perguntas no Firebase:', verifyQuestions.exists() ? verifyQuestions.val().length : 'NÃO');
+                        console.log('- Equipes no Firebase:', verifyTeams.exists() ? verifyTeams.val().length : 'NÃO');
+                        console.log('- Ordem no Firebase:', verifyOrder.exists() ? 'SIM' : 'NÃO');
+                    } catch (verifyError) {
+                        console.error('❌ Erro na verificação:', verifyError);
+                    }
+                }, 1000);
+                
             } catch (error) {
                 console.error('❌ ERRO Firebase:', error);
                 alert('❌ Erro ao salvar: ' + error.message);
                 return;
             }
+        } else {
+            console.log('⚠️ Mestre sem sala ativa - iniciando localmente');
         }
         
         // 4. CONFIGURAÇÕES LOCAIS
         const randomOrderCheckbox = document.getElementById('random-order');
         window.randomOrder = randomOrderCheckbox?.checked || false;
         
-        if (window.randomOrder && typeof shuffleArray === 'function') {
+        // NOTA: O embaralhamento já foi feito acima se for mestre com Firebase
+        // Se for jogo local sem Firebase, aplicar aqui
+        if (window.randomOrder && typeof shuffleArray === 'function' && 
+            (!window.roomSystem || !window.roomSystem.isMaster)) {
             shuffleArray(window.teams);
             shuffleArray(window.questions);
         }
@@ -128,12 +185,37 @@ if (typeof window.startGame !== 'function') {
         document.getElementById('config-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
         
-        // 6. INICIALIZAR
+        // 6. INICIALIZAR SISTEMAS
         setTimeout(() => {
             if (typeof window.initializeGameEventListeners === 'function') {
                 window.initializeGameEventListeners();
             }
             
+            // Inicializar performance se disponível
+            if (typeof initTeamPerformanceSystem === 'function') {
+                initTeamPerformanceSystem();
+            }
+            
+            // Inicializar perguntas bomba se disponível
+            if (window.bombQuestionSystem?.resetUsedQuestions) {
+                window.bombQuestionSystem.resetUsedQuestions();
+            }
+            
+            // DEFINIR PRIMEIRA EQUIPE DE PLANTÃO (se for mestre)
+            if (window.roomSystem && window.roomSystem.isMaster && window.turnSystem) {
+                setTimeout(() => {
+                    if (window.teams && window.teams.length > 0) {
+                        window.turnSystem.setCurrentTurn(
+                            0, 
+                            window.teams[0].id, 
+                            window.teams[0].name
+                        );
+                        console.log('🎯 Primeira equipe de plantão definida:', window.teams[0].name);
+                    }
+                }, 800);
+            }
+            
+            // Atualizar display
             setTimeout(() => {
                 if (window.updateTeamsDisplay) {
                     window.updateTeamsDisplay();
@@ -144,20 +226,57 @@ if (typeof window.startGame !== 'function') {
                 }
                 
                 console.log('✅ JOGO INICIADO');
+                console.log('- Perguntas:', window.questions.length);
+                console.log('- Equipes:', window.teams.length);
+                if (window.roomSystem?.currentRoom) {
+                    console.log('- Sala:', window.roomSystem.currentRoom);
+                }
             }, 200);
         }, 100);
     };
     
-    console.log('✅ window.startGame definida');
+    console.log('✅ Função window.startGame definida');
 }
 
+// Funções auxiliares
 function applyRecurrence(questions, recurrence) {
     const multiplier = {baixa: 1, media: 2, alta: 3}[recurrence] || 3;
     const result = [];
     for (let i = 0; i < multiplier; i++) result.push(...questions);
+    console.log(`📊 Recorrência: ${recurrence} (${multiplier}x)`);
     return result;
 }
 
+function countQuestionsWithoutRecurrence() {
+    let totalQuestions = 0;
+    if (window.subjects) {
+        Object.values(window.subjects).forEach(subject => {
+            if (subject.enabled) {
+                totalQuestions += subject.questions.length;
+            }
+        });
+    }
+    return totalQuestions;
+}
+
+// Exportar funções globais
 window.applyRecurrence = applyRecurrence;
+window.countQuestionsWithoutRecurrence = countQuestionsWithoutRecurrence;
+
+if (typeof updateTotalQuestionsCount !== 'undefined') {
+    window.updateTotalQuestionsCount = function() {
+        let totalQuestions = countQuestionsWithoutRecurrence();
+        const totalEl = document.getElementById('total-questions');
+        if (totalEl) totalEl.textContent = totalQuestions;
+        return totalQuestions;
+    };
+} else {
+    window.updateTotalQuestionsCount = function() {
+        let totalQuestions = countQuestionsWithoutRecurrence();
+        const totalEl = document.getElementById('total-questions');
+        if (totalEl) totalEl.textContent = totalQuestions;
+        return totalQuestions;
+    };
+}
 
 console.log('✅ gameStart.js carregado');
