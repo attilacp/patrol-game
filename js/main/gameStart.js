@@ -1,10 +1,10 @@
-// js/main/gameStart.js - VERSÃO CORRIGIDA (salva dados no Firebase)
+// js/main/gameStart.js - VERSÃO FINAL CORRIGIDA
 console.log('🚀 gameStart.js carregando...');
 
 // GARANTIR QUE A FUNÇÃO É GLOBAL
 if (typeof window.startGame !== 'function') {
     window.startGame = async function() {
-        console.log('🎮 Função startGame executada!');
+        console.log('🎮 MESTRE: Iniciando jogo...');
         
         // 1. COLETAR PERGUNTAS
         window.questions = [];
@@ -20,6 +20,8 @@ if (typeof window.startGame !== 'function') {
             alert('❌ Erro: Nenhuma pergunta carregada ou selecionada.');
             return;
         }
+        
+        console.log('📊 Perguntas coletadas:', window.questions.length);
         
         // 2. COLETAR EQUIPES
         window.teams = [];
@@ -53,49 +55,76 @@ if (typeof window.startGame !== 'function') {
             return;
         }
         
-        // 3. SALVAR NO FIREBASE (APENAS MESTRE)
+        console.log('👥 Equipes coletadas:', window.teams.length);
+        
+        // 3. SALVAR NO FIREBASE (CRÍTICO - MESTRE)
         if (window.roomSystem && window.roomSystem.isMaster && window.roomSystem.currentRoom) {
             try {
-                console.log('💾 Mestre salvando dados no Firebase...');
+                const roomCode = window.roomSystem.currentRoom;
+                console.log('💾 SALVANDO NO FIREBASE - Sala:', roomCode);
                 
-                // Atualizar status da sala
-                const roomRef = firebase.database().ref('rooms/' + window.roomSystem.currentRoom);
+                const roomRef = firebase.database().ref('rooms/' + roomCode);
+                
+                // ATUALIZAR STATUS PRIMEIRO
                 await roomRef.child('status').set('playing');
-                console.log('✅ Status da sala atualizado para "playing"');
+                console.log('✅ Status atualizado para "playing"');
                 
-                // Salvar estado do jogo
+                // SALVAR PERGUNTAS - CAMINHO CORRETO
+                console.log('💾 Salvando perguntas...');
+                await roomRef.child('gameData/questions').set(window.questions);
+                console.log('✅ Perguntas salvas:', window.questions.length);
+                
+                // SALVAR EQUIPES - CAMINHO CORRETO
+                console.log('💾 Salvando equipes...');
+                await roomRef.child('gameData/teams').set(window.teams);
+                console.log('✅ Equipes salvas:', window.teams.length);
+                
+                // SALVAR ESTADO DO JOGO
                 const gameState = {
                     startedAt: Date.now(),
                     currentQuestionIndex: 0,
                     currentTeamIndex: 0,
                     scores: {},
                     mestre: window.roomSystem.playerName,
-                    roomCode: window.roomSystem.currentRoom,
-                    totalQuestions: window.questions.length
+                    roomCode: roomCode,
+                    totalQuestions: window.questions.length,
+                    totalTeams: window.teams.length
                 };
                 await roomRef.child('gameState').set(gameState);
                 console.log('✅ Estado do jogo salvo');
                 
-                // SALVAR PERGUNTAS PARA OS JOGADORES
-                await firebase.database().ref('rooms/' + window.roomSystem.currentRoom + '/gameData/questions')
-                    .set(window.questions);
-                console.log('✅ Perguntas salvas para jogadores:', window.questions.length);
-                
-                // SALVAR EQUIPES PARA OS JOGADORES
-                await firebase.database().ref('rooms/' + window.roomSystem.currentRoom + '/gameData/teams')
-                    .set(window.teams);
-                console.log('✅ Equipes salvas para jogadores:', window.teams.length);
+                // VERIFICAR SE OS DADOS FORAM SALVOS
+                setTimeout(async () => {
+                    try {
+                        const verifyQuestions = await roomRef.child('gameData/questions').once('value');
+                        const verifyTeams = await roomRef.child('gameData/teams').once('value');
+                        
+                        console.log('🔍 VERIFICAÇÃO:');
+                        console.log('- Perguntas no Firebase:', verifyQuestions.exists() ? verifyQuestions.val().length : 'NÃO ENCONTRADO');
+                        console.log('- Equipes no Firebase:', verifyTeams.exists() ? verifyTeams.val().length : 'NÃO ENCONTRADO');
+                        
+                        if (!verifyQuestions.exists() || !verifyTeams.exists()) {
+                            console.error('❌ DADOS NÃO SALVOS CORRETAMENTE!');
+                            alert('⚠️ Problema ao salvar no Firebase. Tente novamente.');
+                        }
+                    } catch (verifyError) {
+                        console.error('❌ Erro na verificação:', verifyError);
+                    }
+                }, 1000);
                 
             } catch (error) {
-                console.error('❌ Erro ao salvar no Firebase:', error);
-                alert('⚠️ Erro ao sincronizar: ' + error.message + '\n\nO jogo começará localmente.');
+                console.error('❌ ERRO CRÍTICO ao salvar no Firebase:', error);
+                console.error('Detalhes:', error.message, error.code);
+                alert('❌ ERRO ao salvar no Firebase:\n\n' + error.message + '\n\nVerifique as regras do banco de dados.');
+                return; // Não continuar se não salvar
             }
+        } else {
+            console.log('⚠️ Mestre sem sala ativa - iniciando localmente');
         }
         
-        // 4. CONFIGURAÇÕES LOCAIS
+        // 4. CONFIGURAÇÕES LOCAIS (MESTRE)
         if (typeof loadSavedPerformance === 'function') {
             loadSavedPerformance();
-            console.log('✅ Performance salva carregada');
         }
         
         if (typeof resetTeamPerformance === 'function') {
@@ -104,7 +133,6 @@ if (typeof window.startGame !== 'function') {
         
         if (window.bombQuestionSystem?.resetUsedQuestions) {
             window.bombQuestionSystem.resetUsedQuestions();
-            console.log('✅ Perguntas bomba resetadas');
         }
         
         const randomOrderCheckbox = document.getElementById('random-order');
@@ -131,18 +159,28 @@ if (typeof window.startGame !== 'function') {
         
         // 6. INICIALIZAR SISTEMAS
         setTimeout(() => {
-            window.initializeGameEventListeners?.();
+            if (typeof window.initializeGameEventListeners === 'function') {
+                window.initializeGameEventListeners();
+            }
             
             if (typeof initTeamPerformanceSystem === 'function') {
                 initTeamPerformanceSystem();
-                console.log('✅ Sistema de performance inicializado');
             }
             
             setTimeout(() => {
-                window.updateTeamsDisplay?.();
-                window.showQuestion?.();
-                console.log('✅ Jogo iniciado com', window.questions.length, 'perguntas');
-            }, 150);
+                if (window.updateTeamsDisplay) {
+                    window.updateTeamsDisplay();
+                }
+                
+                if (window.showQuestion) {
+                    window.showQuestion();
+                }
+                
+                console.log('✅ JOGO INICIADO pelo mestre');
+                console.log('- Perguntas:', window.questions.length);
+                console.log('- Equipes:', window.teams.length);
+                console.log('- Sala:', window.roomSystem?.currentRoom);
+            }, 200);
         }, 100);
     };
     
@@ -154,40 +192,12 @@ function applyRecurrence(questions, recurrence) {
     const multiplier = {baixa: 1, media: 2, alta: 3}[recurrence] || 3;
     const result = [];
     for (let i = 0; i < multiplier; i++) result.push(...questions);
-    console.log(`📊 Recorrência: ${recurrence} (${multiplier}x) - ${questions.length} → ${result.length}`);
+    console.log(`📊 Recorrência: ${recurrence} (${multiplier}x)`);
     return result;
-}
-
-function countQuestionsWithoutRecurrence() {
-    let totalQuestions = 0;
-    if (window.subjects) {
-        Object.values(window.subjects).forEach(subject => {
-            if (subject.enabled) {
-                totalQuestions += subject.questions.length;
-            }
-        });
-    }
-    return totalQuestions;
 }
 
 // Exportar funções globais
 window.applyRecurrence = applyRecurrence;
-window.countQuestionsWithoutRecurrence = countQuestionsWithoutRecurrence;
-
-if (typeof updateTotalQuestionsCount !== 'undefined') {
-    window.updateTotalQuestionsCount = function() {
-        let totalQuestions = countQuestionsWithoutRecurrence();
-        const totalEl = document.getElementById('total-questions');
-        if (totalEl) totalEl.textContent = totalQuestions;
-        return totalQuestions;
-    };
-} else {
-    window.updateTotalQuestionsCount = function() {
-        let totalQuestions = countQuestionsWithoutRecurrence();
-        const totalEl = document.getElementById('total-questions');
-        if (totalEl) totalEl.textContent = totalQuestions;
-        return totalQuestions;
-    };
-}
+window.startGame = window.startGame; // Garantir exportação
 
 console.log('✅ gameStart.js carregado - window.startGame disponível');
