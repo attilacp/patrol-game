@@ -1,5 +1,5 @@
 // file name: js/main/configEvents.js
-// Event listeners da tela de configuração - SEM RANKING
+// Event listeners da tela de configuração
 
 function initializeConfigEventListeners() {
     console.log('🎯 Inicializando event listeners da configuração...');
@@ -19,10 +19,8 @@ function setupTeamManagementEvents() {
     if (addTeamBtn) {
         console.log('✅ Botão Adicionar Equipe encontrado');
         
-        // Remover event listeners antigos
         addTeamBtn.replaceWith(addTeamBtn.cloneNode(true));
         
-        // Obter nova referência
         const newAddTeamBtn = document.getElementById('add-team-btn');
         newAddTeamBtn.addEventListener('click', function() {
             console.log('➕ Botão Adicionar Equipe clicado!');
@@ -74,10 +72,8 @@ function setupFileUploadEvents() {
     if (excelFileInput) {
         console.log('✅ Input de arquivo encontrado');
         
-        // Remover event listeners antigos
         excelFileInput.replaceWith(excelFileInput.cloneNode(true));
         
-        // Obter nova referência
         const newExcelInput = document.getElementById('excel-file');
         newExcelInput.addEventListener('change', function(event) {
             console.log('📄 Arquivo selecionado:', event.target.files[0]?.name);
@@ -102,25 +98,43 @@ function setupGameStartEvents() {
     if (startGameBtn) {
         console.log('✅ Botão Iniciar Jogo encontrado');
         
-        // Remover event listeners antigos
         startGameBtn.replaceWith(startGameBtn.cloneNode(true));
         
-        // Obter nova referência
         const newStartBtn = document.getElementById('start-game-btn');
-        newStartBtn.addEventListener('click', function() {
+        newStartBtn.addEventListener('click', async function() {
             console.log('🚀 Botão Iniciar Jogo clicado!');
             console.log('🔍 Verificando função startGame:', typeof startGame);
             console.log('🔍 Verificando window.startGame:', typeof window.startGame);
             
+            // VERIFICAÇÃO EM CASCATA
             if (typeof startGame === 'function') {
                 console.log('✅ Função startGame encontrada localmente');
-                startGame();
+                try {
+                    await startGame();
+                } catch (error) {
+                    console.error('❌ Erro ao executar startGame:', error);
+                    alert('Erro ao iniciar jogo: ' + error.message);
+                }
             } else if (typeof window.startGame === 'function') {
                 console.log('✅ Função window.startGame encontrada');
-                window.startGame();
+                try {
+                    await window.startGame();
+                } catch (error) {
+                    console.error('❌ Erro ao executar window.startGame:', error);
+                    alert('Erro ao iniciar jogo: ' + error.message);
+                }
             } else {
                 console.error('❌ Função startGame não disponível em nenhum escopo');
-                alert('Erro: Sistema de jogo não carregado corretamente. Recarregue a página.');
+                
+                // DIAGNÓSTICO
+                console.log('🔍 Diagnóstico:');
+                console.log('- window.questions:', window.questions);
+                console.log('- window.teams:', window.teams);
+                console.log('- window.subjects:', window.subjects);
+                
+                // TENTAR CARREGAR MANUALMENTE
+                console.log('🔄 Tentando carregar gameStart.js manualmente...');
+                loadGameStartScriptManually();
             }
         });
         console.log('✅ Event listener do botão Iniciar Jogo configurado');
@@ -129,10 +143,29 @@ function setupGameStartEvents() {
     }
 }
 
+function loadGameStartScriptManually() {
+    const script = document.createElement('script');
+    script.src = 'js/main/gameStart.js';
+    script.onload = function() {
+        console.log('✅ gameStart.js recarregado manualmente');
+        console.log('🔍 window.startGame após recarregar:', typeof window.startGame);
+        
+        if (typeof window.startGame === 'function') {
+            alert('✅ Sistema recarregado! Clique em "Iniciar Jogo" novamente.');
+        } else {
+            alert('❌ Sistema ainda não carregado. Recarregue a página (F5).');
+        }
+    };
+    script.onerror = function() {
+        console.error('❌ Falha ao carregar gameStart.js manualmente');
+        alert('❌ Erro ao carregar sistema. Verifique console (F12).');
+    };
+    document.head.appendChild(script);
+}
+
 function setupUtilityEvents() {
     console.log('🔧 Configurando eventos utilitários...');
     
-    // Event listeners para controles de assunto
     const selectAllBtn = document.querySelector('button[onclick*="toggleAllSubjects(true)"]');
     const deselectAllBtn = document.querySelector('button[onclick*="toggleAllSubjects(false)"]');
     const clearAllBtn = document.querySelector('button[onclick*="clearAllSubjects()"]');
@@ -170,16 +203,13 @@ function setupUtilityEvents() {
         });
     }
     
-    // Event listeners para notas (REMOVIDO RANKING)
     const openNotesConfigBtn = document.getElementById('open-notes-config');
     
     if (openNotesConfigBtn) {
         console.log('✅ Botão Bloco de Notas encontrado');
         
-        // Remover event listeners antigos
         openNotesConfigBtn.replaceWith(openNotesConfigBtn.cloneNode(true));
         
-        // Obter nova referência
         const newNotesBtn = document.getElementById('open-notes-config');
         newNotesBtn.addEventListener('click', function() {
             console.log('📝 Botão Bloco de Notas clicado (config)');
@@ -196,7 +226,6 @@ function setupUtilityEvents() {
         console.error('❌ Botão Bloco de Notas não encontrado no DOM');
     }
     
-    // Event listeners para performance
     const importPerfBtn = document.querySelector('.performance-import-btn');
     const exportPerfBtn = document.querySelector('.performance-export-btn');
     
@@ -229,12 +258,12 @@ function setupUtilityEvents() {
     }
 }
 
-// Exportar para uso global
 window.initializeConfigEventListeners = initializeConfigEventListeners;
 window.setupTeamManagementEvents = setupTeamManagementEvents;
 window.setupFileUploadEvents = setupFileUploadEvents;
 window.setupGameStartEvents = setupGameStartEvents;
 window.setupUtilityEvents = setupUtilityEvents;
 window.fallbackAddTeam = fallbackAddTeam;
+window.loadGameStartScriptManually = loadGameStartScriptManually;
 
 console.log('✅ configEvents.js carregado com sucesso!');
