@@ -1,4 +1,4 @@
-// js/main/gameStart.js - VERSÃO FINAL CORRIGIDA
+// js/main/gameStart.js - VERSÃO FINAL
 console.log('🚀 gameStart.js carregando...');
 
 // GARANTIR QUE A FUNÇÃO É GLOBAL
@@ -17,13 +17,13 @@ if (typeof window.startGame !== 'function') {
         }
         
         if (window.questions.length === 0) {
-            alert('❌ Erro: Nenhuma pergunta carregada ou selecionada.');
+            alert('❌ Erro: Nenhuma pergunta carregada.');
             return;
         }
         
         console.log('📊 Perguntas coletadas:', window.questions.length);
         
-        // 2. COLETAR EQUIPES
+        // 2. COLETAR EQUIPES COM ESTRUTURA CORRETA
         window.teams = [];
         document.querySelectorAll('.team-input').forEach((input, index) => {
             const teamNameInput = input.querySelector('input[type="text"]');
@@ -31,13 +31,18 @@ if (typeof window.startGame !== 'function') {
             
             if (teamName) {
                 const playersInput = input.querySelectorAll('input[type="text"]')[1];
-                const players = playersInput?.value.split(',').map(p => p.trim()).filter(p => p) || [];
+                const playersValue = playersInput?.value || '';
+                
+                // Converter string para array
+                const players = playersValue.split(',').map(p => p.trim()).filter(p => p !== '');
+                
                 const colorScheme = window.teamColorSchemes[index % window.teamColorSchemes.length];
                 
+                // ESTRUTURA COMPLETA para Firebase
                 window.teams.push({
                     id: index + 1,
                     name: teamName,
-                    players: players,
+                    players: players, // Array, não string
                     score: 0,
                     questionsAnswered: 0,
                     questionsWrong: 0,
@@ -51,13 +56,13 @@ if (typeof window.startGame !== 'function') {
         });
         
         if (window.teams.length === 0) {
-            alert('❌ Erro: Configure pelo menos uma equipe com nome.');
+            alert('❌ Erro: Configure equipes.');
             return;
         }
         
         console.log('👥 Equipes coletadas:', window.teams.length);
         
-        // 3. SALVAR NO FIREBASE (CRÍTICO - MESTRE)
+        // 3. SALVAR NO FIREBASE
         if (window.roomSystem && window.roomSystem.isMaster && window.roomSystem.currentRoom) {
             try {
                 const roomCode = window.roomSystem.currentRoom;
@@ -65,21 +70,21 @@ if (typeof window.startGame !== 'function') {
                 
                 const roomRef = firebase.database().ref('rooms/' + roomCode);
                 
-                // ATUALIZAR STATUS PRIMEIRO
+                // Status primeiro
                 await roomRef.child('status').set('playing');
-                console.log('✅ Status atualizado para "playing"');
+                console.log('✅ Status: playing');
                 
-                // SALVAR PERGUNTAS - CAMINHO CORRETO
+                // PERGUNTAS
                 console.log('💾 Salvando perguntas...');
                 await roomRef.child('gameData/questions').set(window.questions);
                 console.log('✅ Perguntas salvas:', window.questions.length);
                 
-                // SALVAR EQUIPES - CAMINHO CORRETO
+                // EQUIPES (com estrutura correta)
                 console.log('💾 Salvando equipes...');
                 await roomRef.child('gameData/teams').set(window.teams);
                 console.log('✅ Equipes salvas:', window.teams.length);
                 
-                // SALVAR ESTADO DO JOGO
+                // Estado do jogo
                 const gameState = {
                     startedAt: Date.now(),
                     currentQuestionIndex: 0,
@@ -93,48 +98,14 @@ if (typeof window.startGame !== 'function') {
                 await roomRef.child('gameState').set(gameState);
                 console.log('✅ Estado do jogo salvo');
                 
-                // VERIFICAR SE OS DADOS FORAM SALVOS
-                setTimeout(async () => {
-                    try {
-                        const verifyQuestions = await roomRef.child('gameData/questions').once('value');
-                        const verifyTeams = await roomRef.child('gameData/teams').once('value');
-                        
-                        console.log('🔍 VERIFICAÇÃO:');
-                        console.log('- Perguntas no Firebase:', verifyQuestions.exists() ? verifyQuestions.val().length : 'NÃO ENCONTRADO');
-                        console.log('- Equipes no Firebase:', verifyTeams.exists() ? verifyTeams.val().length : 'NÃO ENCONTRADO');
-                        
-                        if (!verifyQuestions.exists() || !verifyTeams.exists()) {
-                            console.error('❌ DADOS NÃO SALVOS CORRETAMENTE!');
-                            alert('⚠️ Problema ao salvar no Firebase. Tente novamente.');
-                        }
-                    } catch (verifyError) {
-                        console.error('❌ Erro na verificação:', verifyError);
-                    }
-                }, 1000);
-                
             } catch (error) {
-                console.error('❌ ERRO CRÍTICO ao salvar no Firebase:', error);
-                console.error('Detalhes:', error.message, error.code);
-                alert('❌ ERRO ao salvar no Firebase:\n\n' + error.message + '\n\nVerifique as regras do banco de dados.');
-                return; // Não continuar se não salvar
+                console.error('❌ ERRO Firebase:', error);
+                alert('❌ Erro ao salvar: ' + error.message);
+                return;
             }
-        } else {
-            console.log('⚠️ Mestre sem sala ativa - iniciando localmente');
         }
         
-        // 4. CONFIGURAÇÕES LOCAIS (MESTRE)
-        if (typeof loadSavedPerformance === 'function') {
-            loadSavedPerformance();
-        }
-        
-        if (typeof resetTeamPerformance === 'function') {
-            resetTeamPerformance();
-        }
-        
-        if (window.bombQuestionSystem?.resetUsedQuestions) {
-            window.bombQuestionSystem.resetUsedQuestions();
-        }
-        
+        // 4. CONFIGURAÇÕES LOCAIS
         const randomOrderCheckbox = document.getElementById('random-order');
         window.randomOrder = randomOrderCheckbox?.checked || false;
         
@@ -157,14 +128,10 @@ if (typeof window.startGame !== 'function') {
         document.getElementById('config-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
         
-        // 6. INICIALIZAR SISTEMAS
+        // 6. INICIALIZAR
         setTimeout(() => {
             if (typeof window.initializeGameEventListeners === 'function') {
                 window.initializeGameEventListeners();
-            }
-            
-            if (typeof initTeamPerformanceSystem === 'function') {
-                initTeamPerformanceSystem();
             }
             
             setTimeout(() => {
@@ -176,28 +143,21 @@ if (typeof window.startGame !== 'function') {
                     window.showQuestion();
                 }
                 
-                console.log('✅ JOGO INICIADO pelo mestre');
-                console.log('- Perguntas:', window.questions.length);
-                console.log('- Equipes:', window.teams.length);
-                console.log('- Sala:', window.roomSystem?.currentRoom);
+                console.log('✅ JOGO INICIADO');
             }, 200);
         }, 100);
     };
     
-    console.log('✅ Função window.startGame definida');
+    console.log('✅ window.startGame definida');
 }
 
-// Funções auxiliares
 function applyRecurrence(questions, recurrence) {
     const multiplier = {baixa: 1, media: 2, alta: 3}[recurrence] || 3;
     const result = [];
     for (let i = 0; i < multiplier; i++) result.push(...questions);
-    console.log(`📊 Recorrência: ${recurrence} (${multiplier}x)`);
     return result;
 }
 
-// Exportar funções globais
 window.applyRecurrence = applyRecurrence;
-window.startGame = window.startGame; // Garantir exportação
 
-console.log('✅ gameStart.js carregado - window.startGame disponível');
+console.log('✅ gameStart.js carregado');

@@ -1,5 +1,6 @@
-// file name: js/teams.js
-// file content begin
+// js/teams.js - VERSÃO CORRIGIDA
+console.log('👥 teams.js carregando...');
+
 window.teamColorSchemes = [
     {name: 'Vermelho', bg: 'team-bg-1', turn: 'team-color-1'},
     {name: 'Verde', bg: 'team-bg-2', turn: 'team-color-2'},
@@ -64,18 +65,26 @@ function reorganizeTeamNames() {
 }
 
 function updateTeamsDisplay() {
-    if (!window.teams || !window.teams.length) return;
+    if (!window.teams || !window.teams.length) {
+        console.log('⏳ Nenhuma equipe para exibir');
+        return;
+    }
+    
+    console.log('🔄 Atualizando display de equipes:', window.teams.length);
     
     const teamsDisplay = document.getElementById('teams-display');
     const activeTeamDisplay = document.getElementById('active-team-display');
     
-    if (!teamsDisplay || !activeTeamDisplay) return;
+    if (!teamsDisplay || !activeTeamDisplay) {
+        console.error('❌ Elementos de display não encontrados');
+        return;
+    }
     
     teamsDisplay.innerHTML = '';
     activeTeamDisplay.innerHTML = '';
     
-    const activeTeam = window.teams[window.currentTeamIndex];
-    const inactiveTeams = window.teams.filter((team, index) => index !== window.currentTeamIndex);
+    const activeTeam = window.teams[window.currentTeamIndex || 0];
+    const inactiveTeams = window.teams.filter((team, index) => index !== (window.currentTeamIndex || 0));
     
     if (activeTeam) {
         activeTeamDisplay.appendChild(createTeamCard(activeTeam, true));
@@ -93,46 +102,67 @@ function updateTeamsDisplay() {
 
 function createTeamCard(team, isActive) {
     const card = document.createElement('div');
-    card.className = `team-card ${team.colorClass} ${isActive ? 'active' : ''}`;
-    card.setAttribute('data-team-id', team.id);
+    card.className = `team-card ${team.colorClass || ''} ${isActive ? 'active' : ''}`;
+    card.setAttribute('data-team-id', team.id || 0);
     
-    // Formatar jogadores com quebras de linha
-    const playersHtml = team.players.map(playerName => {
-        return `<div class="player-name">${playerName}</div>`;
-    }).join('');
+    // CORREÇÃO CRÍTICA: Verificar se players existe e é array
+    let playersHtml = '';
+    if (team.players && Array.isArray(team.players)) {
+        playersHtml = team.players.map(playerName => {
+            return `<div class="player-name">${playerName}</div>`;
+        }).join('');
+    } else if (typeof team.players === 'string' && team.players.trim() !== '') {
+        // Se players for string (do input), converter para array
+        playersHtml = team.players.split(',').map(p => p.trim()).filter(p => p)
+            .map(playerName => `<div class="player-name">${playerName}</div>`)
+            .join('');
+    } else {
+        playersHtml = '<div class="no-players">Sem jogadores</div>';
+    }
     
-    // CABEÇALHO ORIGINAL: equipe/jogadores à esquerda, pontuação à direita
-    // REMOVIDO: status DE PLANTÃO/FOLGA
+    // Garantir que as classes de cor existam
+    const colorClass = team.colorClass || 'team-bg-1';
+    const turnClass = team.turnColorClass || 'team-color-1';
+    
     card.innerHTML = `
         <div class="team-card-header">
             <div class="team-info-left">
-                <div class="team-name">${team.name}</div>
-                <div class="team-players">${playersHtml || '<div class="no-players">Sem jogadores</div>'}</div>
+                <div class="team-name">${team.name || 'Equipe Sem Nome'}</div>
+                <div class="team-players">${playersHtml}</div>
             </div>
             <div class="team-info-right">
-                <div class="team-score">${team.score}</div>
+                <div class="team-score">${team.score || 0}</div>
             </div>
         </div>
     `;
     
-    // ADICIONAR SEÇÃO DE PERFORMANCE SE O SISTEMA ESTIVER ATIVO
-    if (window.performanceSystemInitialized && team.performanceBySubject) {
-        const performanceHtml = getFormattedPerformanceBySubject(team);
-        const performanceDiv = document.createElement('div');
-        performanceDiv.className = 'performance-display';
-        performanceDiv.innerHTML = '<div class="performance-title">📊 Performance por Assunto:</div>' + performanceHtml;
-        card.appendChild(performanceDiv);
+    // Adicionar classe de turno se for a equipe ativa
+    if (isActive) {
+        const turnElement = document.getElementById('team-turn');
+        if (turnElement) {
+            turnElement.textContent = '🎯 ' + (team.name || 'Equipe') + ' - DE PLANTÃO';
+            turnElement.className = 'team-turn ' + turnClass;
+        }
     }
     
     return card;
 }
 
-// Função para obter performance formatada (será definida pelo teams-performance.js)
+// Função simplificada para performance
 function getFormattedPerformanceBySubject(team) {
-    if (typeof window.getFormattedPerformanceBySubject === 'function') {
-        return window.getFormattedPerformanceBySubject(team);
+    if (!team.performanceBySubject || Object.keys(team.performanceBySubject).length === 0) {
+        return '<div class="no-performance">Nenhuma performance registrada</div>';
     }
-    return '<div class="no-performance">Nenhuma performance registrada</div>';
+    
+    let html = '';
+    for (const subject in team.performanceBySubject) {
+        const perf = team.performanceBySubject[subject];
+        html += `<div class="performance-row">
+            <span class="performance-subject">${subject}</span>
+            <span class="performance-value">${perf.correct || 0}/${perf.total || 0}</span>
+        </div>`;
+    }
+    return html;
 }
 
 window.addTeam = addTeam;
@@ -141,5 +171,4 @@ window.updateTeamsDisplay = updateTeamsDisplay;
 window.createTeamCard = createTeamCard;
 window.getFormattedPerformanceBySubject = getFormattedPerformanceBySubject;
 
-console.log('teams.js carregado!');
-// file content end
+console.log('✅ teams.js carregado!');
