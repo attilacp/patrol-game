@@ -1,81 +1,51 @@
-// file name: js/gameEvents/teamTurn.js
-console.log('🎮 gameEvents/teamTurn.js carregando...');
+// js/gameEvents/teamTurn.js
+console.log('🔄 teamTurn.js carregando...');
 
 function setupTeamTurnClickEvent() {
-    console.log('👥 Configurando clique no retângulo da equipe de plantão...');
+    console.log('🎯 Configurando clique no turno da equipe...');
     
     const teamTurnElement = document.getElementById('team-turn');
     if (teamTurnElement) {
-        teamTurnElement.style.cursor = 'pointer';
-        teamTurnElement.title = 'Clique para mudar de equipe';
-        
-        // Remover listeners antigos
-        const newTeamTurn = teamTurnElement.cloneNode(true);
-        teamTurnElement.parentNode.replaceChild(newTeamTurn, teamTurnElement);
-        
-        const finalTeamTurn = document.getElementById('team-turn');
-        
-        finalTeamTurn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (window.teamTurnClickInProgress) return;
-            window.teamTurnClickInProgress = true;
-            
+        teamTurnElement.addEventListener('click', function() {
             console.log('🔄 Retângulo da equipe de plantão clicado');
             
-            if (!window.gameStarted || window.winnerTeam || (window.bombQuestionSystem && window.bombQuestionSystem.isBombActive)) {
-                console.log('⛔ Não é possível mudar de equipe agora');
-                window.teamTurnClickInProgress = false;
-                return;
-            }
-            
-            // REGRA 3: CONFIRMAÇÃO DA MENSAGEM APÓS APERTAR O BOTÃO
-            if (confirm('Deseja mudar a equipe de plantão para a próxima equipe?')) {
-                console.log('✅ Confirmado mudança de equipe');
-                
-                // MUDAR EQUIPE IMEDIATAMENTE
-                const oldTeam = window.teams[window.currentTeamIndex];
-                
-                // Rodar equipe AGORA
-                if (window.rotateTeam) {
-                    window.rotateTeam();
-                } else {
-                    window.currentTeamIndex = (window.currentTeamIndex + 1) % window.teams.length;
+            // Apenas mestre pode rodar equipe
+            if (window.roomSystem && window.roomSystem.isMaster) {
+                if (confirm('Deseja rotacionar para a próxima equipe?')) {
+                    console.log('✅ Confirmado mudança de equipe');
+                    
+                    // Usar sistema de turnos se disponível
+                    if (window.turnSystem) {
+                        window.turnSystem.rotateTeam();
+                    } 
+                    // Fallback manual
+                    else if (window.teams && window.teams.length > 1) {
+                        const nextIndex = (window.currentTeamIndex + 1) % window.teams.length;
+                        window.currentTeamIndex = nextIndex;
+                        
+                        console.log(`🔄 ${window.teams[window.currentTeamIndex-1]?.name} → ${window.teams[nextIndex].name}`);
+                        
+                        if (window.updateTeamsDisplay) {
+                            window.updateTeamsDisplay();
+                        }
+                        
+                        if (window.showQuestion) {
+                            window.showQuestion();
+                        }
+                    }
                 }
-                
-                const newTeam = window.teams[window.currentTeamIndex];
-                console.log(`🔄 ${oldTeam.name} → ${newTeam.name} (mudança imediata)`);
-                
-                // Atualizar display da equipe de plantão
-                finalTeamTurn.textContent = '🎯 ' + newTeam.name + ' - DE PLANTÃO';
-                finalTeamTurn.className = 'team-turn ' + (newTeam.turnColorClass || 'team-color-1');
-                
-                // Resetar flags
-                window.consecutiveCorrect = 0; // Zerar contador
-                window.pendingBombQuestion = false; // Cancelar PB pendente
-                window.resetPendingBombButton?.(); // Resetar botão de PB
-                window.nextTeamRotation = false; // NÃO marcar para rodar na próxima pergunta
-                
-                // Atualizar display das equipes
-                if (window.updateTeamsDisplay) {
-                    window.updateTeamsDisplay();
-                }
-                
-                console.log('✅ Equipe de plantão mudada IMEDIATAMENTE');
             } else {
-                console.log('❌ Mudança de equipe cancelada');
+                console.log('⏳ Apenas o mestre pode rodar equipes');
             }
-            
-            setTimeout(() => window.teamTurnClickInProgress = false, 500);
         });
         
-        console.log('✅ Evento de clique no retângulo da equipe configurado');
+        console.log('✅ Clique no team-turn configurado');
+    } else {
+        console.error('❌ Elemento team-turn não encontrado');
     }
 }
 
-// Exportar
 if (typeof window !== 'undefined') {
     window.setupTeamTurnClickEvent = setupTeamTurnClickEvent;
-    console.log('✅ gameEvents/teamTurn.js exportado');
+    console.log('✅ teamTurn.js exportado');
 }

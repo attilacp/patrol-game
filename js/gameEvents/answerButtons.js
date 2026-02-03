@@ -14,7 +14,7 @@ function setupAnswerButtonEvents() {
     setupNextButton();
     
     // 4. BOTÃO RODÍZIO (APENAS MESTRE)
-    setupRotateButton();
+    //setupRotateButton();
     
     // 5. BOTÃO PÓDIO
     setupPodiumButton();
@@ -186,99 +186,6 @@ function setupNextButton() {
     }
 }
 
-function setupRotateButton() {
-    console.log('🔄 Configurando botão RODÍZIO...');
-    
-    // Remover botão anterior se existir
-    const oldRotateBtn = document.getElementById('rotate-team-btn');
-    if (oldRotateBtn) oldRotateBtn.remove();
-    
-    // Criar novo botão
-    const rotateBtn = document.createElement('button');
-    rotateBtn.id = 'rotate-team-btn';
-    rotateBtn.className = 'rotate-btn';
-    rotateBtn.innerHTML = '🔄 Rodízio';
-    rotateBtn.style.cssText = `
-        background: linear-gradient(145deg, #6f42c1, #5a32a3);
-        color: white;
-        border: 2px solid #4a2384;
-        padding: 8px 15px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 14px;
-        display: none;
-        margin-left: 10px;
-        transition: all 0.3s;
-    `;
-    
-    rotateBtn.onmouseenter = function() {
-        rotateBtn.style.transform = 'translateY(-2px)';
-        rotateBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-    };
-    
-    rotateBtn.onmouseleave = function() {
-        rotateBtn.style.transform = 'translateY(0)';
-        rotateBtn.style.boxShadow = 'none';
-    };
-    
-    rotateBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🔄 Botão Rodízio clicado');
-        
-        // Apenas mestre pode rodar equipe
-        if (window.roomSystem && window.roomSystem.isMaster) {
-            // PRIORIDADE: Sistema de turnos
-            if (window.turnSystem) {
-                window.turnSystem.rotateTeam();
-                return;
-            }
-            
-            // Fallback: sistema antigo
-            if (window.rotateTeam) {
-                window.rotateTeam();
-                return;
-            }
-            
-            // Fallback manual
-            if (window.teams && window.teams.length > 1) {
-                const nextIndex = (window.currentTeamIndex + 1) % window.teams.length;
-                window.currentTeamIndex = nextIndex;
-                console.log('🔄 Equipe manualmente rotacionada para:', window.teams[nextIndex].name);
-                
-                if (window.updateTeamsDisplay) {
-                    window.updateTeamsDisplay();
-                }
-                
-                if (window.showQuestion) {
-                    window.showQuestion();
-                }
-            }
-        } else {
-            console.log('🔄 Apenas o mestre pode rodar equipes');
-            alert('⏳ Aguarde o mestre rodar a equipe');
-        }
-    };
-    
-    // Adicionar ao cabeçalho da pergunta
-    const questionHeader = document.querySelector('.question-header-buttons');
-    if (questionHeader) {
-        questionHeader.appendChild(rotateBtn);
-        
-        // Mostrar apenas para mestre
-        if (window.roomSystem && window.roomSystem.isMaster) {
-            rotateBtn.style.display = 'block';
-            console.log('👑 Botão Rodízio visível para mestre');
-        } else {
-            console.log('👤 Botão Rodízio oculto para jogador');
-        }
-    } else {
-        console.error('❌ Cabeçalho da pergunta não encontrado');
-    }
-    
-    console.log('✅ Botão RODÍZIO configurado');
-}
 
 function setupPodiumButton() {
     console.log('🏆 Configurando botão PÓDIO...');

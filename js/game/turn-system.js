@@ -48,14 +48,19 @@ class TurnSystem {
         }
     }
     
-    setupTeamSelection() {
-        console.log('👤 Jogador precisa escolher equipe');
-        
-        // Mostrar modal para escolher equipe
-        setTimeout(() => {
-            this.showTeamSelectionModal();
-        }, 1500);
-    }
+ setupTeamSelection() {
+    console.log('👤 Jogador precisa escolher equipe');
+    
+    // NÃO mostrar modal automático - o jogador será atribuído automaticamente
+    // ou escolherá via interface existente
+    
+    // Por padrão, atribuir à primeira equipe (temporário)
+    setTimeout(() => {
+        if (window.teams && window.teams.length > 0) {
+            this.selectPlayerTeam(0); // Atribuir à primeira equipe
+        }
+    }, 2000);
+}
     
     showTeamSelectionModal() {
         if (!window.teams || window.teams.length === 0) {
