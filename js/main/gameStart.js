@@ -74,7 +74,7 @@ if (typeof window.startGame !== 'function') {
                 await roomRef.child('status').set('playing');
                 console.log('✅ Status: playing');
                 
-                // SALVAR PERGUNTAS - COM ORDEM
+                // SALVAR PERGUNTAS
                 console.log('💾 Salvando perguntas...');
                 await roomRef.child('gameData/questions').set(window.questions);
                 console.log('✅ Perguntas salvas:', window.questions.length);
@@ -99,21 +99,21 @@ if (typeof window.startGame !== 'function') {
                     // Salvar ordem no Firebase
                     await roomRef.child('gameData/order').set({
                         teams: shuffledTeams.map(t => t.id),
-                        questions: shuffledQuestions.map((q, i) => i), // Salva índices embaralhados
+                        questions: shuffledQuestions.map((q, i) => i),
                         isRandom: true,
                         timestamp: Date.now()
                     });
                     
                     console.log('✅ Ordem aleatória salva no Firebase');
                     
-                    // Aplicar ordem localmente
+                    // Aplicar ordem localmente (mestre)
                     window.teams = shuffledTeams;
                     window.questions = shuffledQuestions;
                 } else {
                     // Salvar ordem sequencial
                     await roomRef.child('gameData/order').set({
                         teams: window.teams.map(t => t.id),
-                        questions: window.questions.map((q, i) => i), // Índices normais
+                        questions: window.questions.map((q, i) => i),
                         isRandom: false,
                         timestamp: Date.now()
                     });
@@ -134,7 +134,7 @@ if (typeof window.startGame !== 'function') {
                 await roomRef.child('gameState').set(gameState);
                 console.log('✅ Estado do jogo salvo');
                 
-                // VERIFICAÇÃO (opcional)
+                // VERIFICAÇÃO
                 setTimeout(async () => {
                     try {
                         const verifyQuestions = await roomRef.child('gameData/questions').once('value');
@@ -163,8 +163,7 @@ if (typeof window.startGame !== 'function') {
         const randomOrderCheckbox = document.getElementById('random-order');
         window.randomOrder = randomOrderCheckbox?.checked || false;
         
-        // NOTA: O embaralhamento já foi feito acima se for mestre com Firebase
-        // Se for jogo local sem Firebase, aplicar aqui
+        // Se for jogo local sem Firebase, aplicar embaralhamento
         if (window.randomOrder && typeof shuffleArray === 'function' && 
             (!window.roomSystem || !window.roomSystem.isMaster)) {
             shuffleArray(window.teams);
@@ -191,26 +190,52 @@ if (typeof window.startGame !== 'function') {
                 window.initializeGameEventListeners();
             }
             
-            // Inicializar performance se disponível
+            // Inicializar performance
             if (typeof initTeamPerformanceSystem === 'function') {
                 initTeamPerformanceSystem();
             }
             
-            // Inicializar perguntas bomba se disponível
+            // Inicializar perguntas bomba
             if (window.bombQuestionSystem?.resetUsedQuestions) {
                 window.bombQuestionSystem.resetUsedQuestions();
             }
             
             // DEFINIR PRIMEIRA EQUIPE DE PLANTÃO (se for mestre)
-            if (window.roomSystem && window.roomSystem.isMaster && window.turnSystem) {
+            if (window.roomSystem && window.roomSystem.isMaster) {
                 setTimeout(() => {
                     if (window.teams && window.teams.length > 0) {
-                        window.turnSystem.setCurrentTurn(
-                            0, 
-                            window.teams[0].id, 
-                            window.teams[0].name
-                        );
-                        console.log('🎯 Primeira equipe de plantão definida:', window.teams[0].name);
+                        // Usar sistema de turnos se disponível
+                        if (window.turnSystem) {
+                            window.turnSystem.setCurrentTurn(
+                                0, 
+                                window.teams[0].id, 
+                                window.teams[0].name
+                            );
+                            console.log('🎯 Primeira equipe de plantão definida via turn-system:', window.teams[0].name);
+                            
+                            // Transmitir primeira pergunta
+                            window.turnSystem.broadcastQuestionChange();
+                        } else {
+                            // Fallback: atualizar localmente
+                            console.log('🎯 Primeira equipe de plantão:', window.teams[0].name);
+                            
+                            // Atualizar turno no Firebase diretamente
+                            if (window.roomSystem.currentRoom) {
+                                const turnData = {
+                                    teamIndex: 0,
+                                    teamId: window.teams[0].id,
+                                    teamName: window.teams[0].name,
+                                    questionIndex: 0,
+                                    startTime: Date.now(),
+                                    answered: false,
+                                    masterId: window.roomSystem.playerId
+                                };
+                                
+                                firebase.database().ref('rooms/' + window.roomSystem.currentRoom + '/currentTurn')
+                                    .set(turnData);
+                                console.log('✅ Turno salvo no Firebase');
+                            }
+                        }
                     }
                 }, 800);
             }
@@ -221,7 +246,9 @@ if (typeof window.startGame !== 'function') {
                     window.updateTeamsDisplay();
                 }
                 
-                if (window.showQuestion) {
+                // NÃO chamar showQuestion() aqui - o sistema de turnos controlará isso
+                // Apenas mestre mostra imediatamente, jogadores aguardam sincronização
+                if (window.roomSystem && window.roomSystem.isMaster && window.showQuestion) {
                     window.showQuestion();
                 }
                 
@@ -231,6 +258,8 @@ if (typeof window.startGame !== 'function') {
                 if (window.roomSystem?.currentRoom) {
                     console.log('- Sala:', window.roomSystem.currentRoom);
                 }
+                console.log('- Mestre?', window.roomSystem?.isMaster ? 'SIM' : 'NÃO');
+                
             }, 200);
         }, 100);
     };

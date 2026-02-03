@@ -1,4 +1,4 @@
-// js/game/turn-system.js - Sistema de turnos e respostas
+// js/game/turn-system.js - SISTEMA COMPLETO DE TURNOS
 console.log('🔄 turn-system.js carregando...');
 
 class TurnSystem {
@@ -6,13 +6,16 @@ class TurnSystem {
         this.roomSystem = roomSystem;
         this.currentTurn = null;
         this.setupTurnListeners();
+        this.playerTeam = null; // Equipe do jogador atual
         console.log('✅ Sistema de turnos inicializado');
     }
     
     setupTurnListeners() {
         if (!this.roomSystem.currentRoom) return;
         
-        // Ouvir mudanças de turno
+        console.log('👂 Configurando listeners de turno...');
+        
+        // 1. Ouvir turno atual
         const turnRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentTurn');
         turnRef.on('value', (snapshot) => {
             const turnData = snapshot.val();
@@ -21,12 +24,112 @@ class TurnSystem {
             }
         });
         
-        // Ouvir respostas das equipes
-        const answersRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/teamAnswers');
-        answersRef.on('child_added', (snapshot) => {
-            const answer = snapshot.val();
-            this.handleTeamAnswer(answer);
+        // 2. Ouvir resultados de respostas
+        const resultRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/answerResult');
+        resultRef.on('value', (snapshot) => {
+            const resultData = snapshot.val();
+            if (resultData) {
+                this.handleAnswerResult(resultData);
+            }
         });
+        
+        // 3. Ouvir mudanças de pergunta
+        const questionRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentQuestion');
+        questionRef.on('value', (snapshot) => {
+            const questionData = snapshot.val();
+            if (questionData) {
+                this.handleQuestionChange(questionData);
+            }
+        });
+        
+        // 4. Se for jogador, escolher equipe
+        if (!this.roomSystem.isMaster) {
+            this.setupTeamSelection();
+        }
+    }
+    
+    setupTeamSelection() {
+        console.log('👤 Jogador precisa escolher equipe');
+        
+        // Mostrar modal para escolher equipe
+        setTimeout(() => {
+            this.showTeamSelectionModal();
+        }, 1500);
+    }
+    
+    showTeamSelectionModal() {
+        if (!window.teams || window.teams.length === 0) {
+            console.log('⏳ Aguardando equipes carregarem...');
+            setTimeout(() => this.showTeamSelectionModal(), 1000);
+            return;
+        }
+        
+        const modal = document.createElement('div');
+        modal.id = 'team-selection-modal';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+        `;
+        
+        let teamsHtml = '<h3 style="color: #FFCC00; margin-bottom: 20px;">🏆 Escolha sua Equipe</h3>';
+        window.teams.forEach((team, index) => {
+            teamsHtml += `
+                <button class="team-select-btn" data-team-index="${index}" 
+                        style="background: ${this.getTeamColor(index)}; 
+                               color: white; border: none; padding: 15px 30px;
+                               margin: 10px; border-radius: 10px; cursor: pointer;
+                               font-size: 16px; font-weight: bold; width: 200px;">
+                    ${team.name}
+                    ${team.players && team.players.length > 0 ? 
+                      `<br><small>(${team.players.join(', ')})</small>` : ''}
+                </button><br>
+            `;
+        });
+        
+        modal.innerHTML = `
+            <div style="background: #003366; padding: 30px; border-radius: 15px;
+                        border: 3px solid #FFCC00; text-align: center; max-width: 500px;">
+                ${teamsHtml}
+                <p style="color: #ccc; margin-top: 20px; font-size: 14px;">
+                    Você poderá responder apenas quando sua equipe estiver de plantão
+                </p>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Adicionar event listeners
+        document.querySelectorAll('.team-select-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const teamIndex = parseInt(e.target.dataset.teamIndex);
+                this.selectPlayerTeam(teamIndex);
+                modal.remove();
+            });
+        });
+    }
+    
+    getTeamColor(index) {
+        const colors = [
+            '#E53935', '#00897B', '#FFA000', '#1E3799', '#EC407A',
+            '#4DB6AC', '#6C5CE7', '#F9A825', '#C23616', '#008F74'
+        ];
+        return colors[index % colors.length];
+    }
+    
+    selectPlayerTeam(teamIndex) {
+        if (!window.teams[teamIndex]) return;
+        
+        this.playerTeam = window.teams[teamIndex];
+        console.log(`✅ Jogador selecionou equipe: ${this.playerTeam.name}`);
+        
+        // Salvar no Firebase
+        if (this.roomSystem.currentRoom) {
+            firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/players/' + this.roomSystem.playerId)
+                .update({ teamId: this.playerTeam.id, teamName: this.playerTeam.name });
+        }
+        
+        alert(`✅ Você entrou na equipe ${this.playerTeam.name}!`);
     }
     
     // MESTRE: Definir equipe de plantão
@@ -57,37 +160,36 @@ class TurnSystem {
         const nextTeam = window.teams[nextIndex];
         
         window.currentTeamIndex = nextIndex;
-        window.consecutiveCorrect = 0; // Resetar acertos consecutivos
+        window.consecutiveCorrect = 0;
         
         this.setCurrentTurn(nextIndex, nextTeam.id, nextTeam.name);
-        
-        // Atualizar localmente
-        if (window.updateTeamsDisplay) {
-            window.updateTeamsDisplay();
-        }
         
         console.log('🔄 Equipe rotacionada para:', nextTeam.name);
     }
     
     // TODOS: Processar mudança de turno
     handleTurnChange(turnData) {
-        console.log('📥 Turno recebido:', turnData);
+        console.log('📥 Turno recebido:', turnData.teamName, 'Pergunta:', turnData.questionIndex + 1);
         
-        // Sincronizar índices
-        if (turnData.teamIndex !== undefined) {
-            window.currentTeamIndex = turnData.teamIndex;
-        }
+        this.currentTurn = turnData;
         
-        if (turnData.questionIndex !== undefined) {
-            window.currentQuestionIndex = turnData.questionIndex;
-        }
+        // Sincronizar com estado local
+        window.currentTeamIndex = turnData.teamIndex;
+        window.currentQuestionIndex = turnData.questionIndex;
         
-        // Atualizar display
+        // Atualizar interface
+        this.updateTurnUI();
+        
+        // Controlar botões de resposta
+        this.updateAnswerButtons();
+    }
+    
+    updateTurnUI() {
         setTimeout(() => {
             // Atualizar equipe de plantão
             const teamTurnElement = document.getElementById('team-turn');
-            if (teamTurnElement && turnData.teamName) {
-                teamTurnElement.textContent = `🎯 ${turnData.teamName} - DE PLANTÃO`;
+            if (teamTurnElement && this.currentTurn) {
+                teamTurnElement.textContent = `🎯 ${this.currentTurn.teamName} - DE PLANTÃO`;
                 
                 // Aplicar cor da equipe
                 const currentTeam = window.teams?.[window.currentTeamIndex];
@@ -103,79 +205,69 @@ class TurnSystem {
             }
             
             // Mostrar pergunta atual
-            if (window.showQuestion) {
+            if (window.showQuestion && window.questions[window.currentQuestionIndex]) {
                 window.showQuestion();
             }
             
-            // Controlar botões de resposta
-            this.updateAnswerButtons(turnData);
+            // Atualizar display das equipes
+            if (window.updateTeamsDisplay) {
+                window.updateTeamsDisplay();
+            }
             
         }, 300);
     }
     
-    // Controlar quem pode responder
-    updateAnswerButtons(turnData) {
+    updateAnswerButtons() {
         const certoBtn = document.getElementById('certo-btn');
         const erradoBtn = document.getElementById('errado-btn');
-        const skipBtn = document.getElementById('skip-btn');
         
         if (!certoBtn || !erradoBtn) return;
         
-        // Verificar se o usuário atual está na equipe de plantão
-        const userTeam = this.getUserTeam();
-        const isUsersTurn = userTeam && userTeam.id === turnData.teamId;
+        // Verificar se o jogador pode responder
+        const canAnswer = this.canPlayerAnswer();
         
-        if (isUsersTurn) {
-            // Usuário está na equipe de plantão - pode responder
+        if (canAnswer) {
+            // Jogador pode responder
             certoBtn.disabled = false;
             erradoBtn.disabled = false;
             certoBtn.style.opacity = '1';
             erradoBtn.style.opacity = '1';
-            certoBtn.title = 'Responder CORRETO';
-            erradoBtn.title = 'Responder ERRADO';
+            certoBtn.style.cursor = 'pointer';
+            erradoBtn.style.cursor = 'pointer';
             
-            console.log('🎮 Usuário pode responder - equipe de plantão');
-        } else if (this.roomSystem.isMaster) {
-            // Mestre sempre pode responder (é jogador também)
-            certoBtn.disabled = false;
-            erradoBtn.disabled = false;
-            certoBtn.title = 'Mestre: Responder CORRETO';
-            erradoBtn.title = 'Mestre: Responder ERRADO';
-            
-            console.log('👑 Mestre pode responder');
+            console.log('🎯 Jogador pode responder - equipe de plantão');
         } else {
-            // Usuário não está na equipe de plantão - não pode responder
+            // Jogador não pode responder
             certoBtn.disabled = true;
             erradoBtn.disabled = true;
             certoBtn.style.opacity = '0.5';
             erradoBtn.style.opacity = '0.5';
-            certoBtn.title = 'Aguarde sua equipe';
-            erradoBtn.title = 'Aguarde sua equipe';
+            certoBtn.style.cursor = 'not-allowed';
+            erradoBtn.style.cursor = 'not-allowed';
             
-            console.log('⏳ Usuário aguardando turno da equipe');
-        }
-        
-        // Botão pular só para mestre
-        if (skipBtn) {
-            skipBtn.disabled = !this.roomSystem.isMaster;
-            skipBtn.style.display = this.roomSystem.isMaster ? 'block' : 'none';
-        }
-        
-        // Botão rodízio só para mestre
-        const rotateBtn = document.getElementById('rotate-team-btn');
-        if (rotateBtn) {
-            rotateBtn.style.display = this.roomSystem.isMaster ? 'block' : 'none';
+            console.log('⏳ Jogador não está na equipe de plantão');
         }
     }
     
-    // JOGADOR: Enviar resposta da equipe
-    submitTeamAnswer(answer) {
-        const currentTeam = window.teams?.[window.currentTeamIndex];
-        if (!currentTeam || !this.roomSystem.currentRoom) return;
+    canPlayerAnswer() {
+        if (!this.currentTurn || !this.playerTeam) return false;
+        
+        // Verificar se o jogador está na equipe de plantão
+        return this.playerTeam.id === this.currentTurn.teamId;
+    }
+    
+    // JOGADOR: Enviar resposta
+    submitAnswer(answer) {
+        if (!this.canPlayerAnswer()) {
+            alert('⏳ Aguarde sua equipe estar de plantão!');
+            return;
+        }
+        
+        if (!this.roomSystem.currentRoom) return;
         
         const answerData = {
-            teamId: currentTeam.id,
-            teamName: currentTeam.name,
+            teamId: this.playerTeam.id,
+            teamName: this.playerTeam.name,
             playerId: this.roomSystem.playerId,
             playerName: this.roomSystem.playerName,
             answer: answer,
@@ -189,32 +281,27 @@ class TurnSystem {
         console.log('📤 Resposta enviada:', answer);
     }
     
-    // MESTRE: Processar resposta da equipe
+    // MESTRE: Processar resposta recebida
     handleTeamAnswer(answerData) {
         if (!this.roomSystem.isMaster) return;
         
-        console.log('📥 Resposta recebida da equipe:', answerData);
+        console.log('📥 Resposta recebida:', answerData);
         
-        // Verificar se é da equipe de plantão e pergunta atual
-        const currentTurnRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentTurn');
-        currentTurnRef.once('value').then((snapshot) => {
-            const currentTurn = snapshot.val();
+        // Verificar se é do turno atual e pergunta atual
+        if (this.currentTurn &&
+            this.currentTurn.teamId === answerData.teamId &&
+            this.currentTurn.questionIndex === answerData.questionIndex &&
+            !this.currentTurn.answered) {
             
-            if (currentTurn && 
-                currentTurn.teamId === answerData.teamId &&
-                currentTurn.questionIndex === answerData.questionIndex &&
-                !currentTurn.answered) {
-                
-                // Marcar como respondido
-                currentTurnRef.update({ answered: true });
-                
-                // Processar resposta
-                this.processAnswer(answerData);
-            }
-        });
+            // Marcar como respondido
+            firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentTurn')
+                .update({ answered: true });
+            
+            // Processar resposta
+            this.processAnswer(answerData);
+        }
     }
     
-    // MESTRE: Processar e validar resposta
     processAnswer(answerData) {
         const question = window.questions[window.currentQuestionIndex];
         const gabarito = question?.gabarito ? question.gabarito.trim().toUpperCase() : '';
@@ -233,30 +320,23 @@ class TurnSystem {
             points = -5;
         }
         
-        // Atualizar pontuação
+        // Atualizar pontuação local
         const teamIndex = window.teams.findIndex(t => t.id === answerData.teamId);
         if (teamIndex !== -1) {
             window.teams[teamIndex].score += points;
             
-            if (isCorrect) {
-                window.teams[teamIndex].questionsAnswered++;
-            } else {
-                window.teams[teamIndex].questionsWrong++;
+            if (window.updateTeamsDisplay) {
+                window.updateTeamsDisplay();
             }
             
             // Atualizar no Firebase
             this.updateTeamScore(teamIndex, window.teams[teamIndex].score);
-            
-            // Atualizar display
-            if (window.updateTeamsDisplay) {
-                window.updateTeamsDisplay();
-            }
         }
         
         // Transmitir resultado
         this.broadcastAnswerResult(isCorrect, points, answerData);
         
-        console.log(`✅ Resposta processada: ${answerData.answer} → ${isCorrect ? 'CORRETO' : 'ERRADO'} (${points} pts)`);
+        console.log(`✅ Resposta processada: ${isCorrect ? 'CORRETO' : 'ERRADO'} (${points} pts)`);
     }
     
     broadcastAnswerResult(isCorrect, points, answerData) {
@@ -274,7 +354,83 @@ class TurnSystem {
         firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/answerResult')
             .set(resultData);
         
-        console.log('📤 Resultado transmitido:', resultData);
+        console.log('📤 Resultado transmitido');
+    }
+    
+    handleAnswerResult(resultData) {
+        console.log('📥 Resultado recebido:', resultData);
+        
+        // Mostrar resultado na tela
+        this.showResult(resultData);
+        
+        // Se for mestre, aguardar e avançar
+        if (this.roomSystem.isMaster) {
+            setTimeout(() => {
+                this.advanceToNextQuestion();
+            }, 3000);
+        }
+    }
+    
+    showResult(resultData) {
+        const questionText = document.getElementById('question-text');
+        if (!questionText) return;
+        
+        const resultHtml = `
+            <div style="background: ${resultData.isCorrect ? '#d4edda' : '#f8d7da'}; 
+                        padding: 15px; border-radius: 10px; margin-bottom: 20px;
+                        border: 2px solid ${resultData.isCorrect ? '#28a745' : '#dc3545'};">
+                <h3 style="color: ${resultData.isCorrect ? '#155724' : '#721c24'}; margin: 0 0 10px 0;">
+                    ${resultData.isCorrect ? '✅ CORRETO!' : '❌ ERRADO!'}
+                </h3>
+                <p style="margin: 5px 0;">
+                    <strong>${resultData.playerName}</strong> da equipe <strong>${resultData.teamName}</strong>
+                    ${resultData.isCorrect ? 'acertou' : 'errou'}!
+                </p>
+                <p style="margin: 5px 0;">Pontos: ${resultData.points > 0 ? '+' : ''}${resultData.points}</p>
+                <p style="margin: 5px 0; font-weight: bold;">
+                    Resposta correta: ${resultData.correctAnswer || 'Não informada'}
+                </p>
+            </div>
+        `;
+        
+        // Adicionar resultado acima da pergunta
+        questionText.innerHTML = resultHtml + (questionText.innerHTML || '');
+    }
+    
+    advanceToNextQuestion() {
+        window.currentQuestionIndex++;
+        
+        // Transmitir nova pergunta
+        this.broadcastQuestionChange();
+        
+        // Rotacionar equipe se necessário
+        if (!this.currentTurn?.isCorrect) {
+            setTimeout(() => {
+                this.rotateTeam();
+            }, 1000);
+        }
+    }
+    
+    broadcastQuestionChange() {
+        if (!this.roomSystem.isMaster) return;
+        
+        const questionData = {
+            index: window.currentQuestionIndex,
+            total: window.questions.length,
+            timestamp: Date.now()
+        };
+        
+        firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentQuestion')
+            .set(questionData);
+        
+        console.log('📤 Nova pergunta transmitida:', window.currentQuestionIndex + 1);
+    }
+    
+    handleQuestionChange(questionData) {
+        console.log('📥 Nova pergunta recebida:', questionData.index + 1);
+        
+        window.currentQuestionIndex = questionData.index;
+        this.updateTurnUI();
     }
     
     updateTeamScore(teamIndex, score) {
@@ -292,19 +448,9 @@ class TurnSystem {
             .replace(/^C$/i, 'C')
             .replace(/^E$/i, 'E');
     }
-    
-    getUserTeam() {
-        // Verificar em qual equipe o usuário está
-        // (Isso precisa ser configurado quando o jogador entra)
-        if (!window.teams) return null;
-        
-        // Por enquanto, retorna a primeira equipe
-        // Você precisa implementar a lógica de associação jogador-equipe
-        return window.teams[0];
-    }
 }
 
-// Inicializar globalmente
+// Inicializar quando disponível
 setTimeout(() => {
     if (window.roomSystem) {
         window.turnSystem = new TurnSystem(window.roomSystem);

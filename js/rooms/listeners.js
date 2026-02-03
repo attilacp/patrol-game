@@ -284,15 +284,15 @@ RoomSystem.prototype.startGameForPlayer = function() {
         }
         
         // Mostrar primeira pergunta
-        if (window.showQuestion) {
-            setTimeout(() => {
-                window.showQuestion();
-            }, 500);
-        } else {
-            console.error('❌ showQuestion não disponível');
+        //if (window.showQuestion) {
+            //setTimeout(() => {
+                //window.showQuestion();
+            //}, 500);
+        //} else {
+            //console.error('❌ showQuestion não disponível');
             // Fallback manual
-            this.showQuestionFallback();
-        }
+            //this.showQuestionFallback();
+        //}
         
         // Inicializar sistema de turnos se disponível
         if (window.turnSystem) {
