@@ -1,4 +1,4 @@
-// js/rooms/room-manager.js - Gerenciamento de salas
+// js/rooms/room-manager.js - VERSÃO CORRIGIDA (evita mensagens duplicadas)
 console.log('🏠 rooms/room-manager.js carregando...');
 
 RoomSystem.prototype.createRoom = async function() {
@@ -24,6 +24,7 @@ RoomSystem.prototype.createRoom = async function() {
         },
         status: 'lobby',
         gameState: null,
+        gameData: { questions: [], teams: [] }, // NOVO: dados do jogo
         settings: this.settings,
         players: {
             [this.playerId]: {
@@ -54,31 +55,28 @@ RoomSystem.prototype.createRoom = async function() {
         if (roomInfo) {
             roomInfo.style.display = 'block';
             roomInfo.style.animation = 'fadeIn 0.5s ease';
-            console.log('✅ room-info exibido');
         }
         
         if (roomCodeSpan) {
             roomCodeSpan.textContent = roomCode;
-            console.log('✅ Código atualizado no DOM:', roomCode);
         }
         
-        // Adicionar botão copiar
         this.addCopyButtonToRoomCode(roomCode);
-        
-        // Configurar listeners
         this.setupRoomListeners();
         
-        // Mostrar notificação
-        setTimeout(() => {
-            alert(`🎉 Sala criada!\n\nCódigo: ${roomCode}\n\nCompartilhe este código com os jogadores.`);
-        }, 500);
+        // MOSTRAR ALERTA APENAS UMA VEZ
+        if (!this.roomCreatedAlertShown) {
+            this.roomCreatedAlertShown = true;
+            setTimeout(() => {
+                alert(`🎉 Sala criada!\n\nCódigo: ${roomCode}\n\nCompartilhe este código com os jogadores.`);
+            }, 800);
+        }
         
         return roomCode;
         
     } catch (error) {
         console.error('❌ Erro ao criar sala:', error);
         
-        // Verificar se é erro de regras do Firebase
         if (error.code === 'PERMISSION_DENIED') {
             alert('❌ Erro: Permissão negada no Firebase.\n\nNo Firebase Console:\n1. Vá em Realtime Database\n2. Clique em "Rules"\n3. Altere para:\n{\n  "rules": {\n    ".read": true,\n    ".write": true\n  }\n}');
         } else {
@@ -104,8 +102,11 @@ RoomSystem.prototype.joinRoom = async function(roomCode, isMaster = false) {
     this.currentRoom = roomCode.toUpperCase();
     this.isMaster = isMaster;
     
+    // FLAG PARA CONTROLAR MENSAGENS
+    if (!this.joinFlags) this.joinFlags = {};
+    const roomKey = this.currentRoom;
+    
     try {
-        // Verificar se sala existe
         const roomRef = firebase.database().ref('rooms/' + this.currentRoom);
         const snapshot = await roomRef.once('value');
         
@@ -117,14 +118,12 @@ RoomSystem.prototype.joinRoom = async function(roomCode, isMaster = false) {
         
         const roomData = snapshot.val();
         
-        // Verificar se jogo já começou
         if (roomData.status === 'playing' && !isMaster) {
             alert('⚠️ O jogo já começou nesta sala. Não é possível entrar.');
             this.currentRoom = null;
             return false;
         }
         
-        // Adicionar jogador à sala no Firebase
         const playerData = {
             uid: this.playerId,
             name: this.playerName,
@@ -140,22 +139,19 @@ RoomSystem.prototype.joinRoom = async function(roomCode, isMaster = false) {
         await roomRef.child('players/' + this.playerId).set(playerData);
         
         console.log('✅ Jogador entrou na sala:', this.currentRoom);
-        
-        // Atualizar última atividade
         await roomRef.child('lastActivity').set(Date.now());
         
-        // Configurar listeners
         this.setupRoomListeners();
-        
-        // Atualizar UI
         this.updateRoomUI(roomData);
         
-        // Mostrar notificação
-        setTimeout(() => {
-            if (!isMaster) {
+        // MOSTRAR ALERTA APENAS UMA VEZ POR SALA
+        if (!isMaster && !this.joinFlags[roomKey]) {
+            this.joinFlags[roomKey] = true;
+            
+            setTimeout(() => {
                 alert(`✅ Entrou na sala ${this.currentRoom}!\nAguardando o mestre iniciar o jogo...`);
-            }
-        }, 500);
+            }, 600);
+        }
         
         return true;
         
@@ -180,21 +176,17 @@ RoomSystem.prototype.leaveRoom = async function() {
     console.log('🚪 Saindo da sala:', this.currentRoom);
     
     try {
-        // Remover jogador da sala no Firebase
         const playerRef = firebase.database().ref('rooms/' + this.currentRoom + '/players/' + this.playerId);
         await playerRef.remove();
         
         console.log('✅ Jogador removido da sala');
         
-        // Se for mestre e não houver mais jogadores, deletar sala
         if (this.isMaster) {
             await this.checkAndDeleteEmptyRoom();
         }
         
-        // Limpar localmente
         this.cleanup();
         
-        // Voltar para lobby
         if (window.authSystem) {
             window.authSystem.showLobbyScreen();
         }
@@ -212,7 +204,6 @@ RoomSystem.prototype.checkAndDeleteEmptyRoom = async function() {
         const snapshot = await roomRef.once('value');
         
         if (!snapshot.exists() || Object.keys(snapshot.val() || {}).length === 0) {
-            // Sala vazia, deletar
             await firebase.database().ref('rooms/' + this.currentRoom).remove();
             console.log('🗑️ Sala vazia deletada do Firebase');
         }
@@ -273,21 +264,17 @@ RoomSystem.prototype.addCopyButtonToRoomCode = function(roomCode) {
     };
     
     codeContainer.parentNode.appendChild(copyBtn);
-    console.log('✅ Botão copiar adicionado ao código da sala');
 };
 
 RoomSystem.prototype.updateRoomUI = function(roomData) {
-    // Atualizar lista de jogadores
     if (roomData.players) {
         this.updatePlayersList(roomData.players);
     }
     
-    // Atualizar status da sala
     if (roomData.status) {
         this.updateRoomStatus(roomData.status);
     }
     
-    // Atualizar código da sala
     this.updateRoomCode();
 };
 
@@ -300,7 +287,6 @@ RoomSystem.prototype.updatePlayersList = function(players) {
     let html = '<h4>👥 Jogadores Conectados:</h4>';
     let playerCount = 0;
     
-    // Ordenar: mestre primeiro, depois por nome
     const sortedPlayers = Object.values(players).sort((a, b) => {
         if (a.isMaster && !b.isMaster) return -1;
         if (!a.isMaster && b.isMaster) return 1;

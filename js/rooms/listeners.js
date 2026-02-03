@@ -1,4 +1,4 @@
-// js/rooms/listeners.js - Listeners do Firebase
+// js/rooms/listeners.js - VERSÃO CORRIGIDA (evita duplicação e sincroniza jogo)
 console.log('🏠 rooms/listeners.js carregando...');
 
 RoomSystem.prototype.setupRoomListeners = function() {
@@ -6,8 +6,11 @@ RoomSystem.prototype.setupRoomListeners = function() {
     
     console.log('👂 Configurando listeners da sala:', this.currentRoom);
     
+    // Limpar listeners anteriores para evitar duplicação
+    this.cleanupRoomListeners();
+    
     try {
-        // Listener para dados da sala
+        // Listener para dados da sala (APENAS UMA VEZ)
         const roomRef = firebase.database().ref('rooms/' + this.currentRoom);
         const roomListener = roomRef.on('value', (snapshot) => {
             const roomData = snapshot.val();
@@ -18,7 +21,7 @@ RoomSystem.prototype.setupRoomListeners = function() {
         });
         this.roomListeners.push({ ref: roomRef, listener: roomListener });
         
-        // Listener para ações
+        // Listener para ações (para chat, respostas, etc.)
         const actionsRef = firebase.database().ref('rooms/' + this.currentRoom + '/actions');
         const actionListener = actionsRef.on('child_added', (snapshot) => {
             const action = snapshot.val();
@@ -33,36 +36,68 @@ RoomSystem.prototype.setupRoomListeners = function() {
     }
 };
 
+RoomSystem.prototype.cleanupRoomListeners = function() {
+    // Limpar listeners da sala
+    this.roomListeners.forEach(item => {
+        if (item.ref && item.listener) {
+            item.ref.off('value', item.listener);
+        }
+    });
+    this.roomListeners = [];
+    
+    // Limpar listeners de ações
+    this.actionListeners.forEach(item => {
+        if (item.ref && item.listener) {
+            item.ref.off('child_added', item.listener);
+        }
+    });
+    this.actionListeners = [];
+    
+    console.log('🧹 Todos os listeners anteriores foram limpos');
+};
+
 RoomSystem.prototype.handleRoomUpdate = function(roomData) {
     console.log('🔄 Processando atualização da sala:', roomData.status);
     
-    // Se o mestre iniciou o jogo
-    if (roomData.status === 'playing') {
-        console.log('🎮 O mestre iniciou o jogo! Status: playing');
-        
-        // Se for jogador (não mestre), ir para tela do jogo
-        if (!this.isMaster) {
-            console.log('🚀 Jogador detectou início do jogo, indo para tela do jogo...');
-            
-            // Aguardar 1 segundo para garantir que tudo está carregado
-            setTimeout(() => {
-                if (window.authSystem && document.getElementById('lobby-screen')?.classList.contains('active')) {
-                    console.log('✅ Redirecionando jogador para tela do jogo...');
-                    window.authSystem.showGameScreen();
-                    
-                    // Mostrar alerta informativo
-                    setTimeout(() => {
-                        alert('🎮 O mestre iniciou o jogo!\n\nBoa sorte!');
-                    }, 500);
-                }
-            }, 1000);
-        }
+    // FLAG PARA EVITAR MÚLTIPLAS EXECUÇÕES
+    if (this.lastStatus === roomData.status) {
+        console.log('⏭️ Status igual ao anterior, ignorando...');
+        return;
     }
+    this.lastStatus = roomData.status;
     
     // Atualizar lista de jogadores
     if (roomData.players) {
         this.players = roomData.players;
         this.updatePlayersList();
+    }
+    
+    // SE O MESTRE INICIOU O JOGO
+    if (roomData.status === 'playing' && !this.isMaster) {
+        console.log('🎮 O mestre iniciou o jogo! Sincronizando...');
+        
+        // 1. Ir para tela do jogo (APENAS UMA VEZ)
+        if (!this.jogoIniciadoParaJogador) {
+            this.jogoIniciadoParaJogador = true;
+            
+            setTimeout(() => {
+                if (window.authSystem) {
+                    console.log('✅ Redirecionando jogador para tela do jogo...');
+                    window.authSystem.showGameScreen();
+                    
+                    // Mostrar alerta (APENAS UMA VEZ)
+                    if (!this.alertaMostrado) {
+                        this.alertaMostrado = true;
+                        setTimeout(() => {
+                            alert('🎮 O mestre iniciou o jogo!\n\nBoa sorte!');
+                        }, 800);
+                    }
+                }
+            }, 1200);
+        }
+        
+        // 2. SINCRONIZAR DADOS DO JOGO
+        this.syncGameData(roomData);
     }
     
     // Atualizar status da sala na UI
@@ -71,38 +106,119 @@ RoomSystem.prototype.handleRoomUpdate = function(roomData) {
     }
 };
 
+RoomSystem.prototype.syncGameData = async function(roomData) {
+    console.log('🔄 Sincronizando dados do jogo do Firebase...');
+    
+    // Sincronizar estado do jogo
+    if (roomData.gameState) {
+        console.log('📊 Recebendo estado do jogo:', roomData.gameState);
+        
+        // Sincronizar índices
+        if (roomData.gameState.currentQuestionIndex !== undefined) {
+            window.currentQuestionIndex = roomData.gameState.currentQuestionIndex;
+        }
+        if (roomData.gameState.currentTeamIndex !== undefined) {
+            window.currentTeamIndex = roomData.gameState.currentTeamIndex;
+        }
+        
+        // Sincronizar pontuações
+        if (roomData.gameState.scores && window.teams) {
+            this.syncScores(roomData.gameState.scores);
+        }
+    }
+    
+    // BUSCAR PERGUNTAS E EQUIPES DO FIREBASE
+    await this.fetchQuestionsAndTeams();
+};
+
+RoomSystem.prototype.syncScores = function(scores) {
+    if (window.teams && scores) {
+        window.teams.forEach(team => {
+            if (scores[team.id] !== undefined) {
+                team.score = scores[team.id];
+            }
+        });
+        console.log('📊 Pontuações sincronizadas das equipes');
+        
+        // Atualizar display se estiver no jogo
+        if (window.updateTeamsDisplay) {
+            window.updateTeamsDisplay();
+        }
+    }
+};
+
+RoomSystem.prototype.fetchQuestionsAndTeams = async function() {
+    console.log('📥 Buscando perguntas e equipes do Firebase...');
+    
+    try {
+        // Buscar perguntas
+        const questionsRef = firebase.database().ref('rooms/' + this.currentRoom + '/gameData/questions');
+        const questionsSnap = await questionsRef.once('value');
+        
+        if (questionsSnap.exists()) {
+            window.questions = questionsSnap.val();
+            console.log('✅ Perguntas recebidas:', window.questions.length);
+            
+            // Atualizar contador na tela
+            const totalEl = document.getElementById('total-questions');
+            if (totalEl) totalEl.textContent = window.questions.length;
+        } else {
+            console.log('⏳ Aguardando mestre enviar perguntas...');
+            window.questions = [];
+        }
+        
+        // Buscar equipes
+        const teamsRef = firebase.database().ref('rooms/' + this.currentRoom + '/gameData/teams');
+        const teamsSnap = await teamsRef.once('value');
+        
+        if (teamsSnap.exists()) {
+            window.teams = teamsSnap.val();
+            console.log('✅ Equipes recebidas:', window.teams.length);
+            
+            // Atualizar display das equipes
+            if (window.updateTeamsDisplay) {
+                window.updateTeamsDisplay();
+            }
+        } else {
+            console.log('⏳ Aguardando mestre enviar equipes...');
+            window.teams = [];
+        }
+        
+        // Se temos perguntas, mostrar a atual
+        if (window.questions && window.questions.length > 0 && window.showQuestion) {
+            setTimeout(() => {
+                window.showQuestion();
+            }, 500);
+        } else {
+            // Mostrar mensagem de espera
+            const questionText = document.getElementById('question-text');
+            if (questionText) {
+                questionText.textContent = '🔄 Sincronizando com o mestre...';
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao buscar dados:', error);
+    }
+};
+
+// Funções existentes (manter)
 RoomSystem.prototype.handlePlayerAction = function(action) {
-    // Não processar própria ação
     if (action.playerId === this.playerId) return;
-    
     console.log('📥 Ação recebida:', action.type, 'de', action.playerName);
-    
-    // Mostrar notificação da ação
     this.showActionNotification(action);
 };
 
 RoomSystem.prototype.showActionNotification = function(action) {
     let message = '';
-    
     switch (action.type) {
-        case 'answer':
-            message = `${action.playerName} ${action.data.correct ? 'acertou' : 'errou'}!`;
-            break;
-        case 'ready':
-            message = `${action.playerName} está ${action.data.ready ? 'pronto' : 'não pronto'}`;
-            break;
-        case 'chat':
-            // Chat é mostrado separadamente
-            return;
+        case 'answer': message = `${action.playerName} ${action.data.correct ? 'acertou' : 'errou'}!`; break;
+        case 'ready': message = `${action.playerName} está ${action.data.ready ? 'pronto' : 'não pronto'}`; break;
     }
-    
-    if (message) {
-        this.showNotification(message);
-    }
+    if (message) this.showNotification(message);
 };
 
 RoomSystem.prototype.showNotification = function(message, type = 'info') {
-    // Criar notificação temporária
     const notification = document.createElement('div');
     notification.textContent = message;
     notification.className = 'room-notification';
@@ -115,22 +231,12 @@ RoomSystem.prototype.showNotification = function(message, type = 'info') {
     };
     
     const color = colors[type] || colors.info;
-    
     notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${color.bg};
-        color: ${color.color};
-        padding: 12px 20px;
-        border-radius: 8px;
-        border: 2px solid ${color.border};
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        font-weight: 600;
-        max-width: 300px;
-        word-wrap: break-word;
+        position: fixed; top: 20px; right: 20px; background: ${color.bg};
+        color: ${color.color}; padding: 12px 20px; border-radius: 8px;
+        border: 2px solid ${color.border}; z-index: 10000;
+        animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-weight: 600; max-width: 300px; word-wrap: break-word;
     `;
     
     document.body.appendChild(notification);
@@ -148,11 +254,10 @@ RoomSystem.prototype.updatePlayersList = function() {
     let html = '<h4>👥 Jogadores Conectados:</h4>';
     let playerCount = 0;
     
-    // Ordenar: mestre primeiro, depois por nome
-    const sortedPlayers = Object.values(this.players).sort((a, b) => {
+    const sortedPlayers = Object.values(this.players || {}).sort((a, b) => {
         if (a.isMaster && !b.isMaster) return -1;
         if (!a.isMaster && b.isMaster) return 1;
-        return a.name.localeCompare(b.name);
+        return (a.name || '').localeCompare(b.name || '');
     });
     
     sortedPlayers.forEach(player => {
@@ -161,9 +266,9 @@ RoomSystem.prototype.updatePlayersList = function() {
             html += `
                 <div class="player-item ${player.isMaster ? 'master' : ''}">
                     <span class="player-icon">${player.avatar || '👤'}</span>
-                    <span class="player-name">${player.name}</span>
+                    <span class="player-name">${player.name || 'Sem nome'}</span>
                     <span class="player-status">${player.isReady ? '✅ Pronto' : '⏳ Aguardando'}</span>
-                    <span class="player-score">${player.score} pts</span>
+                    <span class="player-score">${player.score || 0} pts</span>
                 </div>
             `;
         }
@@ -174,12 +279,6 @@ RoomSystem.prototype.updatePlayersList = function() {
     }
     
     playersList.innerHTML = html;
-    
-    // Atualizar contador
-    const playerCountElement = document.getElementById('player-count');
-    if (playerCountElement) {
-        playerCountElement.textContent = `(${playerCount} jogadores)`;
-    }
 };
 
 RoomSystem.prototype.updateRoomStatus = function(status) {
