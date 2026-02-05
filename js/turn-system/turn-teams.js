@@ -1,4 +1,4 @@
-// js/turn-system/turn-teams.js - VERSÃO LEVE COM MESTRE DIRETO
+// js/turn-system/turn-teams.js - VERSÃO COMPLETA
 console.log('🔄 turn-system/turn-teams.js carregando...');
 
 TurnSystem.prototype.updatePlayerTeam = function(teamId) {
@@ -10,12 +10,19 @@ TurnSystem.prototype.updatePlayerTeam = function(teamId) {
     
     const team = window.teams.find(t => t.id === teamId);
     if (team) {
+        // Evitar duplicação
+        if (this.playerTeamId === teamId) {
+            console.log(`🔄 Jogador já está na equipe: ${team.name}`);
+            return;
+        }
+        
         this.playerTeam = team;
         this.playerTeamId = teamId;
         console.log(`🎯 Jogador atribuído à equipe: ${team.name} (ID: ${teamId})`);
         
         this.updateAnswerButtons();
         
+        // Mostrar notificação APENAS UMA VEZ
         if (!this.teamAssignedNotified) {
             this.teamAssignedNotified = true;
             setTimeout(() => {
@@ -34,6 +41,12 @@ TurnSystem.prototype.assignMasterToTeam = function() {
     
     const teamId = window.teams[0].id;
     const teamName = window.teams[0].name;
+    
+    // Evitar duplicação
+    if (this.playerTeamId === teamId) {
+        console.log(`👑 Mestre já está na equipe: ${teamName}`);
+        return;
+    }
     
     this.playerTeam = window.teams[0];
     this.playerTeamId = teamId;
@@ -59,14 +72,14 @@ TurnSystem.prototype.saveMasterTeamAssignment = function(teamId, teamName) {
 };
 
 TurnSystem.prototype.canPlayerAnswer = function() {
-    // MESTRE SEMPRE PODE RESPONDER (responde diretamente, sem Firebase)
+    // MESTRE SEMPRE PODE RESPONDER
     if (this.roomSystem.isMaster) {
         return true;
     }
     
     // JOGADORES NORMAIS: verificar equipe de plantão
     if (!this.currentTurn || !this.playerTeamId) {
-        console.log('❌ Jogador não pode responder:', {
+        console.log('❌ Jogador não pode responder (sem turno ou equipe):', {
             currentTurn: this.currentTurn,
             playerTeamId: this.playerTeamId
         });
@@ -74,11 +87,21 @@ TurnSystem.prototype.canPlayerAnswer = function() {
     }
     
     const canAnswer = this.playerTeamId === this.currentTurn.teamId;
-    console.log('✅ Verificação de equipe:', {
-        jogador: this.playerTeamId,
-        plantao: this.currentTurn.teamId,
-        podeResponder: canAnswer
-    });
+    
+    if (!canAnswer) {
+        console.log('❌ Jogador não está na equipe de plantão:', {
+            equipeJogador: this.playerTeamId,
+            equipePlantao: this.currentTurn.teamId,
+            nomeJogador: this.playerTeam?.name,
+            nomePlantao: this.currentTurn.teamName
+        });
+    } else {
+        console.log('✅ Jogador PODE responder!', {
+            equipe: this.playerTeam?.name,
+            jogador: this.roomSystem.playerName
+        });
+    }
+    
     return canAnswer;
 };
 

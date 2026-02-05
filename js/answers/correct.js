@@ -1,13 +1,11 @@
-// file name: answers/correct.js
+// file name: answers/correct.js - VERSÃO ATUALIZADA
 function handleCorrectAnswer() {
     if (window.currentQuestionProcessed || window.winnerTeam) return;
     window.currentQuestionProcessed = true;
     
-    if (window.bombQuestionSystem && window.bombQuestionSystem.isBombActive) return;
-    
     var team = window.teams[window.currentTeamIndex];
     team.questionsAnswered = (team.questionsAnswered || 0) + 1;
-    team.score++;
+    team.score += 1; // APENAS 1 PONTO
     window.consecutiveCorrect++;
     
     console.log(team.name + ' acertou! Score: ' + team.score + ', Consecutivos: ' + window.consecutiveCorrect);
@@ -30,7 +28,7 @@ function handleCorrectAnswer() {
     // VERIFICAR SE DEVE ATIVAR PB (3 acertos) - MAS SÓ SE HOUVER PB DISPONÍVEL
     if (config.enabled && window.consecutiveCorrect >= config.consecutiveToActivate) {
         
-        // CORREÇÃO CRÍTICA: VERIFICAR SE HÁ PB DISPONÍVEL
+        // VERIFICAR SE HÁ PB DISPONÍVEL
         const hasPB = window.bombQuestionSystem && 
                      window.bombQuestionSystem.getLoadStatus && 
                      window.bombQuestionSystem.getLoadStatus().loaded;

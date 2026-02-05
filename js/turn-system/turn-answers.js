@@ -1,4 +1,4 @@
-// js/turn-system/turn-answers.js - ATUALIZADO COM PROCESSAMENTO PARA MESTRE
+// js/turn-system/turn-answers.js - PONTUAÇÃO CORRIGIDA
 console.log('🔄 turn-system/turn-answers.js carregando...');
 
 TurnSystem.prototype.submitAnswer = function(answer) {
@@ -11,7 +11,7 @@ TurnSystem.prototype.submitAnswer = function(answer) {
         return;
     }
     
-    // JOGADOR NORMAL: Enviar para o mestre
+    // JOGADOR NORMAL: Verificar se pode responder
     if (!this.canPlayerAnswer()) {
         this.showNotification('⏳ Aguarde sua equipe estar de plantão!', 'warning');
         return;
@@ -36,7 +36,6 @@ TurnSystem.prototype.submitAnswer = function(answer) {
     this.showNotification('📤 Resposta enviada ao mestre!', 'success');
 };
 
-// NOVA FUNÇÃO: Mestre responde diretamente
 TurnSystem.prototype.processMasterAnswer = function(answer) {
     console.log('👑 Mestre processando resposta:', answer);
     
@@ -52,17 +51,10 @@ TurnSystem.prototype.processMasterAnswer = function(answer) {
     
     const isCorrect = normalizedUserAnswer === normalizedGabarito;
     
-    // Calcular pontos
-    let points = 0;
-    if (isCorrect) {
-        window.consecutiveCorrect = (window.consecutiveCorrect || 0) + 1;
-        points = 10 + (window.consecutiveCorrect * 2);
-    } else {
-        window.consecutiveCorrect = 0;
-        points = -5;
-    }
+    // PONTUAÇÃO FIXA: 1 ponto por acerto, 0 por erro
+    let points = isCorrect ? 1 : 0;
     
-    // Atualizar pontuação da equipe atual (ALFA)
+    // Atualizar pontuação da equipe atual
     if (window.teams && window.teams[window.currentTeamIndex]) {
         window.teams[window.currentTeamIndex].score += points;
         
@@ -74,106 +66,49 @@ TurnSystem.prototype.processMasterAnswer = function(answer) {
         this.updateTeamScore(window.currentTeamIndex, window.teams[window.currentTeamIndex].score);
     }
     
-    // Mostrar resultado imediatamente
+    // Mostrar resultado (sem tempo, com botão de continuar)
     this.showAnswerResult(isCorrect, points, 'MESTRE');
     
     console.log(`👑 Mestre ${isCorrect ? 'ACERTOU' : 'ERROU'}! (${points} pts)`);
-    
-    // Aguardar e avançar
-    setTimeout(() => {
-        this.advanceToNextQuestion();
-    }, 3000);
 };
 
-// NOVA FUNÇÃO: Mostrar resultado da resposta
+// FUNÇÃO ATUALIZADA: Mostrar resultado sem timer, com comentários no lugar certo
 TurnSystem.prototype.showAnswerResult = function(isCorrect, points, playerName) {
-    const questionText = document.getElementById('question-text');
-    if (!questionText) return;
+    // Limpar resultado anterior
+    const commentaryElement = document.getElementById('commentary');
+    const correctAnswerElement = document.getElementById('correct-answer');
     
-    const currentTeam = window.teams?.[window.currentTeamIndex];
-    const teamName = currentTeam ? currentTeam.name : 'Equipe';
-    
-    const resultHtml = `
-        <div style="background: ${isCorrect ? '#d4edda' : '#f8d7da'}; 
-                    padding: 15px; border-radius: 10px; margin-bottom: 20px;
-                    border: 2px solid ${isCorrect ? '#28a745' : '#dc3545'};">
-            <h3 style="color: ${isCorrect ? '#155724' : '#721c24'}; margin: 0 0 10px 0;">
-                ${isCorrect ? '✅ CORRETO!' : '❌ ERRADO!'}
-            </h3>
-            <p style="margin: 5px 0;">
-                <strong>${playerName}</strong> da equipe <strong>${teamName}</strong>
-                ${isCorrect ? 'acertou' : 'errou'}!
-            </p>
-            <p style="margin: 5px 0;">Pontos: ${points > 0 ? '+' : ''}${points}</p>
-            <p style="margin: 5px 0; font-weight: bold;">
-                Resposta correta: ${window.questions[window.currentQuestionIndex]?.gabarito || 'Não informada'}
-            </p>
-        </div>
-    `;
-    
-    questionText.innerHTML = resultHtml + (questionText.innerHTML || '');
-};
-
-// Resto do código permanece igual...
-TurnSystem.prototype.handleTeamAnswer = function(answerData) {
-    if (!this.roomSystem.isMaster) return;
-    
-    console.log('📥 Resposta recebida:', answerData);
-    
-    if (this.currentTurn &&
-        this.currentTurn.teamId === answerData.teamId &&
-        this.currentTurn.questionIndex === answerData.questionIndex &&
-        !this.currentTurn.answered) {
-        
-        firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentTurn')
-            .update({ answered: true });
-        
-        this.processAnswer(answerData);
-    }
-};
-
-TurnSystem.prototype.processAnswer = function(answerData) {
-    const question = window.questions[window.currentQuestionIndex];
-    const gabarito = question?.gabarito ? question.gabarito.trim().toUpperCase() : '';
-    const normalizedGabarito = this.normalizeAnswer(gabarito);
-    const normalizedUserAnswer = this.normalizeAnswer(answerData.answer);
-    
-    const isCorrect = normalizedUserAnswer === normalizedGabarito;
-    
-    let points = 0;
-    if (isCorrect) {
-        window.consecutiveCorrect = (window.consecutiveCorrect || 0) + 1;
-        points = 10 + (window.consecutiveCorrect * 2);
-    } else {
-        window.consecutiveCorrect = 0;
-        points = -5;
+    if (correctAnswerElement) {
+        correctAnswerElement.textContent = isCorrect ? '✅ ACERTOU' : '❌ ERROU';
+        correctAnswerElement.className = isCorrect ? 'correct-answer' : 'wrong-answer';
     }
     
-    const teamIndex = window.teams.findIndex(t => t.id === answerData.teamId);
-    if (teamIndex !== -1) {
-        window.teams[teamIndex].score += points;
+    // Mostrar comentários no local correto
+    if (commentaryElement && window.questions && window.questions[window.currentQuestionIndex]) {
+        const question = window.questions[window.currentQuestionIndex];
+        let allComments = '';
         
-        if (window.updateTeamsDisplay) {
-            window.updateTeamsDisplay();
-        }
+        if (question.comentario) allComments += question.comentario;
+        if (question.comentario2) allComments += (allComments ? '<br><br>' : '') + question.comentario2;
+        if (question.comentario3) allComments += (allComments ? '<br><br>' : '') + question.comentario3;
         
-        this.updateTeamScore(teamIndex, window.teams[teamIndex].score);
+        commentaryElement.innerHTML = allComments;
+        commentaryElement.classList.add('active');
     }
     
-    this.broadcastAnswerResult(isCorrect, points, answerData);
+    // Mostrar botão de continuar (sem timer automático)
+    const nextBtn = document.getElementById('next-question-btn');
+    if (nextBtn) {
+        nextBtn.style.display = 'inline-block';
+        nextBtn.textContent = '⏭️ Continuar';
+    }
     
-    console.log(`✅ Resposta processada: ${isCorrect ? 'CORRETO' : 'ERRADO'} (${points} pts)`);
+    // Desabilitar botões de resposta
+    const certoBtn = document.getElementById('certo-btn');
+    const erradoBtn = document.getElementById('errado-btn');
+    const skipBtn = document.getElementById('skip-btn');
+    
+    if (certoBtn) certoBtn.disabled = true;
+    if (erradoBtn) erradoBtn.disabled = true;
+    if (skipBtn) skipBtn.disabled = true;
 };
-
-TurnSystem.prototype.normalizeAnswer = function(answer) {
-    if (!answer) return '';
-    return answer.toString().trim().toUpperCase()
-        .replace(/^CERTO$/i, 'C')
-        .replace(/^ERRADO$/i, 'E')
-        .replace(/^CERTA$/i, 'C')
-        .replace(/^ERRADA$/i, 'E')
-        .replace(/^C$/i, 'C')
-        .replace(/^E$/i, 'E');
-};
-
-console.log('✅ turn-system/turn-answers.js carregado');

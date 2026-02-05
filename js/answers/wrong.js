@@ -1,4 +1,4 @@
-// file name: answers/wrong.js
+// file name: answers/wrong.js - VERSÃO ATUALIZADA
 function handleWrongAnswer() {
     // VERIFICAR SE JÁ FOI PROCESSADO ESTA RESPOSTA
     if (window.currentQuestionProcessed) {
@@ -12,6 +12,7 @@ function handleWrongAnswer() {
     var team = window.teams[window.currentTeamIndex];
     team.questionsAnswered = (team.questionsAnswered || 0) + 1;
     team.questionsWrong = (team.questionsWrong || 0) + 1;
+    // NÃO DESCONTA PONTOS
     
     // ZERAR CONSECUTIVOS E MARCAR PARA RODÍZIO (erro sempre roda equipe)
     console.log(team.name + ' errou - RODANDO EQUIPE');

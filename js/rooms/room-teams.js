@@ -1,15 +1,29 @@
-// js/rooms/room-teams.js - CORRIGIDO (não usa TurnSystem)
+// js/rooms/room-teams.js - VERSÃO COMPLETA
 console.log('🏠 rooms/room-teams.js carregando...');
 
 RoomSystem.prototype.assignPlayerToTeam = function() {
-    if (!window.teams || window.teams.length === 0) return;
+    if (!window.teams || window.teams.length === 0) {
+        console.log('⏳ Aguardando equipes carregarem...');
+        setTimeout(() => this.assignPlayerToTeam(), 1000);
+        return;
+    }
     
+    // Se já tem equipe, não atribuir novamente
     if (this.playerTeamId) {
         console.log('👤 Jogador já tem equipe:', this.playerTeamId);
         return;
     }
     
+    console.log('🎯 Atribuindo equipe para jogador...');
+    
+    // Buscar jogadores já atribuídos
     this.getAssignedPlayers().then(assignedPlayers => {
+        // Verificar novamente (pode ter sido atribuído durante a promise)
+        if (this.playerTeamId) {
+            console.log('👤 Jogador já foi atribuído durante a busca');
+            return;
+        }
+        
         const playerCounts = {};
         window.teams.forEach(team => {
             playerCounts[team.id] = assignedPlayers.filter(p => p.teamId === team.id).length;
@@ -36,20 +50,28 @@ RoomSystem.prototype.assignPlayerToTeam = function() {
             }
         }
         
+        // Atribuir APENAS UMA VEZ
         this.playerTeamId = targetTeamId;
         const team = window.teams.find(t => t.id === targetTeamId);
         
         console.log(`👤 Jogador atribuído à equipe: ${team.name} (ID: ${targetTeamId})`);
         
+        // Salvar no Firebase APENAS UMA VEZ
         this.savePlayerTeamAssignment(targetTeamId, team.name);
         
-        // Atualizar sistema de turnos se disponível
+        // Atualizar sistema de turnos APENAS UMA VEZ
         if (window.turnSystem && typeof window.turnSystem.updatePlayerTeam === 'function') {
             window.turnSystem.updatePlayerTeam(targetTeamId);
             console.log('✅ Equipe atribuída ao sistema de turnos');
         }
         
-        this.showNotification(`🎯 Você foi atribuído à equipe: ${team.name}`);
+        // Notificação APENAS UMA VEZ
+        if (!this.teamAssignmentNotified) {
+            this.teamAssignmentNotified = true;
+            this.showNotification(`🎯 Você foi atribuído à equipe: ${team.name}`);
+        }
+    }).catch(error => {
+        console.error('❌ Erro ao atribuir equipe:', error);
     });
 };
 
