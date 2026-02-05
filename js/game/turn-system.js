@@ -1,12 +1,12 @@
-// js/game/turn-system.js - SISTEMA COMPLETO DE TURNOS
+// js/game/turn-system.js - SISTEMA COMPLETO DE TURNOS COM ATRIBUIÇÃO AUTOMÁTICA
 console.log('🔄 turn-system.js carregando...');
 
 class TurnSystem {
     constructor(roomSystem) {
         this.roomSystem = roomSystem;
         this.currentTurn = null;
-        this.setupTurnListeners();
         this.playerTeam = null; // Equipe do jogador atual
+        this.setupTurnListeners();
         console.log('✅ Sistema de turnos inicializado');
     }
     
@@ -24,7 +24,16 @@ class TurnSystem {
             }
         });
         
-        // 2. Ouvir resultados de respostas
+        // 2. Ouvir atribuição de equipe do jogador
+        const playerRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/players/' + this.roomSystem.playerId);
+        playerRef.on('value', (snapshot) => {
+            const playerData = snapshot.val();
+            if (playerData && playerData.teamId && window.teams) {
+                this.updatePlayerTeam(playerData.teamId);
+            }
+        });
+        
+        // 3. Ouvir resultados de respostas
         const resultRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/answerResult');
         resultRef.on('value', (snapshot) => {
             const resultData = snapshot.val();
@@ -33,7 +42,7 @@ class TurnSystem {
             }
         });
         
-        // 3. Ouvir mudanças de pergunta
+        // 4. Ouvir mudanças de pergunta
         const questionRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentQuestion');
         questionRef.on('value', (snapshot) => {
             const questionData = snapshot.val();
@@ -42,99 +51,34 @@ class TurnSystem {
             }
         });
         
-        // 4. Se for jogador, escolher equipe
-        if (!this.roomSystem.isMaster) {
-            this.setupTeamSelection();
-        }
+        console.log('👂 Listeners de turno configurados');
     }
     
- setupTeamSelection() {
-    console.log('👤 Jogador precisa escolher equipe');
-    
-    // NÃO mostrar modal automático - o jogador será atribuído automaticamente
-    // ou escolherá via interface existente
-    
-    // Por padrão, atribuir à primeira equipe (temporário)
-    setTimeout(() => {
-        if (window.teams && window.teams.length > 0) {
-            this.selectPlayerTeam(0); // Atribuir à primeira equipe
-        }
-    }, 2000);
-}
-    
-    showTeamSelectionModal() {
-        if (!window.teams || window.teams.length === 0) {
+    updatePlayerTeam(teamId) {
+        if (!window.teams) {
             console.log('⏳ Aguardando equipes carregarem...');
-            setTimeout(() => this.showTeamSelectionModal(), 1000);
+            setTimeout(() => this.updatePlayerTeam(teamId), 1000);
             return;
         }
         
-        const modal = document.createElement('div');
-        modal.id = 'team-selection-modal';
-        modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 10000;
-            display: flex; justify-content: center; align-items: center;
-        `;
-        
-        let teamsHtml = '<h3 style="color: #FFCC00; margin-bottom: 20px;">🏆 Escolha sua Equipe</h3>';
-        window.teams.forEach((team, index) => {
-            teamsHtml += `
-                <button class="team-select-btn" data-team-index="${index}" 
-                        style="background: ${this.getTeamColor(index)}; 
-                               color: white; border: none; padding: 15px 30px;
-                               margin: 10px; border-radius: 10px; cursor: pointer;
-                               font-size: 16px; font-weight: bold; width: 200px;">
-                    ${team.name}
-                    ${team.players && team.players.length > 0 ? 
-                      `<br><small>(${team.players.join(', ')})</small>` : ''}
-                </button><br>
-            `;
-        });
-        
-        modal.innerHTML = `
-            <div style="background: #003366; padding: 30px; border-radius: 15px;
-                        border: 3px solid #FFCC00; text-align: center; max-width: 500px;">
-                ${teamsHtml}
-                <p style="color: #ccc; margin-top: 20px; font-size: 14px;">
-                    Você poderá responder apenas quando sua equipe estiver de plantão
-                </p>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Adicionar event listeners
-        document.querySelectorAll('.team-select-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const teamIndex = parseInt(e.target.dataset.teamIndex);
-                this.selectPlayerTeam(teamIndex);
-                modal.remove();
-            });
-        });
-    }
-    
-    getTeamColor(index) {
-        const colors = [
-            '#E53935', '#00897B', '#FFA000', '#1E3799', '#EC407A',
-            '#4DB6AC', '#6C5CE7', '#F9A825', '#C23616', '#008F74'
-        ];
-        return colors[index % colors.length];
-    }
-    
-    selectPlayerTeam(teamIndex) {
-        if (!window.teams[teamIndex]) return;
-        
-        this.playerTeam = window.teams[teamIndex];
-        console.log(`✅ Jogador selecionou equipe: ${this.playerTeam.name}`);
-        
-        // Salvar no Firebase
-        if (this.roomSystem.currentRoom) {
-            firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/players/' + this.roomSystem.playerId)
-                .update({ teamId: this.playerTeam.id, teamName: this.playerTeam.name });
+        const team = window.teams.find(t => t.id === teamId);
+        if (team) {
+            this.playerTeam = team;
+            console.log(`🎯 Jogador atribuído à equipe: ${team.name} (ID: ${teamId})`);
+            
+            // Atualizar controles de resposta
+            this.updateAnswerButtons();
+            
+            // Mostrar notificação apenas uma vez
+            if (!this.teamAssignedNotified) {
+                this.teamAssignedNotified = true;
+                setTimeout(() => {
+                    this.showNotification(`🎯 Você está na equipe: ${team.name}`);
+                }, 500);
+            }
+        } else {
+            console.error(`❌ Equipe não encontrada: ${teamId}`);
         }
-        
-        alert(`✅ Você entrou na equipe ${this.playerTeam.name}!`);
     }
     
     // MESTRE: Definir equipe de plantão
@@ -239,6 +183,8 @@ class TurnSystem {
             erradoBtn.style.opacity = '1';
             certoBtn.style.cursor = 'pointer';
             erradoBtn.style.cursor = 'pointer';
+            certoBtn.title = 'Sua vez de responder! (C)';
+            erradoBtn.title = 'Sua vez de responder! (E)';
             
             console.log('🎯 Jogador pode responder - equipe de plantão');
         } else {
@@ -249,6 +195,8 @@ class TurnSystem {
             erradoBtn.style.opacity = '0.5';
             certoBtn.style.cursor = 'not-allowed';
             erradoBtn.style.cursor = 'not-allowed';
+            certoBtn.title = 'Aguarde sua equipe estar de plantão';
+            erradoBtn.title = 'Aguarde sua equipe estar de plantão';
             
             console.log('⏳ Jogador não está na equipe de plantão');
         }
@@ -264,7 +212,7 @@ class TurnSystem {
     // JOGADOR: Enviar resposta
     submitAnswer(answer) {
         if (!this.canPlayerAnswer()) {
-            alert('⏳ Aguarde sua equipe estar de plantão!');
+            this.showNotification('⏳ Aguarde sua equipe estar de plantão!', 'warning');
             return;
         }
         
@@ -284,6 +232,7 @@ class TurnSystem {
             .push(answerData);
         
         console.log('📤 Resposta enviada:', answer);
+        this.showNotification('📤 Resposta enviada ao mestre!', 'success');
     }
     
     // MESTRE: Processar resposta recebida
@@ -452,6 +401,30 @@ class TurnSystem {
             .replace(/^ERRADA$/i, 'E')
             .replace(/^C$/i, 'C')
             .replace(/^E$/i, 'E');
+    }
+    
+    showNotification(message, type = 'info') {
+        console.log('🔔 Notificação:', message);
+        
+        // Criar notificação na tela
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed; top: 20px; right: 20px;
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : type === 'warning' ? '#ffc107' : '#007bff'};
+            color: ${type === 'warning' ? '#000' : 'white'}; padding: 15px 20px; border-radius: 5px;
+            z-index: 9999; box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease; border: 2px solid ${type === 'warning' ? '#ff9800' : 'transparent'};
+            max-width: 300px; word-wrap: break-word;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remover após 5 segundos
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
     }
 }
 
