@@ -1,5 +1,3 @@
-[file name]: rooms/master-controls.js
-[file content begin]
 // js/rooms/master-controls.js - Controles do mestre
 console.log('🏠 rooms/master-controls.js carregando...');
 
@@ -12,13 +10,11 @@ RoomSystem.prototype.startGameForAll = async function(gameData) {
     console.log('🚀 Iniciando jogo para todos os jogadores...');
     
     try {
-        // Verificar se há jogadores suficientes
         if (this.getPlayerCount() < 2) {
             alert('⚠️ É necessário pelo menos 2 jogadores para começar!');
             return false;
         }
         
-        // Atualizar status da sala
         await firebase.database().ref('rooms/' + this.currentRoom).update({
             status: 'playing',
             gameState: gameData || {
@@ -30,13 +26,9 @@ RoomSystem.prototype.startGameForAll = async function(gameData) {
             }
         });
         
-        // Enviar ação de iniciar jogo
         this.sendAction('start_game', { gameData });
-        
-        // Mostrar notificação
         this.showNotification('🎮 O jogo começou! Boa sorte a todos!', 'success');
         
-        // Ir para tela do jogo
         setTimeout(() => {
             if (window.authSystem) {
                 window.authSystem.showGameScreen();
@@ -62,10 +54,8 @@ RoomSystem.prototype.broadcastNextQuestion = function() {
         timestamp: Date.now()
     };
     
-    // Atualizar estado do jogo no Firebase
     firebase.database().ref('rooms/' + this.currentRoom + '/gameState').set(gameState);
     
-    // Enviar ação de próxima pergunta
     this.sendAction('next_question', {
         questionIndex: gameState.currentQuestionIndex,
         teamIndex: gameState.currentTeamIndex
@@ -84,7 +74,6 @@ RoomSystem.prototype.broadcastAnswerResult = function(teamName, isCorrect, point
         timestamp: Date.now()
     });
     
-    // Atualizar pontuações no Firebase
     this.updateScoresInFirebase();
 };
 
@@ -147,7 +136,6 @@ RoomSystem.prototype.transferMaster = async function(newMasterId) {
     }
     
     try {
-        // Atualizar mestre na sala
         await firebase.database().ref('rooms/' + this.currentRoom).update({
             master: {
                 uid: newMasterId,
@@ -155,7 +143,6 @@ RoomSystem.prototype.transferMaster = async function(newMasterId) {
             }
         });
         
-        // Atualizar status dos jogadores
         await firebase.database().ref('rooms/' + this.currentRoom + '/players/' + this.playerId).update({
             isMaster: false
         });
@@ -184,4 +171,9 @@ RoomSystem.prototype.updateGameSettings = async function(settings) {
         console.log('⚙️ Configurações atualizadas:', settings);
         return true;
     } catch (error) {
-        console.error('
+        console.error('❌ Erro ao atualizar configurações:', error);
+        return false;
+    }
+};
+
+console.log('✅ rooms/master-controls.js carregado com sucesso!');

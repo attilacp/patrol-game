@@ -1,5 +1,3 @@
-[file name]: rooms/actions.js
-[file content begin]
 // js/rooms/actions.js - Sistema de ações multiplayer
 console.log('🏠 rooms/actions.js carregando...');
 
@@ -33,12 +31,10 @@ RoomSystem.prototype.sendAction = function(actionType, data = {}) {
 };
 
 RoomSystem.prototype.handlePlayerAction = function(action) {
-    // Não processar própria ação
     if (action.playerId === this.playerId) return;
     
     console.log('📥 Ação recebida:', action.type, 'de', action.playerName);
     
-    // Mostrar notificação da ação
     this.showActionNotification(action);
     
     switch (action.type) {
@@ -70,7 +66,6 @@ RoomSystem.prototype.handleAnswerAction = function(action) {
     const isCorrect = action.data.correct;
     const scoreChange = isCorrect ? 10 : -5;
     
-    // Atualizar pontuação do jogador
     const playerRef = firebase.database().ref('rooms/' + this.currentRoom + '/players/' + action.playerId + '/score');
     playerRef.transaction((current) => {
         return (current || 0) + scoreChange;
@@ -78,7 +73,6 @@ RoomSystem.prototype.handleAnswerAction = function(action) {
 };
 
 RoomSystem.prototype.handleSkipAction = function(action) {
-    // Apenas mestre pode processar pedido de pular
     if (this.isMaster) {
         this.showNotification(`${action.playerName} pediu para pular a pergunta`);
     }
@@ -89,17 +83,14 @@ RoomSystem.prototype.handleChatAction = function(action) {
 };
 
 RoomSystem.prototype.handleReadyAction = function(action) {
-    // Atualizar status do jogador
     const playerRef = firebase.database().ref('rooms/' + this.currentRoom + '/players/' + action.playerId + '/isReady');
     playerRef.set(action.data.ready);
 };
 
 RoomSystem.prototype.handleStartGameAction = function(action) {
-    // Apenas mestre pode iniciar jogo
     if (this.players[action.playerId]?.isMaster) {
         this.showNotification('🎮 O mestre iniciou o jogo!');
         
-        // Ir para tela do jogo
         setTimeout(() => {
             if (window.authSystem) {
                 window.authSystem.showGameScreen();
@@ -109,11 +100,9 @@ RoomSystem.prototype.handleStartGameAction = function(action) {
 };
 
 RoomSystem.prototype.handleNextQuestionAction = function(action) {
-    // Apenas mestre pode avançar perguntas
     if (this.players[action.playerId]?.isMaster) {
         this.showNotification('⏭️ O mestre avançou para próxima pergunta');
         
-        // Avançar pergunta localmente
         if (window.gameStarted) {
             window.nextQuestion?.();
         }
@@ -138,7 +127,6 @@ RoomSystem.prototype.showActionNotification = function(action) {
             message = `${action.playerName} está ${action.data.ready ? 'pronto' : 'não pronto'}`;
             break;
         case 'chat':
-            // Chat é mostrado separadamente
             return;
     }
     
@@ -148,4 +136,3 @@ RoomSystem.prototype.showActionNotification = function(action) {
 };
 
 console.log('✅ rooms/actions.js carregado com sucesso!');
-[file content end]

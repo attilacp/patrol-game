@@ -12,6 +12,11 @@ class RoomSystem {
         this.roomListeners = [];
         this.actionListeners = [];
         this.settings = { maxPlayers: 10, isPrivate: false };
+        this.playerTeamId = null;
+        this.lastStatus = null;
+        this.jogoIniciadoParaJogador = false;
+        this.alertaMostrado = false;
+        this.creationAlertShown = false;
         
         console.log('👤 Jogador:', this.playerName, 'ID:', this.playerId);
     }
@@ -40,17 +45,39 @@ class RoomSystem {
         return code;
     }
     
-    getCurrentRoom() { return this.currentRoom; }
-    getIsMaster() { return this.isMaster; }
-    getPlayers() { return this.players; }
+    getCurrentRoom() { 
+        return this.currentRoom; 
+    }
+    
+    getIsMaster() { 
+        return this.isMaster; 
+    }
+    
+    getPlayers() { 
+        return this.players; 
+    }
+    
     getPlayerCount() {
         return Object.values(this.players).filter(p => p.connected).length;
+    }
+    
+    getPlayerNameById(playerId) {
+        if (this.players && this.players[playerId]) {
+            return this.players[playerId].name;
+        }
+        return 'Jogador desconhecido';
+    }
+    
+    addChatMessage(sender, message) {
+        console.log(`💬 ${sender}: ${message}`);
+        // Implementação do chat pode ser adicionada depois
     }
     
     cleanup() {
         this.currentRoom = null;
         this.isMaster = false;
         this.players = {};
+        this.playerTeamId = null;
         console.log('🧹 Sistema de salas limpo');
     }
 }
