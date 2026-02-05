@@ -1,4 +1,4 @@
-// js/rooms/room-handlers.js - CORRIGIDO
+// js/rooms/room-handlers.js - MANIPULAÇÃO DE EVENTOS (CORRIGIDO)
 console.log('🏠 rooms/room-handlers.js carregando...');
 
 RoomSystem.prototype.handleStatusChange = function(status) {
@@ -32,11 +32,6 @@ RoomSystem.prototype.handleTurnFromFirebase = function(turnData) {
     window.currentQuestionIndex = turnData.questionIndex || 0;
     
     this.updateTurnUI(turnData);
-    
-    // CORREÇÃO: Usar updateAnswerButtons em vez de updatePlayerControls
-    if (window.turnSystem && window.turnSystem.updateAnswerButtons) {
-        window.turnSystem.updateAnswerButtons();
-    }
 };
 
 RoomSystem.prototype.handleQuestionFromFirebase = function(questionData) {
@@ -68,6 +63,9 @@ RoomSystem.prototype.fetchGameDataFromFirebase = async function() {
         if (questionsSnap.exists()) {
             window.questions = questionsSnap.val();
             console.log('✅ Perguntas:', window.questions.length);
+        } else {
+            console.error('❌ Nenhuma pergunta');
+            return;
         }
         
         const teamsSnap = await roomRef.child('gameData/teams').once('value');
@@ -83,6 +81,9 @@ RoomSystem.prototype.fetchGameDataFromFirebase = async function() {
                 colorClass: team.colorClass || `team-bg-${(index % 10) + 1}`,
                 turnColorClass: team.turnColorClass || `team-color-${(index % 10) + 1}`
             }));
+        } else {
+            console.error('❌ Nenhuma equipe');
+            return;
         }
         
         await this.applyFirebaseOrder();
@@ -91,6 +92,38 @@ RoomSystem.prototype.fetchGameDataFromFirebase = async function() {
     } catch (error) {
         console.error('❌ Erro:', error);
         this.showDataError();
+    }
+};
+
+RoomSystem.prototype.applyFirebaseOrder = async function() {
+    if (!this.currentRoom) return;
+    
+    try {
+        const orderRef = firebase.database().ref('rooms/' + this.currentRoom + '/gameData/order');
+        const orderSnap = await orderRef.once('value');
+        
+        if (orderSnap.exists()) {
+            const orderData = orderSnap.val();
+            console.log('🔄 Ordem:', orderData.isRandom ? 'ALEATÓRIA' : 'NORMAL');
+            
+            if (orderData.questions && window.questions) {
+                const originalQuestions = [...window.questions];
+                const reorderedQuestions = [];
+                
+                orderData.questions.forEach(originalIndex => {
+                    if (originalQuestions[originalIndex]) {
+                        reorderedQuestions.push(originalQuestions[originalIndex]);
+                    }
+                });
+                
+                if (reorderedQuestions.length === window.questions.length) {
+                    window.questions = reorderedQuestions;
+                    console.log('✅ Perguntas reordenadas');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro na ordem:', error);
     }
 };
 
@@ -105,14 +138,6 @@ RoomSystem.prototype.startGameForPlayer = function() {
         perguntas: window.questions?.length,
         equipes: window.teams?.length
     });
-    
-    // CORREÇÃO: Usar updatePlayerTeam em vez de selectPlayerTeam (que não existe)
-    if (window.turnSystem && window.turnSystem.updatePlayerTeam && window.teams && window.teams.length > 0) {
-        setTimeout(() => {
-            // Atribuir à primeira equipe temporariamente
-            window.turnSystem.updatePlayerTeam(1); // ID 1 = ALFA
-        }, 1000);
-    }
     
     console.log('✅ Jogador pronto (aguardando sincronização)');
 };

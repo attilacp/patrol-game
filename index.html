@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PATROL - Jogo de Perguntas e Respostas Multiplayer</title>
+    <link rel="icon" href="favicon.ico">
     
     <!-- CSS Dividido -->
     <link rel="stylesheet" href="css/base.css">
@@ -106,7 +107,6 @@
                     <div id="teams-container">
                         <div class="team-input">
                             <input type="text" placeholder="Nome da Equipe" value="ALFA">
-                            <input type="text" placeholder="Jogadores (opcional)">
                             <button class="remove-team" onclick="removeTeam(this)">🗑️</button>
                         </div>
                     </div>
@@ -298,16 +298,17 @@
     <!-- AUTH.JS COM LOBBY -->
     <script src="js/auth.js"></script>
 
-    <!-- SISTEMA DE SALAS SIMPLIFICADO -->
+    <!-- SISTEMA DE SALAS -->
     <script src="js/rooms/core.js"></script>
-<script src="js/rooms/room-manager.js"></script>
-<script src="js/rooms/room-listeners.js"></script>
-<script src="js/rooms/room-data.js"></script>
-<script src="js/rooms/room-teams.js"></script>
-<script src="js/rooms/room-handlers.js"></script>
-<script src="js/rooms/room-ui.js"></script>
-<script src="js/rooms/ui.js"></script>
-<script src="js/rooms/init.js"></script>
+    <script src="js/rooms/room-manager.js"></script>
+    <script src="js/rooms/room-listeners.js"></script>
+    <script src="js/rooms/room-data.js"></script>
+    <script src="js/rooms/room-teams.js"></script>
+    <script src="js/rooms/room-handlers.js"></script>
+    <script src="js/rooms/room-ui.js"></script>
+    <script src="js/rooms/actions.js"></script>
+    <script src="js/rooms/master-controls.js"></script>
+    <script src="js/rooms/init.js"></script>
 
     <!-- ===== JAVASCRIPT DO JOGO ===== -->
     <!-- ORDEM CRÍTICA DE CARREGAMENTO -->
@@ -349,6 +350,16 @@
     <script src="js/fileUpload/subjects.js"></script>
     <script src="js/fileUpload/status.js"></script>
     
+    <!-- SISTEMA DE TURNOS (APÓS ROOMS) -->
+    <script src="js/turn-system/turn-class.js"></script>
+    <script src="js/turn-system/turn-listeners.js"></script>
+    <script src="js/turn-system/turn-teams.js"></script>
+    <script src="js/turn-system/turn-interface.js"></script>
+    <script src="js/turn-system/turn-answers.js"></script>
+    <script src="js/turn-system/turn-results.js"></script>
+    <script src="js/turn-system/turn-notifications.js"></script>
+    <script src="js/turn-system/turn-start.js"></script>
+    
     <!-- Game Events -->
     <script src="js/gameEvents/main.js"></script>
     <script src="js/gameEvents/core.js"></script>
@@ -362,24 +373,13 @@
     <script src="js/main/notesLoader.js"></script>
     <script src="js/main/configEvents.js"></script>
     <script src="js/main/configScreen.js"></script>
-<script src="js/main/game-start-helpers.js"></script>
-<script src="js/main/game-start-firebase.js"></script>
-<script src="js/main/game-start-core.js"></script>
+    <script src="js/main/game-start-helpers.js"></script>
+    <script src="js/main/game-start-firebase.js"></script>
+    <script src="js/main/game-start-core.js"></script>
     <script src="js/main/init.js"></script>
     <script src="js/debug.js"></script>
     
     <!-- MULTIPLAYER -->
     <script src="js/game/multiplayer.js"></script>
-
-<!-- turn-system.js  -->
-<script src="js/turn-system/turn-class.js"></script>
-<script src="js/turn-system/turn-listeners.js"></script>
-<script src="js/turn-system/turn-teams.js"></script>
-<script src="js/turn-system/turn-interface.js"></script>
-<script src="js/turn-system/turn-answers.js"></script>
-<script src="js/turn-system/turn-results.js"></script>
-<script src="js/turn-system/turn-notifications.js"></script>
-<script src="js/turn-system/turn-start.js"></script>
-
 </body>
 </html>
