@@ -31,6 +31,15 @@ patrol-game/
 │   │   ├── import-export.js               # Importação/exportação
 │   │   ├── display.js                     # Exibição e formatação
 │   │   └── init.js                        # Inicialização completa
+│   ├── turn-system/
+│   │   ├── turn-class.js         # Classe principal
+│   │   ├── turn-listeners.js     # Listeners
+│   │   ├── turn-teams.js         # Gerenciamento de equipes
+│   │   ├── turn-interface.js     # Interface
+│   │   ├── turn-answers.js       # Respostas
+│   │   ├── turn-results.js       # Resultados
+│   │   ├── turn-notifications.js # Notificações
+│   │   └── turn-start.js        # Inicialização
 │   ├── answers/                           # Sistema de respostas
 │   │   ├── core.js                        # Núcleo do sistema de respostas
 │   │   ├── correct.js                     # Lógica de resposta correta
