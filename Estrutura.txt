@@ -75,7 +75,9 @@ patrol-game/
 │   │   └── keyboard.js                    # Atalhos de teclado
 │   ├── main/                              # Inicialização principal
 │   │   ├── init.js                        # Inicialização geral do sistema
-│   │   ├── gameStart.js                   # Sistema de início do jogo
+│   │   ├── game-start-helpers.js   # Funções auxiliares
+│   │   ├── game-start-firebase.js  # Salvamento Firebase
+│   │   ├── game-start-core.js      # Função principal startGame
 │   │   ├── configScreen.js                # Configuração da tela de configuração
 │   │   ├── configEvents.js                # Event listeners da configuração
 │   │   ├── bombConfig.js                  # Configuração da Pergunta Bomba

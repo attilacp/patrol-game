@@ -1,4 +1,4 @@
-// js/rooms/room-handlers.js - MANIPULAÇÃO DE EVENTOS
+// js/rooms/room-handlers.js - CORRIGIDO
 console.log('🏠 rooms/room-handlers.js carregando...');
 
 RoomSystem.prototype.handleStatusChange = function(status) {
@@ -33,8 +33,9 @@ RoomSystem.prototype.handleTurnFromFirebase = function(turnData) {
     
     this.updateTurnUI(turnData);
     
-    if (window.turnSystem) {
-        window.turnSystem.updatePlayerControls();
+    // CORREÇÃO: Usar updateAnswerButtons em vez de updatePlayerControls
+    if (window.turnSystem && window.turnSystem.updateAnswerButtons) {
+        window.turnSystem.updateAnswerButtons();
     }
 };
 
@@ -105,9 +106,11 @@ RoomSystem.prototype.startGameForPlayer = function() {
         equipes: window.teams?.length
     });
     
-    if (window.turnSystem && window.teams && window.teams.length > 0) {
+    // CORREÇÃO: Usar updatePlayerTeam em vez de selectPlayerTeam (que não existe)
+    if (window.turnSystem && window.turnSystem.updatePlayerTeam && window.teams && window.teams.length > 0) {
         setTimeout(() => {
-            window.turnSystem.selectPlayerTeam(0);
+            // Atribuir à primeira equipe temporariamente
+            window.turnSystem.updatePlayerTeam(1); // ID 1 = ALFA
         }, 1000);
     }
     
