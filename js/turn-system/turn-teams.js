@@ -1,4 +1,4 @@
-// js/turn-system/turn-teams.js - GERENCIAMENTO DE EQUIPES
+// js/turn-system/turn-teams.js - ATUALIZADO COM ATRIBUIÇÃO PARA MESTRE
 console.log('🔄 turn-system/turn-teams.js carregando...');
 
 TurnSystem.prototype.updatePlayerTeam = function(teamId) {
@@ -27,7 +27,50 @@ TurnSystem.prototype.updatePlayerTeam = function(teamId) {
     }
 };
 
+// NOVA FUNÇÃO: Atribuir mestre automaticamente à primeira equipe
+TurnSystem.prototype.assignMasterToTeam = function() {
+    if (!this.roomSystem.isMaster || !window.teams || window.teams.length === 0) return;
+    
+    console.log('👑 Atribuindo mestre à equipe...');
+    
+    // Mestre sempre fica na primeira equipe
+    const teamId = window.teams[0].id;
+    const teamName = window.teams[0].name;
+    
+    // Atribuir localmente
+    this.playerTeam = window.teams[0];
+    this.playerTeamId = teamId;
+    
+    console.log(`👑 Mestre atribuído à equipe: ${teamName} (ID: ${teamId})`);
+    
+    // Salvar no Firebase
+    this.saveMasterTeamAssignment(teamId, teamName);
+    
+    // Atualizar controles
+    this.updateAnswerButtons();
+};
+
+TurnSystem.prototype.saveMasterTeamAssignment = function(teamId, teamName) {
+    if (!this.roomSystem.currentRoom) return;
+    
+    firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/players/' + this.roomSystem.playerId)
+        .update({ 
+            teamId: teamId,
+            teamName: teamName,
+            isMaster: true,
+            assignedAt: Date.now()
+        });
+    
+    console.log(`💾 Equipe ${teamName} salva no Firebase para mestre`);
+};
+
 TurnSystem.prototype.canPlayerAnswer = function() {
+    // MESTRE SEMPRE PODE RESPONDER, INDEPENDENTE DA EQUIPE
+    if (this.roomSystem.isMaster) {
+        console.log('👑 Mestre sempre pode responder');
+        return true;
+    }
+    
     if (!this.currentTurn || !this.playerTeamId) {
         console.log('❌ Não pode responder:', {
             currentTurn: this.currentTurn,
@@ -58,10 +101,17 @@ TurnSystem.prototype.setCurrentTurn = function(teamIndex, teamId, teamName) {
         masterId: this.roomSystem.playerId
     };
     
+    this.currentTurn = turnData; // IMPORTANTE: Atribuir localmente também
+    
     firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentTurn')
         .set(turnData);
     
     console.log('👑 Mestre definiu turno:', teamName);
+    
+    // Atualizar controles após definir turno
+    setTimeout(() => {
+        this.updateAnswerButtons();
+    }, 100);
 };
 
 TurnSystem.prototype.rotateTeam = function() {

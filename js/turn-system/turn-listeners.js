@@ -1,10 +1,18 @@
-// js/turn-system/turn-listeners.js - CONFIGURAÇÃO DE LISTENERS
+// js/turn-system/turn-listeners.js - ATUALIZADO COM ATRIBUIÇÃO DO MESTRE
 console.log('🔄 turn-system/turn-listeners.js carregando...');
 
 TurnSystem.prototype.setupTurnListeners = function() {
     if (!this.roomSystem.currentRoom) return;
     
     console.log('👂 Configurando listeners de turno...');
+    
+    // ATRIBUIR MESTRE À EQUIPE IMEDIATAMENTE
+    if (this.roomSystem.isMaster) {
+        console.log('👑 Configurando sistema para mestre...');
+        setTimeout(() => {
+            this.assignMasterToTeam();
+        }, 500);
+    }
     
     const turnRef = firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentTurn');
     turnRef.on('value', (snapshot) => {

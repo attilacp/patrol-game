@@ -1,4 +1,4 @@
-// js/turn-system/turn-interface.js - INTERFACE DO USUÁRIO
+// js/turn-system/turn-interface.js - ATUALIZADO PARA MESTRE
 console.log('🔄 turn-system/turn-interface.js carregando...');
 
 TurnSystem.prototype.handleTurnChange = function(turnData) {
@@ -12,29 +12,6 @@ TurnSystem.prototype.handleTurnChange = function(turnData) {
     this.updateAnswerButtons();
 };
 
-TurnSystem.prototype.updateTurnUI = function() {
-    setTimeout(() => {
-        const teamTurnElement = document.getElementById('team-turn');
-        if (teamTurnElement && this.currentTurn) {
-            teamTurnElement.textContent = `🎯 ${this.currentTurn.teamName} - DE PLANTÃO`;
-            
-            const currentTeam = window.teams?.[window.currentTeamIndex];
-            if (currentTeam && currentTeam.turnColorClass) {
-                teamTurnElement.className = 'team-turn ' + currentTeam.turnColorClass;
-            }
-        }
-        
-        const questionNumber = document.getElementById('question-number');
-        if (questionNumber) questionNumber.textContent = (window.currentQuestionIndex + 1) || 1;
-        
-        if (window.showQuestion && window.questions[window.currentQuestionIndex]) {
-            window.showQuestion();
-        }
-        
-        if (window.updateTeamsDisplay) window.updateTeamsDisplay();
-    }, 300);
-};
-
 TurnSystem.prototype.updateAnswerButtons = function() {
     const certoBtn = document.getElementById('certo-btn');
     const erradoBtn = document.getElementById('errado-btn');
@@ -43,6 +20,8 @@ TurnSystem.prototype.updateAnswerButtons = function() {
     
     const canAnswer = this.canPlayerAnswer();
     
+    console.log('🔍 Atualizando botões - Pode responder?', canAnswer, 'Mestre?', this.roomSystem.isMaster);
+    
     if (canAnswer) {
         certoBtn.disabled = false;
         erradoBtn.disabled = false;
@@ -50,8 +29,18 @@ TurnSystem.prototype.updateAnswerButtons = function() {
         erradoBtn.style.opacity = '1';
         certoBtn.style.cursor = 'pointer';
         erradoBtn.style.cursor = 'pointer';
-        certoBtn.title = 'Sua vez de responder! (C)';
-        erradoBtn.title = 'Sua vez de responder! (E)';
+        certoBtn.title = this.roomSystem.isMaster ? 'Responder CERTO (C)' : 'Sua vez de responder! (C)';
+        erradoBtn.title = this.roomSystem.isMaster ? 'Responder ERRADO (E)' : 'Sua vez de responder! (E)';
+        
+        // Estilos especiais para mestre
+        if (this.roomSystem.isMaster) {
+            certoBtn.style.background = '#28a745';
+            erradoBtn.style.background = '#dc3545';
+            certoBtn.style.border = '3px solid #155724';
+            erradoBtn.style.border = '3px solid #721c24';
+        }
+        
+        console.log('✅ Botões HABILITADOS');
     } else {
         certoBtn.disabled = true;
         erradoBtn.disabled = true;
@@ -59,15 +48,11 @@ TurnSystem.prototype.updateAnswerButtons = function() {
         erradoBtn.style.opacity = '0.5';
         certoBtn.style.cursor = 'not-allowed';
         erradoBtn.style.cursor = 'not-allowed';
-        certoBtn.title = 'Aguarde sua equipe estar de plantão';
-        erradoBtn.title = 'Aguarde sua equipe estar de plantão';
+        certoBtn.title = this.roomSystem.isMaster ? 'Aguardando jogadores...' : 'Aguarde sua equipe estar de plantão';
+        erradoBtn.title = this.roomSystem.isMaster ? 'Aguardando jogadores...' : 'Aguarde sua equipe estar de plantão';
+        
+        console.log('⏳ Botões DESABILITADOS');
     }
-};
-
-TurnSystem.prototype.handleQuestionChange = function(questionData) {
-    console.log('📥 Nova pergunta recebida:', questionData.index + 1);
-    window.currentQuestionIndex = questionData.index;
-    this.updateTurnUI();
 };
 
 console.log('✅ turn-system/turn-interface.js carregado');
