@@ -1,4 +1,4 @@
-// js/teams.js - VERSÃO CORRIGIDA
+// js/teams.js - VERSÃO CORRIGIDA SEM CAMPO DE JOGADORES NA CONFIG
 console.log('👥 teams.js carregando...');
 
 window.teamColorSchemes = [
@@ -25,7 +25,6 @@ function addTeam() {
     teamInput.className = 'team-input';
     teamInput.innerHTML = `
         <input type="text" placeholder="Nome da Equipe" value="${defaultName}">
-        <input type="text" placeholder="Jogadores (opcional)">
         <button class="remove-team" onclick="removeTeam(this)">🗑️</button>
     `;
     
@@ -105,19 +104,26 @@ function createTeamCard(team, isActive) {
     card.className = `team-card ${team.colorClass || ''} ${isActive ? 'active' : ''}`;
     card.setAttribute('data-team-id', team.id || 0);
     
-    // CORREÇÃO CRÍTICA: Verificar se players existe e é array
-    let playersHtml = '';
-    if (team.players && Array.isArray(team.players)) {
-        playersHtml = team.players.map(playerName => {
-            return `<div class="player-name">${playerName}</div>`;
-        }).join('');
-    } else if (typeof team.players === 'string' && team.players.trim() !== '') {
-        // Se players for string (do input), converter para array
-        playersHtml = team.players.split(',').map(p => p.trim()).filter(p => p)
-            .map(playerName => `<div class="player-name">${playerName}</div>`)
-            .join('');
+    // BUSCAR JOGADORES ATRIBUÍDOS A ESTA EQUIPE
+    let playersHtml = '<div class="no-players">Carregando jogadores...</div>';
+    
+    // Verificar se há sistema de salas e buscar jogadores do Firebase
+    if (window.roomSystem && window.roomSystem.currentRoom) {
+        // Usar dados locais se disponíveis
+        if (team.assignedPlayers && Array.isArray(team.assignedPlayers) && team.assignedPlayers.length > 0) {
+            playersHtml = team.assignedPlayers.map(playerName => {
+                return `<div class="player-name">👤 ${playerName}</div>`;
+            }).join('');
+        } else if (team.players && Array.isArray(team.players) && team.players.length > 0) {
+            playersHtml = team.players.map(playerName => {
+                return `<div class="player-name">👤 ${playerName}</div>`;
+            }).join('');
+        } else {
+            playersHtml = '<div class="no-players">Nenhum jogador ainda</div>';
+        }
     } else {
-        playersHtml = '<div class="no-players">Sem jogadores</div>';
+        // Modo offline - mostrar placeholder
+        playersHtml = '<div class="no-players">Modo offline</div>';
     }
     
     // Garantir que as classes de cor existam
@@ -148,6 +154,70 @@ function createTeamCard(team, isActive) {
     return card;
 }
 
+// Função para atualizar jogadores nas equipes (chamada pelo sistema de salas)
+function updateTeamPlayers(teamId, players) {
+    if (!window.teams) return;
+    
+    const team = window.teams.find(t => t.id === teamId);
+    if (team) {
+        team.assignedPlayers = Array.isArray(players) ? players : [];
+        console.log(`👥 Equipe ${team.name} atualizada:`, team.assignedPlayers);
+        
+        // Atualizar display
+        if (window.updateTeamsDisplay) {
+            window.updateTeamsDisplay();
+        }
+    }
+}
+
+// Função para buscar jogadores de todas as equipes do Firebase
+async function fetchAllTeamPlayers() {
+    if (!window.roomSystem || !window.roomSystem.currentRoom || !window.teams) return;
+    
+    try {
+        const playersRef = firebase.database().ref('rooms/' + window.roomSystem.currentRoom + '/players');
+        const snapshot = await playersRef.once('value');
+        const allPlayers = snapshot.val() || {};
+        
+        // Limpar jogadores anteriores
+        window.teams.forEach(team => {
+            team.assignedPlayers = [];
+        });
+        
+        // Agrupar jogadores por equipe
+        for (const playerId in allPlayers) {
+            const player = allPlayers[playerId];
+            if (player.teamId && player.name) {
+                const team = window.teams.find(t => t.id === player.teamId);
+                if (team) {
+                    if (!team.assignedPlayers) team.assignedPlayers = [];
+                    team.assignedPlayers.push(player.name);
+                }
+            }
+        }
+        
+        console.log('👥 Jogadores carregados por equipe');
+        
+        // Atualizar display
+        if (window.updateTeamsDisplay) {
+            window.updateTeamsDisplay();
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao buscar jogadores:', error);
+    }
+}
+
+// Iniciar busca periódica de jogadores
+if (typeof window !== 'undefined') {
+    window.startTeamPlayersSync = function() {
+        if (window.roomSystem && window.roomSystem.currentRoom) {
+            setInterval(fetchAllTeamPlayers, 5000); // Atualizar a cada 5 segundos
+            console.log('🔄 Sincronização de jogadores iniciada');
+        }
+    };
+}
+
 // Função simplificada para performance
 function getFormattedPerformanceBySubject(team) {
     if (!team.performanceBySubject || Object.keys(team.performanceBySubject).length === 0) {
@@ -170,5 +240,7 @@ window.removeTeam = removeTeam;
 window.updateTeamsDisplay = updateTeamsDisplay;
 window.createTeamCard = createTeamCard;
 window.getFormattedPerformanceBySubject = getFormattedPerformanceBySubject;
+window.updateTeamPlayers = updateTeamPlayers;
+window.fetchAllTeamPlayers = fetchAllTeamPlayers;
 
 console.log('✅ teams.js carregado!');

@@ -1,5 +1,5 @@
 // file name: js/main/configScreen.js
-// Inicialização da tela de configuração
+// Inicialização da tela de configuração (SEM campo de jogadores)
 
 function initializeConfigScreen() {
     console.log('⚙️ Inicializando tela de configuração...');
@@ -23,7 +23,7 @@ function initializeConfigScreen() {
         console.log('✅ Ordem aleatória definida como padrão');
     }
     
-    // Configurar nomes padrão das equipes
+    // Configurar nomes padrão das equipes (SEM campo de jogadores)
     setupDefaultTeams();
     
     console.log('✅ Tela de configuração inicializada');
@@ -44,13 +44,23 @@ function setupDefaultTeams() {
         teamInput.className = 'team-input';
         teamInput.innerHTML = `
             <input type="text" placeholder="Nome da Equipe" value="ALFA">
-            <input type="text" placeholder="Jogadores (opcional)">
             <button class="remove-team" onclick="removeTeam(this)">🗑️</button>
         `;
         
         teamsContainer.appendChild(teamInput);
     } else {
         console.log(`📝 ${existingTeams.length} equipes já configuradas`);
+        
+        // Remover campos de jogadores existentes se houver
+        existingTeams.forEach(teamInput => {
+            const inputs = teamInput.querySelectorAll('input[type="text"]');
+            if (inputs.length > 1) {
+                // Manter apenas o primeiro input (nome da equipe)
+                for (let i = 1; i < inputs.length; i++) {
+                    inputs[i].remove();
+                }
+            }
+        });
     }
 }
 

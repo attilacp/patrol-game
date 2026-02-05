@@ -1,4 +1,4 @@
-// js/gameEvents/answerButtons.js - VERSÃO COMPLETA
+// js/gameEvents/answerButtons.js - VERSÃO COMPLETA SEM setupRotateButton
 console.log('🎮 gameEvents/answerButtons.js carregando...');
 
 function setupAnswerButtonEvents() {
@@ -13,10 +13,7 @@ function setupAnswerButtonEvents() {
     // 3. BOTÃO PRÓXIMA PERGUNTA
     setupNextButton();
     
-    // 4. BOTÃO RODÍZIO (APENAS MESTRE)
-    //setupRotateButton();
-    
-    // 5. BOTÃO PÓDIO
+    // 4. BOTÃO PÓDIO
     setupPodiumButton();
     
     console.log('✅ Todos os botões configurados');
@@ -186,7 +183,6 @@ function setupNextButton() {
     }
 }
 
-
 function setupPodiumButton() {
     console.log('🏆 Configurando botão PÓDIO...');
     
@@ -252,12 +248,6 @@ function setupKeyboardShortcuts() {
                     document.getElementById('next-question-btn')?.click();
                 }
                 break;
-                
-            case 'R':
-                if (window.roomSystem?.isMaster) {
-                    document.getElementById('rotate-team-btn')?.click();
-                }
-                break;
         }
     });
     
@@ -270,7 +260,6 @@ if (typeof window !== 'undefined') {
     window.setupAnswerButtons = setupAnswerButtons;
     window.setupSkipButton = setupSkipButton;
     window.setupNextButton = setupNextButton;
-    window.setupRotateButton = setupRotateButton;
     window.setupPodiumButton = setupPodiumButton;
     window.setupKeyboardShortcuts = setupKeyboardShortcuts;
     
