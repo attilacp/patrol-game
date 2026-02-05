@@ -1,19 +1,12 @@
-// js/gameEvents/answerButtons.js - VERSÃO COMPLETA SEM setupRotateButton
+// js/gameEvents/answerButtons.js - VERSÃO COMPLETA COM MESTRE DIRETO
 console.log('🎮 gameEvents/answerButtons.js carregando...');
 
 function setupAnswerButtonEvents() {
     console.log('🎮 Configurando botões de resposta...');
     
-    // 1. BOTÕES CERTO/ERRADO
     setupAnswerButtons();
-    
-    // 2. BOTÃO PULAR
     setupSkipButton();
-    
-    // 3. BOTÃO PRÓXIMA PERGUNTA
     setupNextButton();
-    
-    // 4. BOTÃO PÓDIO
     setupPodiumButton();
     
     console.log('✅ Todos os botões configurados');
@@ -26,7 +19,6 @@ function setupAnswerButtons() {
     const erradoBtn = document.getElementById('errado-btn');
     
     if (certoBtn) {
-        // Remover event listeners antigos
         certoBtn.replaceWith(certoBtn.cloneNode(true));
         const newCertoBtn = document.getElementById('certo-btn');
         
@@ -35,29 +27,36 @@ function setupAnswerButtons() {
             e.stopPropagation();
             console.log('✅ Botão CERTO clicado - EVENT LISTENER ATIVO');
             
-            // PRIORIDADE 1: Sistema de turnos
+            // PRIORIDADE 1: MESTRE RESPONDE DIRETAMENTE
+            if (window.roomSystem && window.roomSystem.isMaster) {
+                console.log('👑 Mestre clicou em CERTO');
+                if (window.turnSystem && window.turnSystem.submitAnswer) {
+                    window.turnSystem.submitAnswer('CERTO');
+                    return;
+                }
+            }
+            
+            // PRIORIDADE 2: Sistema de turnos para jogadores
             if (window.turnSystem) {
                 console.log('🎯 Usando sistema de turnos...');
                 window.turnSystem.submitAnswer('CERTO');
                 return;
             }
             
-            // PRIORIDADE 2: Sistema antigo com verificação de mestre
+            // PRIORIDADE 3: Sistema antigo com verificação de mestre
             if (window.checkAnswer && window.roomSystem) {
-                // Se for mestre ou não houver sistema de turnos, usar sistema antigo
                 if (window.roomSystem.isMaster || !window.turnSystem) {
                     window.checkAnswer('CERTO');
                     return;
                 }
             }
             
-            // PRIORIDADE 3: Sistema antigo sem verificação
+            // PRIORIDADE 4: Sistema antigo sem verificação
             if (window.checkAnswer) {
                 window.checkAnswer('CERTO');
                 return;
             }
             
-            // FALLBACK
             console.error('❌ Nenhum sistema de resposta disponível');
             alert('Sistema de resposta não disponível. Recarregue a página.');
         });
@@ -68,7 +67,6 @@ function setupAnswerButtons() {
     }
     
     if (erradoBtn) {
-        // Remover event listeners antigos
         erradoBtn.replaceWith(erradoBtn.cloneNode(true));
         const newErradoBtn = document.getElementById('errado-btn');
         
@@ -77,14 +75,23 @@ function setupAnswerButtons() {
             e.stopPropagation();
             console.log('❌ Botão ERRADO clicado - EVENT LISTENER ATIVO');
             
-            // PRIORIDADE 1: Sistema de turnos
+            // PRIORIDADE 1: MESTRE RESPONDE DIRETAMENTE
+            if (window.roomSystem && window.roomSystem.isMaster) {
+                console.log('👑 Mestre clicou em ERRADO');
+                if (window.turnSystem && window.turnSystem.submitAnswer) {
+                    window.turnSystem.submitAnswer('ERRADO');
+                    return;
+                }
+            }
+            
+            // PRIORIDADE 2: Sistema de turnos para jogadores
             if (window.turnSystem) {
                 console.log('🎯 Usando sistema de turnos...');
                 window.turnSystem.submitAnswer('ERRADO');
                 return;
             }
             
-            // PRIORIDADE 2: Sistema antigo com verificação de mestre
+            // PRIORIDADE 3: Sistema antigo com verificação de mestre
             if (window.checkAnswer && window.roomSystem) {
                 if (window.roomSystem.isMaster || !window.turnSystem) {
                     window.checkAnswer('ERRADO');
@@ -92,13 +99,12 @@ function setupAnswerButtons() {
                 }
             }
             
-            // PRIORIDADE 3: Sistema antigo sem verificação
+            // PRIORIDADE 4: Sistema antigo sem verificação
             if (window.checkAnswer) {
                 window.checkAnswer('ERRADO');
                 return;
             }
             
-            // FALLBACK
             console.error('❌ Nenhum sistema de resposta disponível');
             alert('Sistema de resposta não disponível. Recarregue a página.');
         });
@@ -114,7 +120,6 @@ function setupSkipButton() {
     
     const skipBtn = document.getElementById('skip-btn');
     if (skipBtn) {
-        // Remover event listeners antigos
         skipBtn.replaceWith(skipBtn.cloneNode(true));
         const newSkipBtn = document.getElementById('skip-btn');
         
@@ -123,7 +128,6 @@ function setupSkipButton() {
             e.stopPropagation();
             console.log('⏭️ Botão PULAR clicado');
             
-            // Se for mestre, pular
             if (window.roomSystem && window.roomSystem.isMaster) {
                 if (window.skipQuestion) {
                     window.skipQuestion();
@@ -132,7 +136,6 @@ function setupSkipButton() {
                 }
             } else {
                 console.log('⏭️ Jogador não pode pular - apenas mestre');
-                // Jogador pode pedir para pular (opcional)
                 if (window.roomSystem) {
                     window.roomSystem.sendAction('skip_request', {
                         playerName: window.roomSystem.playerName
@@ -153,7 +156,6 @@ function setupNextButton() {
     
     const nextBtn = document.getElementById('next-question-btn');
     if (nextBtn) {
-        // Remover event listeners antigos
         nextBtn.replaceWith(nextBtn.cloneNode(true));
         const newNextBtn = document.getElementById('next-question-btn');
         
@@ -162,13 +164,11 @@ function setupNextButton() {
             e.stopPropagation();
             console.log('⏭️ Botão Próxima Pergunta clicado');
             
-            // Apenas mestre pode avançar
             if (window.roomSystem && window.roomSystem.isMaster) {
                 if (window.nextQuestion) {
                     window.nextQuestion();
                 }
                 
-                // Se tiver sistema de turnos, usar ele
                 if (window.turnSystem) {
                     window.turnSystem.advanceToNextQuestion();
                 }
@@ -188,7 +188,6 @@ function setupPodiumButton() {
     
     const podiumBtn = document.getElementById('podium-btn');
     if (podiumBtn) {
-        // Remover event listeners antigos
         podiumBtn.replaceWith(podiumBtn.cloneNode(true));
         const newPodiumBtn = document.getElementById('podium-btn');
         
@@ -197,7 +196,6 @@ function setupPodiumButton() {
             e.stopPropagation();
             console.log('🏆 Botão Pódio clicado');
             
-            // Ir para tela de pódio
             if (window.authSystem && window.authSystem.showPodiumScreen) {
                 window.authSystem.showPodiumScreen();
             } else if (window.showPodium) {
@@ -214,14 +212,12 @@ function setupPodiumButton() {
     }
 }
 
-// Configurar atalhos de teclado
 function setupKeyboardShortcuts() {
     console.log('⌨️ Configurando atalhos de teclado...');
     
     document.addEventListener('keydown', function(e) {
         if (!window.keyboardEnabled) return;
         
-        // Evitar atalhos em campos de entrada
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         
         switch(e.key.toUpperCase()) {
@@ -254,7 +250,6 @@ function setupKeyboardShortcuts() {
     console.log('✅ Atalhos de teclado configurados');
 }
 
-// Exportar funções
 if (typeof window !== 'undefined') {
     window.setupAnswerButtonEvents = setupAnswerButtonEvents;
     window.setupAnswerButtons = setupAnswerButtons;

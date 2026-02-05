@@ -1,4 +1,4 @@
-// js/turn-system/turn-teams.js - ATUALIZADO (remover método não usado)
+// js/turn-system/turn-teams.js - VERSÃO LEVE COM MESTRE DIRETO
 console.log('🔄 turn-system/turn-teams.js carregando...');
 
 TurnSystem.prototype.updatePlayerTeam = function(teamId) {
@@ -26,9 +26,6 @@ TurnSystem.prototype.updatePlayerTeam = function(teamId) {
         console.error(`❌ Equipe não encontrada: ${teamId}`);
     }
 };
-
-// REMOVER ESTA FUNÇÃO (não existe mais):
-// TurnSystem.prototype.selectPlayerTeam = function(teamIndex) { ... }
 
 TurnSystem.prototype.assignMasterToTeam = function() {
     if (!this.roomSystem.isMaster || !window.teams || window.teams.length === 0) return;
@@ -62,13 +59,14 @@ TurnSystem.prototype.saveMasterTeamAssignment = function(teamId, teamName) {
 };
 
 TurnSystem.prototype.canPlayerAnswer = function() {
+    // MESTRE SEMPRE PODE RESPONDER (responde diretamente, sem Firebase)
     if (this.roomSystem.isMaster) {
-        console.log('👑 Mestre sempre pode responder');
         return true;
     }
     
+    // JOGADORES NORMAIS: verificar equipe de plantão
     if (!this.currentTurn || !this.playerTeamId) {
-        console.log('❌ Não pode responder:', {
+        console.log('❌ Jogador não pode responder:', {
             currentTurn: this.currentTurn,
             playerTeamId: this.playerTeamId
         });
