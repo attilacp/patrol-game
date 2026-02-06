@@ -1,4 +1,4 @@
-// js/turn-system/turn-interface.js - ATUALIZADO PARA MESTRE
+// js/turn-system/turn-interface.js - ATUALIZADO COM FUNÇÕES FALTANDO
 console.log('🔄 turn-system/turn-interface.js carregando...');
 
 TurnSystem.prototype.handleTurnChange = function(turnData) {
@@ -10,6 +10,19 @@ TurnSystem.prototype.handleTurnChange = function(turnData) {
     
     this.updateTurnUI();
     this.updateAnswerButtons();
+};
+
+// FUNÇÃO FALTANDO ADICIONADA
+TurnSystem.prototype.updateTurnUI = function() {
+    const teamTurnElement = document.getElementById('team-turn');
+    if (!teamTurnElement) return;
+    
+    const currentTeam = window.teams?.[window.currentTeamIndex];
+    if (currentTeam) {
+        teamTurnElement.textContent = `🎯 ${currentTeam.name} - DE PLANTÃO`;
+        teamTurnElement.className = 'team-turn ' + currentTeam.turnColorClass;
+        console.log('🔄 Turno atualizado na UI:', currentTeam.name);
+    }
 };
 
 TurnSystem.prototype.updateAnswerButtons = function() {

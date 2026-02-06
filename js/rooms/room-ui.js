@@ -1,20 +1,55 @@
-// js/rooms/room-ui.js - ATUALIZAÇÃO DE INTERFACE
+// js/rooms/room-ui.js - Atualização de interface COMPLETA
 console.log('🏠 rooms/room-ui.js carregando...');
 
-RoomSystem.prototype.updateTurnUI = function(turnData) {
-    const teamTurnElement = document.getElementById('team-turn');
-    if (teamTurnElement && turnData.teamName) {
-        teamTurnElement.textContent = `🎯 ${turnData.teamName} - DE PLANTÃO`;
-        
-        const currentTeam = window.teams?.[window.currentTeamIndex];
-        if (currentTeam && currentTeam.turnColorClass) {
-            teamTurnElement.className = 'team-turn ' + currentTeam.turnColorClass;
-        }
+RoomSystem.prototype.showRoomInfo = function(roomCode) {
+    console.log('📋 Mostrando código da sala:', roomCode);
+    
+    const roomInfo = document.getElementById('room-info');
+    const roomCodeSpan = document.getElementById('current-room-code');
+    
+    if (roomInfo) {
+        roomInfo.style.display = 'block';
+        roomInfo.style.opacity = '1';
+        console.log('✅ room-info exibido');
     }
     
-    if (window.updateTeamsDisplay) {
-        window.updateTeamsDisplay();
+    if (roomCodeSpan) {
+        roomCodeSpan.textContent = roomCode;
+        console.log('✅ Código atualizado:', roomCode);
     }
+    
+    // Adicionar botão de copiar
+    this.addCopyButtonToRoomCode(roomCode);
+};
+
+// FUNÇÃO PARA ADICIONAR BOTÃO DE COPIAR (mesma de room-manager.js)
+RoomSystem.prototype.addCopyButtonToRoomCode = function(roomCode) {
+    const codeContainer = document.getElementById('current-room-code');
+    if (!codeContainer) return;
+    
+    // Remover botão anterior se existir
+    const existingBtn = codeContainer.parentNode.querySelector('.copy-code-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-code-btn';
+    copyBtn.innerHTML = '📋 Copiar';
+    copyBtn.style.cssText = `
+        background: #003366; color: #FFCC00; border: 2px solid #FFCC00;
+        padding: 5px 15px; border-radius: 5px; cursor: pointer;
+        margin-left: 10px; font-size: 12px; font-weight: bold;
+    `;
+    
+    copyBtn.onclick = (e) => {
+        e.preventDefault();
+        navigator.clipboard.writeText(roomCode).then(() => {
+            copyBtn.innerHTML = '✅ Copiado!';
+            setTimeout(() => copyBtn.innerHTML = '📋 Copiar', 2000);
+        });
+    };
+    
+    codeContainer.parentNode.appendChild(copyBtn);
+    console.log('✅ Botão copiar adicionado');
 };
 
 RoomSystem.prototype.updatePlayersList = function() {
@@ -61,7 +96,14 @@ RoomSystem.prototype.updateRoomStatus = function(status) {
 RoomSystem.prototype.showNotification = function(message, type = 'info') {
     console.log('🔔 Notificação:', message);
     
+    // Evitar notificações duplicadas
+    const existingNotifications = document.querySelectorAll('.room-notification');
+    existingNotifications.forEach(notif => {
+        if (notif.textContent.includes(message)) return;
+    });
+    
     const notification = document.createElement('div');
+    notification.className = 'room-notification';
     notification.style.cssText = `
         position: fixed; top: 20px; right: 20px;
         background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : type === 'warning' ? '#ffc107' : '#007bff'};
@@ -80,4 +122,4 @@ RoomSystem.prototype.showNotification = function(message, type = 'info') {
     }, 5000);
 };
 
-console.log('✅ rooms/room-ui.js carregado!');
+console.log('✅ rooms/room-ui.js carregado com sucesso!');

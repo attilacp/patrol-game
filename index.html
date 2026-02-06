@@ -299,17 +299,19 @@
     <!-- AUTH.JS COM LOBBY -->
     <script src="js/auth.js"></script>
 
-    <!-- SISTEMA DE SALAS -->
-    <script src="js/rooms/core.js"></script>
-    <script src="js/rooms/room-manager.js"></script>
-    <script src="js/rooms/room-listeners.js"></script>
-    <script src="js/rooms/room-data.js"></script>
-    <script src="js/rooms/room-teams.js"></script>
-    <script src="js/rooms/room-handlers.js"></script>
-    <script src="js/rooms/room-ui.js"></script>
-    <script src="js/rooms/actions.js"></script>
-    <script src="js/rooms/master-controls.js"></script>
-    <script src="js/rooms/init.js"></script>
+<!-- SISTEMA DE SALAS (ORDEM CRÍTICA) -->
+<script src="js/rooms/core.js"></script>
+<script src="js/rooms/room-manager-core.js"></script>
+<script src="js/rooms/room-manager-utils.js"></script>
+<script src="js/rooms/room-manager.js"></script>
+<script src="js/rooms/room-listeners.js"></script>
+<script src="js/rooms/room-data.js"></script>
+<script src="js/rooms/room-teams.js"></script>
+<script src="js/rooms/room-handlers.js"></script>
+<script src="js/rooms/room-ui.js"></script>
+<script src="js/rooms/actions.js"></script>
+<script src="js/rooms/master-controls.js"></script>
+<script src="js/rooms/init.js"></script>
 
     <!-- ===== JAVASCRIPT DO JOGO ===== -->
     <!-- ORDEM CRÍTICA DE CARREGAMENTO -->
