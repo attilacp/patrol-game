@@ -128,3 +128,5 @@ TurnSystem.prototype.showAnswerResult = function(isCorrect, points, playerName) 
     if (erradoBtn) erradoBtn.disabled = true;
     if (skipBtn) skipBtn.disabled = true;
 };
+
+console.log('✅ turn-system/turn-answers.js carregado');
