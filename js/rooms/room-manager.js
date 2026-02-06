@@ -1,5 +1,42 @@
-// js/rooms/room-manager.js - VERSÃO SIMPLIFICADA
+// js/rooms/room-manager.js - VERSÃO CORRIGIDA
 console.log('🏠 rooms/room-manager.js carregando...');
+
+RoomSystem.prototype.generateRoomCode = function() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+};
+
+RoomSystem.prototype.addCopyButtonToRoomCode = function(roomCode) {
+    const codeContainer = document.getElementById('current-room-code');
+    if (!codeContainer) return;
+    
+    // Remover botão anterior se existir
+    const existingBtn = codeContainer.parentNode.querySelector('.copy-code-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-code-btn';
+    copyBtn.innerHTML = '📋 Copiar';
+    copyBtn.style.cssText = `
+        background: #003366; color: #FFCC00; border: 2px solid #FFCC00;
+        padding: 5px 15px; border-radius: 5px; cursor: pointer;
+        margin-left: 10px; font-size: 12px; font-weight: bold;
+    `;
+    
+    copyBtn.onclick = (e) => {
+        e.preventDefault();
+        navigator.clipboard.writeText(roomCode).then(() => {
+            copyBtn.innerHTML = '✅ Copiado!';
+            setTimeout(() => copyBtn.innerHTML = '📋 Copiar', 2000);
+        });
+    };
+    
+    codeContainer.parentNode.appendChild(copyBtn);
+};
 
 RoomSystem.prototype.createRoom = async function() {
     console.log('🏁 Criando nova sala...');
@@ -138,35 +175,6 @@ RoomSystem.prototype.joinRoom = async function(roomCode, isMaster = false) {
         alert('Erro: ' + error.message);
         return false;
     }
-};
-
-// Funções auxiliares (manter as existentes)
-RoomSystem.prototype.addCopyButtonToRoomCode = function(roomCode) {
-    const codeContainer = document.getElementById('current-room-code');
-    if (!codeContainer) return;
-    
-    // Remover botão anterior se existir
-    const existingBtn = codeContainer.parentNode.querySelector('.copy-code-btn');
-    if (existingBtn) existingBtn.remove();
-    
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'copy-code-btn';
-    copyBtn.innerHTML = '📋 Copiar';
-    copyBtn.style.cssText = `
-        background: #003366; color: #FFCC00; border: 2px solid #FFCC00;
-        padding: 5px 15px; border-radius: 5px; cursor: pointer;
-        margin-left: 10px; font-size: 12px; font-weight: bold;
-    `;
-    
-    copyBtn.onclick = (e) => {
-        e.preventDefault();
-        navigator.clipboard.writeText(roomCode).then(() => {
-            copyBtn.innerHTML = '✅ Copiado!';
-            setTimeout(() => copyBtn.innerHTML = '📋 Copiar', 2000);
-        });
-    };
-    
-    codeContainer.parentNode.appendChild(copyBtn);
 };
 
 RoomSystem.prototype.cleanup = function() {
