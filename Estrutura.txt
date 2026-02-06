@@ -14,12 +14,17 @@ patrol-game/
 │   └── responsive.css                     # Responsividade
 ├── js/
 │   ├── auth.js                            # Sistema de autenticação com lobby
-│   ├── rooms/                             # Sistema de salas multiplayer (NOVO)
+│   ├── rooms/                             # Sistema de salas multiplayer
 │   │   ├── core.js                        # Classe RoomSystem principal
-│   │   ├── room-manager.js                # Criar/entrar/sair salas
-│   │   ├── listeners.js                   # Listeners Firebase
+│   │   ├── room-manager-core.js           # Criar/entrar salas (PRINCIPAL)
+│   │   ├── room-manager-utils.js          # Funções auxiliares de gerenciamento
+│   │   ├── room-manager.js                # Arquivo principal (redirecionador)
+│   │   ├── room-listeners.js              # Listeners Firebase
+│   │   ├── room-data.js                   # Sincronização de dados
+│   │   ├── room-teams.js                  # Atribuição de equipes
+│   │   ├── room-handlers.js               # Manipulação de eventos
+│   │   ├── room-ui.js                     # Atualização de interface
 │   │   ├── actions.js                     # Sistema de ações multiplayer
-│   │   ├── ui.js                          # Atualização de interface
 │   │   ├── master-controls.js             # Controles do mestre
 │   │   └── init.js                        # Inicialização do sistema
 │   ├── utils.js                           # Funções utilitárias gerais
@@ -32,14 +37,14 @@ patrol-game/
 │   │   ├── display.js                     # Exibição e formatação
 │   │   └── init.js                        # Inicialização completa
 │   ├── turn-system/
-│   │   ├── turn-class.js         # Classe principal
-│   │   ├── turn-listeners.js     # Listeners
-│   │   ├── turn-teams.js         # Gerenciamento de equipes
-│   │   ├── turn-interface.js     # Interface
-│   │   ├── turn-answers.js       # Respostas
-│   │   ├── turn-results.js       # Resultados
-│   │   ├── turn-notifications.js # Notificações
-│   │   └── turn-start.js        # Inicialização
+│   │   ├── turn-class.js                  # Classe principal
+│   │   ├── turn-listeners.js              # Listeners
+│   │   ├── turn-teams.js                  # Gerenciamento de equipes
+│   │   ├── turn-interface.js              # Interface
+│   │   ├── turn-answers.js                # Respostas
+│   │   ├── turn-results.js                # Resultados
+│   │   ├── turn-notifications.js          # Notificações
+│   │   └── turn-start.js                  # Inicialização
 │   ├── answers/                           # Sistema de respostas
 │   │   ├── core.js                        # Núcleo do sistema de respostas
 │   │   ├── correct.js                     # Lógica de resposta correta
@@ -75,9 +80,9 @@ patrol-game/
 │   │   └── keyboard.js                    # Atalhos de teclado
 │   ├── main/                              # Inicialização principal
 │   │   ├── init.js                        # Inicialização geral do sistema
-│   │   ├── game-start-helpers.js   # Funções auxiliares
-│   │   ├── game-start-firebase.js  # Salvamento Firebase
-│   │   ├── game-start-core.js      # Função principal startGame
+│   │   ├── game-start-helpers.js          # Funções auxiliares
+│   │   ├── game-start-firebase.js         # Salvamento Firebase
+│   │   ├── game-start-core.js             # Função principal startGame
 │   │   ├── configScreen.js                # Configuração da tela de configuração
 │   │   ├── configEvents.js                # Event listeners da configuração
 │   │   ├── bombConfig.js                  # Configuração da Pergunta Bomba
