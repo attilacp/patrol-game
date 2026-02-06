@@ -1,4 +1,4 @@
-// js/turn-system/turn-results.js - GERENCIAMENTO DE RESULTADOS
+// js/turn-system/turn-results.js - GERENCIAMENTO DE RESULTADOS CORRIGIDO
 console.log('🔄 turn-system/turn-results.js carregando...');
 
 TurnSystem.prototype.broadcastAnswerResult = function(isCorrect, points, answerData) {
@@ -23,9 +23,9 @@ TurnSystem.prototype.handleAnswerResult = function(resultData) {
     console.log('📥 Resultado recebido:', resultData);
     this.showResult(resultData);
     
-    if (this.roomSystem.isMaster) {
-        setTimeout(() => this.advanceToNextQuestion(), 3000);
-    }
+    // ATENÇÃO: REMOVIDO o advanceToNextQuestion automático!
+    // O mestre controla quando avançar via botão "Continuar"
+    // Não avançar automaticamente após resultado
 };
 
 TurnSystem.prototype.showResult = function(resultData) {
@@ -53,13 +53,31 @@ TurnSystem.prototype.showResult = function(resultData) {
     questionText.innerHTML = resultHtml + (questionText.innerHTML || '');
 };
 
+// ATENÇÃO: NÃO chamar esta função automaticamente após resposta!
+// Só quando mestre clicar em "Continuar"
 TurnSystem.prototype.advanceToNextQuestion = function() {
+    console.log('🔄 Mestre avançando para próxima pergunta...');
+    
+    // Incrementar índice da pergunta
     window.currentQuestionIndex++;
+    
+    // NÃO RODAR EQUIPE AQUI! Só se a regra especificar:
+    // 1. Após 5 acertos consecutivos (já tratado em answers/correct.js)
+    // 2. Após erro (já tratado em answers/wrong.js)
+    // 3. Após PB (tratado em bombQuestion)
+    // 4. Manualmente (botão rodízio)
+    
+    // Transmitir nova pergunta
     this.broadcastQuestionChange();
     
-    if (!this.currentTurn?.isCorrect) {
-        setTimeout(() => this.rotateTeam(), 1000);
-    }
+    console.log('✅ Nova pergunta:', window.currentQuestionIndex + 1);
+    
+    // Mostrar pergunta
+    setTimeout(() => {
+        if (window.showQuestion) {
+            window.showQuestion();
+        }
+    }, 500);
 };
 
 TurnSystem.prototype.broadcastQuestionChange = function() {
@@ -68,13 +86,24 @@ TurnSystem.prototype.broadcastQuestionChange = function() {
     const questionData = {
         index: window.currentQuestionIndex,
         total: window.questions.length,
+        teamIndex: window.currentTeamIndex, // IMPORTANTE: Enviar equipe atual
+        teamName: window.teams?.[window.currentTeamIndex]?.name || 'Equipe',
         timestamp: Date.now()
     };
     
     firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/currentQuestion')
         .set(questionData);
     
-    console.log('📤 Nova pergunta transmitida:', window.currentQuestionIndex + 1);
+    // Também atualizar turno atual
+    if (window.teams && window.teams[window.currentTeamIndex]) {
+        this.setCurrentTurn(
+            window.currentTeamIndex,
+            window.teams[window.currentTeamIndex].id,
+            window.teams[window.currentTeamIndex].name
+        );
+    }
+    
+    console.log('📤 Nova pergunta transmitida:', window.currentQuestionIndex + 1, 'Equipe:', window.teams?.[window.currentTeamIndex]?.name);
 };
 
 TurnSystem.prototype.updateTeamScore = function(teamIndex, score) {

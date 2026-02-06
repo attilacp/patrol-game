@@ -11,10 +11,36 @@ function setupControlButtonEvents() {
             e.preventDefault();
             e.stopPropagation();
             console.log('⏭️ Botão Próxima Pergunta clicado');
-            if (window.nextQuestion) {
-                window.nextQuestion();
+            
+            if (window.roomSystem && window.roomSystem.isMaster) {
+                console.log('👑 Mestre avançando pergunta...');
+                
+                // 1. Verificar se precisa rodar equipe (apenas se marcado por regras específicas)
+                const shouldRotate = window.nextTeamRotation === true;
+                
+                if (shouldRotate) {
+                    console.log('🔄 Rodando equipe (regra ativada)...');
+                    if (window.turnSystem && window.turnSystem.rotateTeam) {
+                        window.turnSystem.rotateTeam();
+                    } else if (window.rotateTeam) {
+                        window.rotateTeam();
+                    }
+                    window.nextTeamRotation = false; // Resetar flag
+                } else {
+                    console.log('✅ Mantendo mesma equipe (sem rodízio)');
+                }
+                
+                // 2. Avançar para próxima pergunta
+                if (window.turnSystem && window.turnSystem.advanceToNextQuestion) {
+                    window.turnSystem.advanceToNextQuestion();
+                } else if (window.nextQuestion) {
+                    window.nextQuestion();
+                } else {
+                    console.error('❌ Nenhum sistema para avançar pergunta');
+                }
+                
             } else {
-                console.error('❌ Função nextQuestion não disponível');
+                console.log('⏳ Apenas o mestre pode avançar pergunta');
             }
         });
         console.log('✅ Event listener do botão Próxima Pergunta configurado');
