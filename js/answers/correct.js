@@ -56,7 +56,7 @@ function handleCorrectAnswer() {
                     console.log('Indo para PB...');
                     
                     // Resetar flags antes de ir para PB
-                    window.nextTeamRotation = false;
+                    window.nextTeamRotation = false; // REMOVIDO: Não rodar equipe ao ir para PB
                     window.consecutiveCorrect = 0;
                     window.pendingBombQuestion = false;
                     

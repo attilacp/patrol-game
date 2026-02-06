@@ -1,4 +1,4 @@
-// file name: js/answers/core.js (ATUALIZADO PARA LIMPAR MÚLTIPLOS COMENTÁRIOS)
+// file name: answers/core.js (ATUALIZADO PARA LIMPAR MÚLTIPLOS COMENTÁRIOS)
 // answers/core.js - COM CONTROLE DE TECLADO E PREVENÇÃO DE DUPLICAÇÃO
 
 if (!window.questions) window.questions = [];
@@ -71,11 +71,9 @@ function showQuestion() {
         return;
     }
     
-    if (window.nextTeamRotation && window.gameStarted) {
-        rotateTeam();
-        window.nextTeamRotation = false;
-        console.log('Rodízio aplicado');
-    }
+    // ATENÇÃO: REMOVIDO o rodízio automático aqui!
+    // O rodízio só deve ocorrer após 5 acertos consecutivos ou erro
+    // Essa lógica está em answers/correct.js e answers/wrong.js
     
     if (window.currentQuestionIndex < window.questions.length) {
         var q = window.questions[window.currentQuestionIndex];
@@ -109,7 +107,7 @@ function showQuestion() {
         document.getElementById('question-number').textContent = window.currentQuestionIndex + 1;
         document.getElementById('total-questions').textContent = window.questions.length;
         
-        // ATUALIZAR EQUIPE ATUAL
+        // ATUALIZAR EQUIPE ATUAL (APENAS EXIBIR, NÃO RODAR)
         if (window.teams && window.teams[window.currentTeamIndex]) {
             var team = window.teams[window.currentTeamIndex];
             var turnEl = document.getElementById('team-turn');
@@ -140,87 +138,3 @@ function showQuestion() {
         endGame();
     }
 }
-
-function nextQuestion() {
-    console.log('Próxima pergunta...');
-    
-    var nextBtn = document.getElementById('next-question-btn');
-    if (nextBtn && nextBtn.textContent.includes('PB')) {
-        nextBtn.textContent = '⏭️ PRÓXIMA';
-        
-        var newNextBtn = nextBtn.cloneNode(true);
-        nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-        
-        var finalNextBtn = document.getElementById('next-question-btn');
-        finalNextBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Botão Próxima clicado (restaurado)');
-            window.nextQuestion();
-        });
-    }
-    
-    window.currentQuestionIndex++;
-    console.log('Novo índice: ' + window.currentQuestionIndex);
-    showQuestion();
-}
-
-function rotateTeam() {
-    var oldTeam = window.teams[window.currentTeamIndex];
-    window.currentTeamIndex = (window.currentTeamIndex + 1) % window.teams.length;
-    var newTeam = window.teams[window.currentTeamIndex];
-    window.consecutiveCorrect = 0;
-    console.log(oldTeam.name + ' → ' + newTeam.name);
-}
-
-function enableAnswerButtons() {
-    // Se já tem vencedor, não habilitar botões de resposta
-    if (window.winnerTeam) {
-        console.log('Tem vencedor, não habilitando botões de resposta');
-        return;
-    }
-    
-    ['certo-btn', 'errado-btn', 'skip-btn'].forEach(function(id) {
-        var btn = document.getElementById(id);
-        if (btn) {
-            btn.disabled = false;
-            btn.style.display = 'inline-block';
-        }
-    });
-    
-    var nextBtn = document.getElementById('next-question-btn');
-    var podiumBtn = document.getElementById('podium-btn');
-    if (nextBtn) nextBtn.style.display = 'none';
-    if (podiumBtn) podiumBtn.style.display = window.winnerTeam ? 'block' : 'none';
-    
-    console.log('Botões de resposta habilitados, botões de continuação escondidos');
-}
-
-function endGame() {
-    console.log('Fim do jogo');
-    document.getElementById('question-text').textContent = 'Fim do jogo!';
-    document.getElementById('team-turn').textContent = 'JOGO FINALIZADO';
-    document.getElementById('team-turn').className = 'team-turn team-color-1';
-    
-    ['certo-btn', 'errado-btn', 'skip-btn'].forEach(function(id) {
-        var btn = document.getElementById(id);
-        if (btn) btn.disabled = true;
-    });
-    
-    var nextBtn = document.getElementById('next-question-btn');
-    var podiumBtn = document.getElementById('podium-btn');
-    if (nextBtn) nextBtn.style.display = 'none';
-    if (podiumBtn) podiumBtn.style.display = 'block';
-    
-    if (window.updateTeamsDisplay) {
-        window.updateTeamsDisplay();
-    }
-}
-
-window.showQuestion = showQuestion;
-window.nextQuestion = nextQuestion;
-window.rotateTeam = rotateTeam;
-window.enableAnswerButtons = enableAnswerButtons;
-window.game = { nextQuestion: nextQuestion, showQuestion: showQuestion };
-
-console.log('answers/core.js carregado com controle de teclado e prevenção de duplicação');
