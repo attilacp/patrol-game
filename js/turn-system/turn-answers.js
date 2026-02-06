@@ -1,6 +1,22 @@
 // js/turn-system/turn-answers.js - PONTUAÇÃO CORRIGIDA
 console.log('🔄 turn-system/turn-answers.js carregando...');
 
+TurnSystem.prototype.normalizeAnswer = function(answer) {
+    if (!answer) return '';
+    
+    const normalized = answer.toString().trim().toUpperCase();
+    
+    if (normalized.includes('C') || normalized.includes('CERTO') || normalized.includes('✅') || normalized.includes('V')) {
+        return 'CERTO';
+    }
+    
+    if (normalized.includes('E') || normalized.includes('ERRADO') || normalized.includes('❌') || normalized.includes('F')) {
+        return 'ERRADO';
+    }
+    
+    return normalized;
+};
+
 TurnSystem.prototype.submitAnswer = function(answer) {
     console.log('📤 Tentando enviar resposta:', answer);
     
