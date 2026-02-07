@@ -1,4 +1,4 @@
-// file name: game/core.js
+// game/core.js - COM SINCRONIZAÇÃO
 if (!window.questions) window.questions = [];
 if (window.currentQuestionIndex === undefined) window.currentQuestionIndex = 0;
 if (window.currentTeamIndex === undefined) window.currentTeamIndex = 0;
@@ -32,7 +32,6 @@ function showQuestion() {
             return;
         } else {
             console.log('❌ Falha ao ativar PB pendente - continuando jogo normal');
-            // Continuar com pergunta normal
             window.pendingBombQuestion = false;
             window.resetPendingBombButton?.();
         }
@@ -72,9 +71,29 @@ function showQuestion() {
 function displayCurrentQuestion() {
     const question = window.questions[window.currentQuestionIndex];
     
-    document.getElementById('question-text').textContent = question.enunciado || 'Pergunta sem enunciado';
-    document.getElementById('commentary').textContent = question.comentario || '';
+    // EXIBIR PERGUNTA COM ASSUNTO
+    let questionHTML = '';
+    if (question.assuntoInfo) {
+        questionHTML = '<div class="assunto-container">' +
+            '<div class="assunto-icon">📚</div>' +
+            '<div class="assunto-text">' + question.assuntoInfo + '</div>' +
+        '</div>' +
+        '<div class="pergunta-texto">' +
+            (question.enunciado || 'Pergunta sem enunciado') +
+        '</div>';
+    } else {
+        questionHTML = '<div class="pergunta-texto">' + (question.enunciado || 'Pergunta sem enunciado') + '</div>';
+    }
+    
+    document.getElementById('question-text').innerHTML = questionHTML;
+    
+    // LIMPAR ELEMENTOS ANTERIORES
+    document.getElementById('commentary').textContent = '';
+    document.getElementById('commentary').innerHTML = '';
+    document.getElementById('commentary').classList.remove('active');
+    
     document.getElementById('correct-answer').textContent = '';
+    document.getElementById('correct-answer').className = 'correct-answer';
     
     document.getElementById('question-number').textContent = window.currentQuestionIndex + 1;
     document.getElementById('total-questions').textContent = window.questions.length;
@@ -87,6 +106,13 @@ function displayCurrentQuestion() {
     
     enableAnswerButtons();
     window.updateTeamsDisplay?.();
+    
+    // SINCRONIZAR COM TODOS OS JOGADORES (se mestre)
+    if (window.roomSystem && window.roomSystem.isMaster) {
+        if (window.roomSystem.broadcastQuestionToAll) {
+            window.roomSystem.broadcastQuestionToAll();
+        }
+    }
 }
 
 function nextQuestion() {
@@ -109,6 +135,19 @@ function enableAnswerButtons() {
     const podiumBtn = document.getElementById('podium-btn');
     if (nextBtn) nextBtn.style.display = 'none';
     if (podiumBtn) podiumBtn.style.display = window.winnerTeam ? 'block' : 'none';
+    
+    // SINCRONIZAR ESTADO DOS BOTÕES (se mestre)
+    if (window.roomSystem && window.roomSystem.isMaster) {
+        if (window.roomSystem.broadcastButtonsState) {
+            window.roomSystem.broadcastButtonsState({
+                certo: true,
+                errado: true,
+                skip: true,
+                next: false,
+                podium: false
+            });
+        }
+    }
 }
 
 function endGame() {
@@ -126,7 +165,51 @@ function endGame() {
     window.updateTeamsDisplay?.();
 }
 
+// NOVA FUNÇÃO: Sincronizar resposta para todos
+function syncAnswerToAll(isCorrect, question) {
+    if (window.roomSystem && window.roomSystem.isMaster) {
+        // 1. Transmitir se acertou/errou
+        if (window.roomSystem.broadcastAnswerToAll) {
+            window.roomSystem.broadcastAnswerToAll(isCorrect);
+        }
+        
+        // 2. Transmitir gabarito e comentários
+        if (window.roomSystem.broadcastGabaritoToAll) {
+            setTimeout(() => {
+                window.roomSystem.broadcastGabaritoToAll(question);
+            }, 500);
+        }
+        
+        // 3. Transmitir estado dos botões
+        if (window.roomSystem.broadcastButtonsState) {
+            window.roomSystem.broadcastButtonsState({
+                certo: false,
+                errado: false,
+                skip: false,
+                next: true,
+                podium: false
+            });
+        }
+    }
+}
+
+// ATUALIZAR checkAnswer para sincronizar
+if (window.checkAnswer) {
+    const originalCheckAnswer = window.checkAnswer;
+    window.checkAnswer = function(answer) {
+        originalCheckAnswer(answer);
+        
+        // Sincronizar após resposta
+        if (window.questions && window.questions[window.currentQuestionIndex]) {
+            const question = window.questions[window.currentQuestionIndex];
+            const isCorrect = answer === 'CERTO' ? true : false;
+            syncAnswerToAll(isCorrect, question);
+        }
+    };
+}
+
 window.showQuestion = showQuestion;
 window.nextQuestion = nextQuestion;
 window.rotateTeam = rotateTeam;
 window.enableAnswerButtons = enableAnswerButtons;
+window.syncAnswerToAll = syncAnswerToAll;

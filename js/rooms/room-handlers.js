@@ -5,23 +5,31 @@ RoomSystem.prototype.handleStatusChange = function(status) {
     console.log('📊 Status mudou:', status);
     
     if (status === 'playing' && !this.isMaster) {
-        console.log('🎮 Jogo iniciado pelo mestre!');
+        console.log('🎮 MESTRE iniciou o jogo! Sincronizando automaticamente...');
         this.jogoIniciadoParaJogador = true;
         
-        if (!this.alertaMostrado) {
-            this.alertaMostrado = true;
-            setTimeout(() => {
-                alert('🎮 O mestre iniciou o jogo!\n\nSincronizando...');
-            }, 500);
-        }
-        
+        // SINCRONIZAÇÃO AUTOMÁTICA
         setTimeout(() => {
-            if (window.authSystem) {
-                console.log('✅ Indo para tela do jogo...');
-                window.authSystem.showGameScreen();
-                this.fetchGameDataFromFirebase();
+            // 1. Buscar dados do jogo
+            this.fetchGameDataFromFirebase();
+            
+            // 2. Configurar sincronização
+            if (this.setupGameSync) {
+                this.setupGameSync();
             }
-        }, 1000);
+            
+            // 3. Ir para tela do jogo AUTOMATICAMENTE
+            if (window.authSystem && window.authSystem.showGameScreen) {
+                console.log('✅ Indo para tela do jogo automaticamente...');
+                window.authSystem.showGameScreen();
+            }
+            
+            // 4. Mostrar notificação
+            if (!this.alertaMostrado) {
+                this.alertaMostrado = true;
+                this.showNotification('🎮 Jogo iniciado pelo mestre! Sincronizando...', 'success');
+            }
+        }, 800);
     }
 };
 

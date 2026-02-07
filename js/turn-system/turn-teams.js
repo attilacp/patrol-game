@@ -1,4 +1,4 @@
-// js/turn-system/turn-teams.js - VERSÃO COMPLETA
+// js/turn-system/turn-teams.js - VERSÃO COMPLETA (ATUALIZADA)
 console.log('🔄 turn-system/turn-teams.js carregando...');
 
 TurnSystem.prototype.updatePlayerTeam = function(teamId) {
@@ -19,6 +19,11 @@ TurnSystem.prototype.updatePlayerTeam = function(teamId) {
         this.playerTeam = team;
         this.playerTeamId = teamId;
         console.log(`🎯 Jogador atribuído à equipe: ${team.name} (ID: ${teamId})`);
+        
+        // NOTIFICAR MESTRE ESPECIALMENTE
+        if (this.roomSystem.isMaster) {
+            this.roomSystem.showMasterTeam(team.name);
+        }
         
         this.updateAnswerButtons();
         
@@ -54,6 +59,10 @@ TurnSystem.prototype.assignMasterToTeam = function() {
     console.log(`👑 Mestre atribuído à equipe: ${teamName} (ID: ${teamId})`);
     
     this.saveMasterTeamAssignment(teamId, teamName);
+    
+    // NOTIFICAR MESTRE
+    this.roomSystem.showMasterTeam(teamName);
+    
     this.updateAnswerButtons();
 };
 

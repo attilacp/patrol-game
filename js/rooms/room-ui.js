@@ -1,4 +1,4 @@
-// js/rooms/room-ui.js - Atualização de interface COMPLETA
+// js/rooms/room-ui.js - Atualização de interface COMPLETA (ATUALIZADO)
 console.log('🏠 rooms/room-ui.js carregando...');
 
 RoomSystem.prototype.showRoomInfo = function(roomCode) {
@@ -21,6 +21,12 @@ RoomSystem.prototype.showRoomInfo = function(roomCode) {
     
     // Adicionar botão de copiar
     this.addCopyButtonToRoomCode(roomCode);
+    
+    // ATUALIZAÇÃO: MOSTRAR MENSAGEM DE SUCESSO PARA MESTRE
+    if (this.isMaster) {
+        this.showNotification(`🎉 Sala criada: ${roomCode}`, 'success');
+        console.log(`👑 Mestre criou sala: ${roomCode}`);
+    }
 };
 
 RoomSystem.prototype.addCopyButtonToRoomCode = function(roomCode) {
@@ -63,10 +69,12 @@ RoomSystem.prototype.updatePlayersList = function() {
     Object.values(players).forEach(player => {
         if (player.connected) {
             count++;
+            // MOSTRAR EQUIPE DO JOGADOR SE TIVER
+            const teamInfo = player.teamName ? ` (${player.teamName})` : '';
             html += `
                 <div class="player-item ${player.isMaster ? 'master' : ''}">
                     <span class="player-icon">${player.avatar || '👤'}</span>
-                    <span class="player-name">${player.name || 'Jogador'}</span>
+                    <span class="player-name">${player.name || 'Jogador'}${teamInfo}</span>
                     <span class="player-score">${player.score || 0} pts</span>
                 </div>
             `;
@@ -120,6 +128,25 @@ RoomSystem.prototype.showNotification = function(message, type = 'info') {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => notification.remove(), 300);
     }, 5000);
+};
+
+// NOVA FUNÇÃO: Mostrar equipe do mestre
+RoomSystem.prototype.showMasterTeam = function(teamName) {
+    if (this.isMaster && teamName) {
+        this.showNotification(`👑 Você (Mestre) está na equipe: ${teamName}`, 'success');
+        console.log(`👑 Mestre atribuído à equipe: ${teamName}`);
+        
+        // Atualizar também na tela de configuração se visível
+        const masterTeamElement = document.getElementById('master-team-display');
+        if (masterTeamElement) {
+            masterTeamElement.innerHTML = `
+                <div style="background: #FFCC00; color: #003366; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                    🎯 <strong>MESTRE</strong><br>
+                    Equipe: <strong>${teamName}</strong>
+                </div>
+            `;
+        }
+    }
 };
 
 console.log('✅ rooms/room-ui.js carregado com sucesso!');
