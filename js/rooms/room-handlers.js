@@ -1,4 +1,4 @@
-// js/rooms/room-handlers.js - MANIPULAÇÃO DE EVENTOS (CORRIGIDO)
+// js/rooms/room-handlers.js - MANIPULAÇÃO DE EVENTOS (COMPLETO)
 console.log('🏠 rooms/room-handlers.js carregando...');
 
 RoomSystem.prototype.handleStatusChange = function(status) {
@@ -33,7 +33,6 @@ RoomSystem.prototype.handleStatusChange = function(status) {
     }
 };
 
-// CORREÇÃO: Usar função do RoomSystem, não do TurnSystem
 RoomSystem.prototype.handleTurnFromFirebase = function(turnData) {
     console.log('🔄 Processando turno do Firebase:', turnData);
     
@@ -45,7 +44,6 @@ RoomSystem.prototype.handleTurnFromFirebase = function(turnData) {
     this.updateTurnUI(turnData);
 };
 
-// NOVA FUNÇÃO: Atualizar UI do turno
 RoomSystem.prototype.updateTurnUI = function(turnData) {
     console.log('🔄 Atualizando UI do turno:', turnData.teamName);
     
@@ -175,6 +173,145 @@ RoomSystem.prototype.showDataError = function() {
     const questionText = document.getElementById('question-text');
     if (questionText) {
         questionText.textContent = '❌ Erro ao carregar. Recarregue.';
+    }
+};
+
+RoomSystem.prototype.setupRoomListeners = function() {
+    if (!this.currentRoom) return;
+    
+    console.log('👂 Configurando listeners da sala:', this.currentRoom);
+    
+    this.cleanupAllListeners();
+    
+    try {
+        const roomRef = firebase.database().ref('rooms/' + this.currentRoom);
+        
+        // Status da sala
+        const statusListener = roomRef.child('status').on('value', (snapshot) => {
+            const status = snapshot.val();
+            if (status && status !== this.lastStatus) {
+                console.log('🔄 Status mudou para:', status);
+                this.lastStatus = status;
+                this.handleStatusChange(status);
+            }
+        });
+        this.roomListeners.push({ ref: roomRef.child('status'), listener: statusListener });
+        
+        // Dados do jogo
+        const gameDataListener = roomRef.child('gameData').on('value', (snapshot) => {
+            const gameData = snapshot.val();
+            if (gameData) {
+                console.log('📥 GameData recebido do Firebase');
+                this.syncGameDataFromFirebase(gameData);
+            }
+        });
+        this.roomListeners.push({ ref: roomRef.child('gameData'), listener: gameDataListener });
+        
+        // Turno atual
+        const turnListener = roomRef.child('currentTurn').on('value', (snapshot) => {
+            const turnData = snapshot.val();
+            if (turnData) {
+                console.log('🎯 Turno recebido:', turnData.teamName);
+                this.handleTurnFromFirebase(turnData);
+            }
+        });
+        this.roomListeners.push({ ref: roomRef.child('currentTurn'), listener: turnListener });
+        
+        // Pergunta atual
+        const questionListener = roomRef.child('currentQuestion').on('value', (snapshot) => {
+            const questionData = snapshot.val();
+            if (questionData) {
+                console.log('📚 Pergunta recebida:', questionData.index + 1);
+                this.handleQuestionFromFirebase(questionData);
+            }
+        });
+        this.roomListeners.push({ ref: roomRef.child('currentQuestion'), listener: questionListener });
+        
+        // Resultados de respostas
+        const answerResultListener = roomRef.child('answerResult').on('value', (snapshot) => {
+            const resultData = snapshot.val();
+            if (resultData) {
+                console.log('✅ Resultado de resposta recebido');
+                if (typeof this.syncAnswerResult === 'function') {
+                    this.syncAnswerResult(resultData);
+                }
+            }
+        });
+        this.roomListeners.push({ ref: roomRef.child('answerResult'), listener: answerResultListener });
+        
+        // Sincronização de jogo
+        const gameSyncListener = roomRef.child('gameSync').on('value', (snapshot) => {
+            const syncData = snapshot.val();
+            if (syncData) {
+                console.log('🔄 Dados de sincronização recebidos');
+                if (typeof this.handleGameSync === 'function') {
+                    this.handleGameSync(syncData);
+                }
+            }
+        });
+        this.roomListeners.push({ ref: roomRef.child('gameSync'), listener: gameSyncListener });
+        
+        // Respostas dos jogadores (apenas para mestre)
+        if (this.isMaster) {
+            const playerAnswersListener = roomRef.child('playerAnswers').on('child_added', (snapshot) => {
+                const answerData = snapshot.val();
+                if (answerData && answerData.playerId !== this.playerId) {
+                    console.log('📥 Resposta de jogador recebida:', answerData.playerName);
+                    if (typeof this.handlePlayerAnswer === 'function') {
+                        this.handlePlayerAnswer(answerData);
+                    }
+                }
+            });
+            this.roomListeners.push({ ref: roomRef.child('playerAnswers'), listener: playerAnswersListener });
+        }
+        
+        this.loadInitialRoomData();
+        
+        console.log('✅ Todos os listeners configurados');
+        
+    } catch (error) {
+        console.error('❌ Erro ao configurar listeners:', error);
+    }
+};
+
+RoomSystem.prototype.cleanupAllListeners = function() {
+    this.roomListeners.forEach(item => {
+        if (item.ref && item.listener) {
+            if (item.ref.off) {
+                item.ref.off('value', item.listener);
+            } else if (item.ref.off && typeof item.ref.off === 'function') {
+                item.ref.off('child_added', item.listener);
+            }
+        }
+    });
+    this.roomListeners = [];
+    
+    this.lastStatus = null;
+    this.jogoIniciadoParaJogador = false;
+    this.alertaMostrado = false;
+};
+
+RoomSystem.prototype.loadInitialRoomData = async function() {
+    try {
+        const roomRef = firebase.database().ref('rooms/' + this.currentRoom);
+        const snapshot = await roomRef.once('value');
+        const roomData = snapshot.val();
+        
+        if (roomData) {
+            console.log('📡 Dados iniciais carregados');
+            
+            if (roomData.status) {
+                this.updateRoomStatus(roomData.status);
+                this.lastStatus = roomData.status;
+                
+                if (roomData.status === 'playing' && !this.isMaster) {
+                    console.log('🎮 Jogo em andamento - sincronizando...');
+                    this.syncGameDataFromFirebase(roomData.gameData || {});
+                }
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados:', error);
     }
 };
 

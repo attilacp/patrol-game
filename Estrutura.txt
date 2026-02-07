@@ -1,5 +1,5 @@
 patrol-game/
-├── index.html                              # Página principal HTML
+├── index.html                              # Página principal MINIMALISTA
 ├── css/                                    # Arquivos CSS divididos
 │   ├── base.css                           # Variáveis e fundamentos
 │   ├── buttons.css                        # Estilos de todos os botões
@@ -13,19 +13,28 @@ patrol-game/
 │   ├── game.css                           # Tela do jogo
 │   └── responsive.css                     # Responsividade
 ├── js/
+│   ├── app-loader.js                      # CARREGADOR PRINCIPAL (novo)
+│   ├── firebase-config.js                 # Configuração do Firebase (novo)
+│   ├── css-loader.js                      # Carregador de CSS (novo)
+│   ├── templates.js                       # Todas as telas como templates (novo)
+│   ├── script-loader.js                   # Carregador de scripts (novo)
 │   ├── auth.js                            # Sistema de autenticação com lobby
 │   ├── rooms/                             # Sistema de salas multiplayer
 │   │   ├── core.js                        # Classe RoomSystem principal
 │   │   ├── room-manager-core.js           # Criar/entrar salas (PRINCIPAL)
 │   │   ├── room-manager-utils.js          # Funções auxiliares de gerenciamento
 │   │   ├── room-manager.js                # Arquivo principal (redirecionador)
-│   │   ├── room-listeners.js              # Listeners Firebase
+│   │   ├── room-handlers.js               # Manipulação de eventos (COMPLETO)
 │   │   ├── room-data.js                   # Sincronização de dados
 │   │   ├── room-teams.js                  # Atribuição de equipes
-│   │   ├── room-handlers.js               # Manipulação de eventos
 │   │   ├── room-ui.js                     # Atualização de interface
 │   │   ├── actions.js                     # Sistema de ações multiplayer
 │   │   ├── master-controls.js             # Controles do mestre
+│   │   ├── sync-game.js                   # Sincronização automática de jogo
+│   │   ├── room-answers-core.js           # Núcleo do sistema de respostas
+│   │   ├── room-master-answers.js         # Respostas do mestre
+│   │   ├── room-answer-sync.js            # Sincronização de respostas
+│   │   ├── room-answer-control.js         # Controle de fluxo de respostas
 │   │   └── init.js                        # Inicialização do sistema
 │   ├── utils.js                           # Funções utilitárias gerais
 │   ├── teams.js                           # Gerenciamento completo de equipes
@@ -41,17 +50,20 @@ patrol-game/
 │   │   ├── turn-listeners.js              # Listeners
 │   │   ├── turn-teams.js                  # Gerenciamento de equipes
 │   │   ├── turn-interface.js              # Interface
-│   │   ├── turn-answers.js                # Respostas
-│   │   ├── turn-results.js                # Resultados
 │   │   ├── turn-notifications.js          # Notificações
 │   │   └── turn-start.js                  # Inicialização
-│   ├── answers/                           # Sistema de respostas
-│   │   ├── core.js                        # Núcleo do sistema de respostas
-│   │   ├── correct.js                     # Lógica de resposta correta
-│   │   ├── wrong.js                       # Lógica de resposta errada
-│   │   ├── skip.js                        # Lógica para pular pergunta
-│   │   ├── checkAnswer.js                 # Verificação de resposta
-│   │   └── winner.js                      # Mensagem e lógica do vencedor
+
+│   ├── answers/
+│   │   ├── question-display.js     # Exibição de perguntas com assunto
+│   │   ├── question-flow.js        # Fluxo entre perguntas
+│   │   ├── game-state.js          # Estado global do jogo
+│   │   ├── response-handler.js    # Processamento de respostas
+│   │   ├── core.js               # Redirecionador (opcional)
+│   │   ├── checkAnswer.js        # Verificação de resposta
+│   │   ├── correct.js            # Lógica de acerto
+│   │   ├── wrong.js              # Lógica de erro  
+│   │   ├── skip.js               # Lógica de pular
+│   │   └── winner.js             # Lógica de vencedor
 │   ├── game/                              # Núcleo do jogo
 │   │   ├── core.js                        # Núcleo principal do jogo
 │   │   ├── podium.js                      # Sistema de pódio
@@ -88,6 +100,14 @@ patrol-game/
 │   │   ├── bombConfig.js                  # Configuração da Pergunta Bomba
 │   │   ├── notesLoader.js                 # Carregamento do sistema de notas
 │   │   └── buttonTester.js                # Sistema de teste e fallback
+│   ├── js/script-loader/
+│   │   ├── config.js           # Configuração de grupos de scripts
+│   │   ├── loader-core.js      # Funções básicas de carregamento
+│   │   ├── progress-manager.js # Gerenciamento de progresso
+│   │   ├── verification.js     # Verificação de scripts
+│   │   ├── error-handler.js    # Tratamento de erros
+│   │   └── main.js            # Arquivo principal que integra tudo
+│   ├── checkStartGame.js                  # Verificação para iniciar jogo
 │   └── debug.js                           # Funções de debug
 ├── assets/                                # Recursos estáticos
 │   └── (pasta vazia - para futuros assets)
