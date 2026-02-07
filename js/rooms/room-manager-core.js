@@ -59,14 +59,33 @@ RoomSystem.prototype.createRoom = async function() {
         
         console.log('✅ Sala criada:', roomCode);
         
-        // Mostrar código da sala
-        if (typeof this.showRoomInfo === 'function') {
-            this.showRoomInfo(roomCode);
-        }
+        // GARANTIR QUE showRoomInfo SEJA CHAMADO (com timeout para UI carregar)
+        setTimeout(() => {
+            if (typeof this.showRoomInfo === 'function') {
+                this.showRoomInfo(roomCode);
+            } else {
+                // Fallback direto
+                const roomInfo = document.getElementById('room-info');
+                const roomCodeSpan = document.getElementById('current-room-code');
+                
+                if (roomInfo) {
+                    roomInfo.style.display = 'block';
+                    roomInfo.style.opacity = '1';
+                }
+                if (roomCodeSpan) roomCodeSpan.textContent = roomCode;
+                
+                // Tentar adicionar botão copiar
+                if (typeof this.addCopyButtonToRoomCode === 'function') {
+                    this.addCopyButtonToRoomCode(roomCode);
+                }
+            }
+        }, 500);
         
         // Configurar listeners
         if (this.setupRoomListeners) {
-            this.setupRoomListeners();
+            setTimeout(() => {
+                this.setupRoomListeners();
+            }, 800);
         }
         
         return roomCode;

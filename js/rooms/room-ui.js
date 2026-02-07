@@ -10,6 +10,7 @@ RoomSystem.prototype.showRoomInfo = function(roomCode) {
     if (roomInfo) {
         roomInfo.style.display = 'block';
         roomInfo.style.opacity = '1';
+        roomInfo.style.animation = 'fadeIn 0.5s ease';
         console.log('✅ room-info exibido');
     }
     
@@ -22,7 +23,6 @@ RoomSystem.prototype.showRoomInfo = function(roomCode) {
     this.addCopyButtonToRoomCode(roomCode);
 };
 
-// FUNÇÃO PARA ADICIONAR BOTÃO DE COPIAR (mesma de room-manager.js)
 RoomSystem.prototype.addCopyButtonToRoomCode = function(roomCode) {
     const codeContainer = document.getElementById('current-room-code');
     if (!codeContainer) return;

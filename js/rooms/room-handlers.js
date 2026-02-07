@@ -25,13 +25,34 @@ RoomSystem.prototype.handleStatusChange = function(status) {
     }
 };
 
+// CORREÇÃO: Usar função do RoomSystem, não do TurnSystem
 RoomSystem.prototype.handleTurnFromFirebase = function(turnData) {
     console.log('🔄 Processando turno do Firebase:', turnData);
     
+    // Atualizar índices globais
     window.currentTeamIndex = turnData.teamIndex || 0;
     window.currentQuestionIndex = turnData.questionIndex || 0;
     
+    // Atualizar UI (função do RoomSystem)
     this.updateTurnUI(turnData);
+};
+
+// NOVA FUNÇÃO: Atualizar UI do turno
+RoomSystem.prototype.updateTurnUI = function(turnData) {
+    console.log('🔄 Atualizando UI do turno:', turnData.teamName);
+    
+    const teamTurnElement = document.getElementById('team-turn');
+    if (!teamTurnElement) return;
+    
+    if (turnData.teamName) {
+        teamTurnElement.textContent = `🎯 ${turnData.teamName} - DE PLANTÃO`;
+        
+        // Tentar aplicar cor da equipe
+        if (window.teams && window.teams[turnData.teamIndex]) {
+            const team = window.teams[turnData.teamIndex];
+            teamTurnElement.className = 'team-turn ' + (team.turnColorClass || 'team-color-1');
+        }
+    }
 };
 
 RoomSystem.prototype.handleQuestionFromFirebase = function(questionData) {
