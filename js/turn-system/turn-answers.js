@@ -1,4 +1,4 @@
-// js/turn-system/turn-answers.js - PONTUAÇÃO CORRIGIDA
+// js/turn-system/turn-answers.js - PONTUAÇÃO E RODÍZIO CORRIGIDOS
 console.log('🔄 turn-system/turn-answers.js carregando...');
 
 TurnSystem.prototype.normalizeAnswer = function(answer) {
@@ -72,23 +72,53 @@ TurnSystem.prototype.processMasterAnswer = function(answer) {
     
     // Atualizar pontuação da equipe atual
     if (window.teams && window.teams[window.currentTeamIndex]) {
-        window.teams[window.currentTeamIndex].score += points;
+        const team = window.teams[window.currentTeamIndex];
+        team.score += points;
+        
+        // REGRA DO RODÍZIO: SE ERROU, RODAR EQUIPE
+        if (!isCorrect) {
+            console.log(`❌ ${team.name} errou - RODANDO EQUIPE!`);
+            window.consecutiveCorrect = 0;
+            window.nextTeamRotation = true; // Marcar para rodar na próxima pergunta
+            
+            // Notificar sobre rodízio
+            this.showNotification(`❌ ${team.name} errou - Próxima equipe na próxima pergunta!`, 'warning');
+        } else {
+            // Se acertou, incrementar consecutivos
+            window.consecutiveCorrect = (window.consecutiveCorrect || 0) + 1;
+            console.log(`✅ ${team.name} acertou! Consecutivos: ${window.consecutiveCorrect}`);
+            
+            // Verificar se atingiu 5 acertos consecutivos para rodar equipe
+            if (window.consecutiveCorrect >= 5) {
+                console.log(`🏆 ${team.name} com 5 acertos consecutivos - RODANDO EQUIPE!`);
+                window.nextTeamRotation = true;
+                window.consecutiveCorrect = 0;
+                this.showNotification(`🏆 ${team.name} com 5 acertos - Próxima equipe na próxima pergunta!`, 'success');
+            }
+        }
         
         if (window.updateTeamsDisplay) {
             window.updateTeamsDisplay();
         }
         
         // Atualizar no Firebase
-        this.updateTeamScore(window.currentTeamIndex, window.teams[window.currentTeamIndex].score);
+        this.updateTeamScore(window.currentTeamIndex, team.score);
     }
     
-    // Mostrar resultado (sem tempo, com botão de continuar)
+    // Mostrar resultado
     this.showAnswerResult(isCorrect, points, 'MESTRE');
+    
+    // SINCRONIZAR COM TODOS OS JOGADORES
+    this.broadcastAnswerResult(isCorrect, points, {
+        teamId: window.currentTeamIndex,
+        teamName: window.teams?.[window.currentTeamIndex]?.name || 'Equipe',
+        playerName: 'Mestre'
+    });
     
     console.log(`👑 Mestre ${isCorrect ? 'ACERTOU' : 'ERROU'}! (${points} pts)`);
 };
 
-// FUNÇÃO ATUALIZADA: Mostrar resultado sem timer, com comentários no lugar certo
+// FUNÇÃO ATUALIZADA: Mostrar resultado e SINCRONIZAR
 TurnSystem.prototype.showAnswerResult = function(isCorrect, points, playerName) {
     // Limpar resultado anterior
     const commentaryElement = document.getElementById('commentary');
@@ -127,6 +157,75 @@ TurnSystem.prototype.showAnswerResult = function(isCorrect, points, playerName) 
     if (certoBtn) certoBtn.disabled = true;
     if (erradoBtn) erradoBtn.disabled = true;
     if (skipBtn) skipBtn.disabled = true;
+    
+    // SINCRONIZAR ESTADO DOS BOTÕES COM TODOS
+    if (this.roomSystem && this.roomSystem.isMaster) {
+        if (this.roomSystem.broadcastButtonsState) {
+            this.roomSystem.broadcastButtonsState({
+                certo: false,
+                errado: false,
+                skip: false,
+                next: true,
+                podium: false
+            });
+        }
+    }
+};
+
+// ATUALIZAR advanceToNextQuestion para aplicar rodízio
+TurnSystem.prototype.advanceToNextQuestion = function() {
+    console.log('🔄 Mestre avançando para próxima pergunta...');
+    
+    // APLICAR RODÍZIO SE MARCADO
+    if (window.nextTeamRotation && window.teams && window.teams.length > 1) {
+        console.log('🔄 Aplicando rodízio de equipe...');
+        this.rotateTeam();
+        window.nextTeamRotation = false;
+    }
+    
+    // Incrementar índice da pergunta
+    window.currentQuestionIndex++;
+    
+    // Transmitir nova pergunta
+    this.broadcastQuestionChange();
+    
+    console.log('✅ Nova pergunta:', window.currentQuestionIndex + 1);
+    
+    // Mostrar pergunta
+    setTimeout(() => {
+        if (window.showQuestion) {
+            window.showQuestion();
+        }
+    }, 500);
+};
+
+TurnSystem.prototype.broadcastAnswerResult = function(isCorrect, points, answerData) {
+    if (!this.roomSystem.isMaster || !this.roomSystem.currentRoom) return;
+    
+    const question = window.questions[window.currentQuestionIndex];
+    let allComments = '';
+    if (question) {
+        if (question.comentario) allComments += question.comentario;
+        if (question.comentario2) allComments += (allComments ? '<br><br>' : '') + question.comentario2;
+        if (question.comentario3) allComments += (allComments ? '<br><br>' : '') + question.comentario3;
+    }
+    
+    const resultData = {
+        questionIndex: window.currentQuestionIndex,
+        isCorrect: isCorrect,
+        points: points,
+        teamId: answerData.teamId,
+        teamName: answerData.teamName,
+        playerName: answerData.playerName,
+        correctAnswer: question?.gabarito || 'Não informado',
+        comments: allComments, // INCLUIR COMENTÁRIOS
+        timestamp: Date.now()
+    };
+    
+    firebase.database().ref('rooms/' + this.roomSystem.currentRoom + '/answerResult')
+        .set(resultData);
+    
+    console.log('📤 Resultado transmitido com comentários');
 };
 
 console.log('✅ turn-system/turn-answers.js carregado');

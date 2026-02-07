@@ -1,4 +1,4 @@
-// game/core.js - COM SINCRONIZAÇÃO
+// game/core.js - COM SINCRONIZAÇÃO E RODÍZIO
 if (!window.questions) window.questions = [];
 if (window.currentQuestionIndex === undefined) window.currentQuestionIndex = 0;
 if (window.currentTeamIndex === undefined) window.currentTeamIndex = 0;
@@ -21,6 +21,13 @@ function showQuestion() {
     window.currentQuestionProcessed = false;
     window.resetAnswerProcessedFlag?.();
     
+    // APLICAR RODÍZIO ANTES DE MOSTRAR PERGUNTA (se marcado)
+    if (window.nextTeamRotation && window.gameStarted && window.teams && window.teams.length > 1) {
+        console.log('🔄 Aplicando rodízio marcado antes de mostrar pergunta...');
+        rotateTeam();
+        window.nextTeamRotation = false;
+    }
+    
     // VERIFICAR SE HÁ PB PENDENTE - SE SIM, ATIVAR
     if (window.pendingBombQuestion && window.bombQuestionSystem) {
         console.log('PB pendente detectada, ativando...');
@@ -41,24 +48,12 @@ function showQuestion() {
     if (window.winnerTeam) {
         console.log('🏆 Já temos um vencedor, ignorando PB');
         
-        if (window.nextTeamRotation && window.gameStarted) {
-            rotateTeam();
-            window.nextTeamRotation = false;
-        }
-        
         if (window.currentQuestionIndex < window.questions.length) {
             displayCurrentQuestion();
         } else {
             endGame();
         }
         return;
-    }
-    
-    // APLICAR RODÍZIO SE MARCADO
-    if (window.nextTeamRotation && window.gameStarted) {
-        console.log('🔄 Aplicando rodízio marcado...');
-        rotateTeam();
-        window.nextTeamRotation = false;
     }
     
     if (window.currentQuestionIndex < window.questions.length) {
@@ -87,7 +82,7 @@ function displayCurrentQuestion() {
     
     document.getElementById('question-text').innerHTML = questionHTML;
     
-    // LIMPAR ELEMENTOS ANTERIORES
+    // LIMPAR ELEMENTOS ANTERIORES (resposta e comentários)
     document.getElementById('commentary').textContent = '';
     document.getElementById('commentary').innerHTML = '';
     document.getElementById('commentary').classList.remove('active');
@@ -116,13 +111,40 @@ function displayCurrentQuestion() {
 }
 
 function nextQuestion() {
+    console.log('⏭️ Avançando para próxima pergunta...');
+    
+    // APLICAR RODÍZIO SE MARCADO
+    if (window.nextTeamRotation && window.teams && window.teams.length > 1) {
+        console.log('🔄 Aplicando rodízio antes de avançar...');
+        rotateTeam();
+        window.nextTeamRotation = false;
+    }
+    
     window.currentQuestionIndex++;
     showQuestion();
 }
 
 function rotateTeam() {
+    if (!window.teams || window.teams.length === 0) return;
+    
+    const oldTeam = window.teams[window.currentTeamIndex]?.name || 'Equipe';
     window.currentTeamIndex = (window.currentTeamIndex + 1) % window.teams.length;
     window.consecutiveCorrect = 0;
+    
+    const newTeam = window.teams[window.currentTeamIndex]?.name || 'Equipe';
+    
+    console.log(`🔄 Equipe rotacionada: ${oldTeam} → ${newTeam}`);
+    
+    // Notificar sobre rodízio
+    if (window.roomSystem && window.roomSystem.isMaster) {
+        window.roomSystem.showNotification(`🔄 Rodízio: ${oldTeam} → ${newTeam}`, 'info');
+    }
+    
+    // Atualizar sistema de turnos
+    if (window.turnSystem && window.turnSystem.setCurrentTurn) {
+        const team = window.teams[window.currentTeamIndex];
+        window.turnSystem.setCurrentTurn(window.currentTeamIndex, team.id, team.name);
+    }
 }
 
 function enableAnswerButtons() {
@@ -168,19 +190,12 @@ function endGame() {
 // NOVA FUNÇÃO: Sincronizar resposta para todos
 function syncAnswerToAll(isCorrect, question) {
     if (window.roomSystem && window.roomSystem.isMaster) {
-        // 1. Transmitir se acertou/errou
+        // Transmitir resposta e comentários
         if (window.roomSystem.broadcastAnswerToAll) {
-            window.roomSystem.broadcastAnswerToAll(isCorrect);
+            window.roomSystem.broadcastAnswerToAll(isCorrect, question);
         }
         
-        // 2. Transmitir gabarito e comentários
-        if (window.roomSystem.broadcastGabaritoToAll) {
-            setTimeout(() => {
-                window.roomSystem.broadcastGabaritoToAll(question);
-            }, 500);
-        }
-        
-        // 3. Transmitir estado dos botões
+        // Transmitir estado dos botões
         if (window.roomSystem.broadcastButtonsState) {
             window.roomSystem.broadcastButtonsState({
                 certo: false,

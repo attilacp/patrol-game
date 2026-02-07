@@ -1,4 +1,4 @@
-// js/rooms/sync-game.js - Sincronização automática de tela
+// js/rooms/sync-game.js - Sincronização automática de tela (ATUALIZADO)
 console.log('🔄 rooms/sync-game.js carregando...');
 
 RoomSystem.prototype.setupGameSync = function() {
@@ -15,8 +15,8 @@ RoomSystem.prototype.setupGameSync = function() {
         }
     });
     
-    // 2. SINCRONIZAR RESPOSTAS
-    const answerRef = firebase.database().ref('rooms/' + this.currentRoom + '/gameSync/answerResult');
+    // 2. SINCRONIZAR RESPOSTAS E COMENTÁRIOS
+    const answerRef = firebase.database().ref('rooms/' + this.currentRoom + '/answerResult');
     answerRef.on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -30,15 +30,6 @@ RoomSystem.prototype.setupGameSync = function() {
         const data = snapshot.val();
         if (data) {
             this.syncButtonsState(data);
-        }
-    });
-    
-    // 4. SINCRONIZAR GABARITO
-    const gabaritoRef = firebase.database().ref('rooms/' + this.currentRoom + '/gameSync/gabarito');
-    gabaritoRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            this.syncGabaritoDisplay(data);
         }
     });
     
@@ -79,6 +70,19 @@ RoomSystem.prototype.syncQuestionDisplay = function(data) {
         }
     }
     
+    // LIMPAR COMENTÁRIOS ANTERIORES
+    const commentary = document.getElementById('commentary');
+    if (commentary) {
+        commentary.innerHTML = '';
+        commentary.classList.remove('active');
+    }
+    
+    const correctAnswer = document.getElementById('correct-answer');
+    if (correctAnswer) {
+        correctAnswer.textContent = '';
+        correctAnswer.className = 'correct-answer';
+    }
+    
     // Habilitar botões de resposta (se for a vez da equipe)
     this.syncButtonsState({
         certo: true,
@@ -90,13 +94,27 @@ RoomSystem.prototype.syncQuestionDisplay = function(data) {
 };
 
 RoomSystem.prototype.syncAnswerDisplay = function(data) {
-    console.log('✅ Sincronizando resposta:', data.isCorrect ? 'CORRETA' : 'ERRADA');
+    console.log('✅ Sincronizando resposta e comentários:', data.isCorrect ? 'CORRETA' : 'ERRADA');
     
     // Mostrar se acertou ou errou
     const correctAnswer = document.getElementById('correct-answer');
     if (correctAnswer) {
         correctAnswer.textContent = data.isCorrect ? '✅ ACERTOU' : '❌ ERROU';
         correctAnswer.className = data.isCorrect ? 'correct-answer' : 'wrong-answer';
+    }
+    
+    // MOSTRAR COMENTÁRIOS SINCRONIZADOS
+    const commentary = document.getElementById('commentary');
+    if (commentary && data.comments) {
+        commentary.innerHTML = data.comments;
+        commentary.classList.add('active');
+        
+        console.log('📝 Comentários exibidos:', data.comments.substring(0, 50) + '...');
+    }
+    
+    // Mostrar gabarito se disponível
+    if (data.correctAnswer && correctAnswer) {
+        correctAnswer.textContent += ' - GABARITO: ' + data.correctAnswer;
     }
     
     // Atualizar botões para mostrar "Continuar"
@@ -107,33 +125,11 @@ RoomSystem.prototype.syncAnswerDisplay = function(data) {
         next: true,
         podium: false
     });
-};
-
-RoomSystem.prototype.syncGabaritoDisplay = function(data) {
-    console.log('📋 Sincronizando gabarito e comentários');
     
-    // Mostrar gabarito
-    const correctAnswer = document.getElementById('correct-answer');
-    if (correctAnswer && data.gabarito) {
-        correctAnswer.textContent = 'GABARITO: ' + data.gabarito;
-        correctAnswer.className = 'correct-answer';
+    // Atualizar pontuação se disponível
+    if (data.teamName && data.playerName) {
+        console.log(`📊 ${data.playerName} (${data.teamName}) ${data.isCorrect ? 'acertou' : 'errou'}`);
     }
-    
-    // Mostrar comentários
-    const commentary = document.getElementById('commentary');
-    if (commentary && data.comments) {
-        commentary.innerHTML = data.comments;
-        commentary.classList.add('active');
-    }
-    
-    // Desabilitar botões de resposta
-    this.syncButtonsState({
-        certo: false,
-        errado: false,
-        skip: false,
-        next: true,
-        podium: false
-    });
 };
 
 RoomSystem.prototype.syncButtonsState = function(state) {
@@ -165,7 +161,10 @@ RoomSystem.prototype.syncButtonsState = function(state) {
     
     if (nextBtn) {
         nextBtn.style.display = state.next ? 'inline-block' : 'none';
-        if (state.next) nextBtn.disabled = false;
+        if (state.next) {
+            nextBtn.disabled = false;
+            nextBtn.textContent = '⏭️ Continuar';
+        }
     }
     
     if (podiumBtn) {
@@ -218,21 +217,7 @@ RoomSystem.prototype.broadcastQuestionToAll = function() {
     console.log('📤 Pergunta transmitida para todos');
 };
 
-RoomSystem.prototype.broadcastAnswerToAll = function(isCorrect) {
-    if (!this.isMaster || !this.currentRoom) return;
-    
-    const syncData = {
-        isCorrect: isCorrect,
-        timestamp: Date.now()
-    };
-    
-    firebase.database().ref('rooms/' + this.currentRoom + '/gameSync/answerResult')
-        .set(syncData);
-    
-    console.log('📤 Resposta transmitida para todos');
-};
-
-RoomSystem.prototype.broadcastGabaritoToAll = function(question) {
+RoomSystem.prototype.broadcastAnswerToAll = function(isCorrect, question) {
     if (!this.isMaster || !this.currentRoom) return;
     
     // Coletar todos os comentários
@@ -242,15 +227,17 @@ RoomSystem.prototype.broadcastGabaritoToAll = function(question) {
     if (question.comentario3) allComments += (allComments ? '<br><br>' : '') + question.comentario3;
     
     const syncData = {
-        gabarito: question.gabarito || 'Não informado',
+        isCorrect: isCorrect,
+        correctAnswer: question.gabarito || 'Não informado',
         comments: allComments,
         timestamp: Date.now()
     };
     
-    firebase.database().ref('rooms/' + this.currentRoom + '/gameSync/gabarito')
+    // Usar o mesmo caminho que o TurnSystem usa para sincronizar
+    firebase.database().ref('rooms/' + this.currentRoom + '/answerResult')
         .set(syncData);
     
-    console.log('📤 Gabarito e comentários transmitidos para todos');
+    console.log('📤 Resposta e comentários transmitidos para todos');
 };
 
 RoomSystem.prototype.broadcastButtonsState = function(state) {
