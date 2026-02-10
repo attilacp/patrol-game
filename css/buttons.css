@@ -1,0 +1,239 @@
+/* css/buttons.css - Estilos de todos os botões */
+button {
+    background: linear-gradient(145deg, #003366, #002244);
+    color: #FFCC00 !important;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 8px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    border: 3px solid #FFCC00;
+    position: relative;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.3);
+    background: linear-gradient(145deg, #002244, #001933);
+    color: #FFCC00 !important;
+}
+
+button:hover::before {
+    left: 100%;
+}
+
+button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.3);
+}
+
+button:disabled {
+    background: #666;
+    transform: none;
+    box-shadow: none;
+    border-color: #999;
+    cursor: not-allowed;
+    color: #ccc !important;
+}
+
+button:disabled::before {
+    display: none;
+}
+
+/* Botões específicos */
+.answer-btn {
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 140px;
+    border-radius: 15px;
+    cursor: pointer !important;
+    color: #FFCC00 !important;
+}
+
+.answer-btn:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+    color: #FFCC00 !important;
+}
+
+.next-btn, .podium-btn, .skip-btn {
+    padding: 16px 32px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    min-width: 140px !important;
+    border-radius: 15px !important;
+    height: auto !important;
+    margin: 8px !important;
+}
+
+.next-btn {
+    background: linear-gradient(145deg, #17a2b8, #138496) !important;
+    border-color: #117a8b !important;
+    color: #FFCC00 !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.next-btn:hover {
+    background: linear-gradient(145deg, #138496, #117a8b) !important;
+    transform: translateY(-3px) !important;
+    color: #FFCC00 !important;
+}
+
+.podium-btn {
+    background: linear-gradient(145deg, #FFD700, #FFC400) !important;
+    border-color: #FFB300 !important;
+    color: #003366 !important;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+}
+
+.podium-btn:hover {
+    background: linear-gradient(145deg, #FFC400, #FFB300) !important;
+    transform: translateY(-3px) !important;
+    color: #003366 !important;
+}
+
+.config-btn {
+    background: linear-gradient(145deg, #6c757d, #5a6268) !important;
+    border-color: #545b62 !important;
+    color: #FFCC00 !important;
+}
+
+.config-btn:hover {
+    background: linear-gradient(145deg, #5a6268, #495057) !important;
+    transform: translateY(-3px) !important;
+    color: #FFCC00 !important;
+}
+
+.certo-btn {
+    background: linear-gradient(145deg, #28a745, #1e7e34);
+    border-color: #155724;
+    color: #FFCC00 !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.certo-btn:not(:disabled):hover {
+    background: linear-gradient(145deg, #1e7e34, #155724);
+    color: #FFCC00 !important;
+}
+
+.errado-btn {
+    background: linear-gradient(145deg, #dc3545, #c82333);
+    border-color: #bd2130;
+    color: #FFCC00 !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.errado-btn:not(:disabled):hover {
+    background: linear-gradient(145deg, #c82333, #a71e2a);
+    color: #FFCC00 !important;
+}
+
+.skip-btn {
+    background: linear-gradient(145deg, #ff9800, #f57c00) !important;
+    border-color: #ef6c00 !important;
+    color: #FFF !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.skip-btn:hover {
+    background: linear-gradient(145deg, #f57c00, #e65100) !important;
+    transform: translateY(-3px) !important;
+    color: #FFF !important;
+}
+
+.skip-btn:disabled {
+    background: #666 !important;
+    border-color: #999 !important;
+    color: #ccc !important;
+}
+
+.notes-btn {
+    background: linear-gradient(145deg, #6c757d, #5a6268) !important;
+    border-color: #545b62 !important;
+    padding: 12px 25px !important;
+    font-size: 14px !important;
+    color: #FFCC00 !important;
+}
+
+.notes-btn:hover {
+    background: linear-gradient(145deg, #5a6268, #495057) !important;
+    transform: translateY(-2px) !important;
+}
+
+.back-to-lobby {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: linear-gradient(145deg, #6c757d, #5a6268) !important;
+    border-color: #545b62 !important;
+    color: #FFCC00 !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    z-index: 100;
+}
+
+.logout-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(145deg, #dc3545, #c82333);
+    border-color: #bd2130;
+    padding: 10px 20px;
+    font-size: 14px;
+    z-index: 100;
+}
+
+/* Botões do mestre */
+.master-control-btn {
+    background: linear-gradient(145deg, #FFCC00, #E6B800) !important;
+    border-color: #003366 !important;
+    color: #003366 !important;
+    font-size: 12px !important;
+    padding: 8px 15px !important;
+    min-width: auto !important;
+}
+
+/* Botão copiar código */
+.copy-code-btn {
+    background: #003366;
+    color: #FFCC00;
+    border: 2px solid #FFCC00;
+    padding: 5px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.copy-code-btn:hover {
+    background: #002244;
+    transform: translateY(-2px);
+}
+
+.copy-code-btn:disabled {
+    background: #6c757d;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+}
