@@ -2,24 +2,152 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PATROL - Jogo de Perguntas e Respostas Multiplayer</title>
-    <link rel="icon" href="favicon.ico">
+    <title>PATROL - Quiz Multiplayer</title>
     
-    <!-- CSS principal apenas -->
-    <link rel="stylesheet" href="css/base.css">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
     
-    <!-- Carregador principal -->
-    <script src="js/app-loader.js" defer></script>
+    <!-- CSS - Carregamento Otimizado -->
+    <link rel="stylesheet" href="css/base-optimized.css">
+    <link rel="stylesheet" href="css/buttons-optimized.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/cards.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/podium.css">
+    <link rel="stylesheet" href="css/bomb-question.css">
+    <link rel="stylesheet" href="css/performance.css">
+    <link rel="stylesheet" href="css/lobby.css">
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
-    <!-- Container principal (será preenchido por templates) -->
-    <div class="container" id="main-container">
-        <!-- As telas serão carregadas dinamicamente aqui -->
+    <!-- Container Principal -->
+    <div id="main-container" class="container">
+        <!-- Templates serão carregados aqui dinamicamente -->
     </div>
-    
-    <!-- Modal de notas (será carregado dinamicamente) -->
+
+    <!-- Container do Modal de Notas -->
     <div id="notes-modal-container"></div>
+
+    <!-- Bibliotecas Externas - CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+
+    <!-- Scripts Core - Ordem Otimizada -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/utils-optimized.js"></script>
+    <script src="js/teams.js"></script>
+    <script src="js/auth.js"></script>
+
+    <!-- Sistema de Salas -->
+    <script src="js/rooms/core.js"></script>
+    <script src="js/rooms/room-manager-core.js"></script>
+    <script src="js/rooms/room-manager-utils.js"></script>
+    <script src="js/rooms/room-ui.js"></script>
+    <script src="js/rooms/room-handlers.js"></script>
+    <script src="js/rooms/room-data.js"></script>
+    <script src="js/rooms/room-teams.js"></script>
+    <script src="js/rooms/actions.js"></script>
+    <script src="js/rooms/master-controls.js"></script>
+    <script src="js/rooms/room-answers-core.js"></script>
+    <script src="js/rooms/room-master-answers.js"></script>
+    <script src="js/rooms/room-answer-sync.js"></script>
+    <script src="js/rooms/room-answer-control.js"></script>
+    <script src="js/rooms/sync-game.js"></script>
+    <script src="js/rooms/init.js"></script>
+
+    <!-- Sistema de Performance - OTIMIZADO -->
+    <script src="js/teams-performance-optimized.js"></script>
+
+    <!-- Sistema de Perguntas e Respostas -->
+    <script src="js/answers/question-display.js"></script>
+    <script src="js/answers/question-flow.js"></script>
+    <script src="js/answers/game-state.js"></script>
+    <script src="js/answers/response-handler.js"></script>
+    <script src="js/answers/checkAnswer.js"></script>
+    <script src="js/answers/correct.js"></script>
+    <script src="js/answers/wrong.js"></script>
+    <script src="js/answers/skip.js"></script>
+    <script src="js/answers/winner.js"></script>
+
+    <!-- Pódio e Notas -->
+    <script src="js/game/podium.js"></script>
+    <script src="js/game/notes.js"></script>
+
+    <!-- Pergunta Bomba -->
+    <script src="js/bombQuestion/penaltyModal.js"></script>
+    <script src="js/bombQuestion/fileLoader.js"></script>
+    <script src="js/bombQuestion/ui-manager.js"></script>
+    <script src="js/bombQuestion/selector.js"></script>
+    <script src="js/bombQuestion/game-manager.js"></script>
+    <script src="js/bombQuestion/core-base.js"></script>
+    <script src="js/bombQuestion/config.js"></script>
+    <script src="js/bombQuestion/main.js"></script>
+
+    <!-- Upload de Arquivos -->
+    <script src="js/fileUpload/main.js"></script>
+    <script src="js/fileUpload/core.js"></script>
+    <script src="js/fileUpload/subjects.js"></script>
+    <script src="js/fileUpload/status.js"></script>
+
+    <!-- Sistema de Turnos - OTIMIZADO -->
+    <script src="js/turn-system-optimized.js"></script>
+
+    <!-- Eventos do Jogo -->
+    <script src="js/gameEvents/main.js"></script>
+    <script src="js/gameEvents/core.js"></script>
+    <script src="js/gameEvents/answerButtons.js"></script>
+    <script src="js/gameEvents/controlButtons.js"></script>
+    <script src="js/gameEvents/teamTurn.js"></script>
+    <script src="js/gameEvents/keyboard.js"></script>
+
+    <!-- Inicialização Principal -->
+    <script src="js/main/buttonTester.js"></script>
+    <script src="js/main/notesLoader.js"></script>
+    <script src="js/main/configEvents.js"></script>
+    <script src="js/main/configScreen.js"></script>
+    <script src="js/main/game-start-helpers.js"></script>
+    <script src="js/main/game-start-firebase.js"></script>
+    <script src="js/main/game-start-core.js"></script>
+    <script src="js/main/init.js"></script>
+    <script src="js/checkStartGame.js"></script>
+    <script src="js/game/multiplayer.js"></script>
+
+    <!-- Script de Inicialização -->
+    <script>
+        console.log('🚀 PATROL iniciando...');
+        
+        // Carregar templates imediatamente
+        if (typeof loadAllTemplates === 'function') {
+            loadAllTemplates();
+            console.log('✅ Templates carregados');
+        }
+
+        // Inicializar Firebase
+        if (typeof initializeFirebase === 'function') {
+            const firebaseOk = initializeFirebase();
+            console.log(firebaseOk ? '✅ Firebase inicializado' : '❌ Erro no Firebase');
+        }
+
+        // Log de verificação após carregamento
+        window.addEventListener('load', function() {
+            console.log('🔍 Verificando componentes essenciais:');
+            console.log('- Firebase:', typeof firebase !== 'undefined' ? '✅' : '❌');
+            console.log('- Auth:', window.auth ? '✅' : '❌');
+            console.log('- Database:', window.db ? '✅' : '❌');
+            console.log('- Templates:', typeof loadAllTemplates === 'function' ? '✅' : '❌');
+            console.log('- Utils:', typeof Utils !== 'undefined' ? '✅' : '❌');
+            console.log('- PerformanceSystem:', typeof PerformanceSystem !== 'undefined' ? '✅' : '❌');
+            console.log('- TurnSystem:', typeof TurnSystem !== 'undefined' ? '✅' : '❌');
+            
+            // Disparar evento de app pronto
+            document.dispatchEvent(new Event('appReady'));
+            console.log('✅ PATROL pronto!');
+        });
+    </script>
 </body>
 </html>

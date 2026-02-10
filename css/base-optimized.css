@@ -1,17 +1,18 @@
-/* css/base.css - Variáveis e estilos fundamentais */
+/* css/base-optimized.css - Estilos fundamentais otimizados */
 :root {
     --prf-blue: #003366;
-    --prf-dark-blue: #002244;
+    --prf-dark: #002244;
     --prf-yellow: #FFCC00;
     --prf-gold: #E6B800;
-    --prf-white: #fff;
-    --prf-gray: #F5F5F5;
-    --prf-light-gray: #E9ECEF;
-    --correct-green: #28a745;
-    --wrong-red: #dc3545;
-    --success-green: #d4edda;
-    --warning-yellow: #fff3cd;
-    --danger-red: #f8d7da;
+    --correct: #28a745;
+    --wrong: #dc3545;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --gray: #6c757d;
+    --light: #f8f9fa;
+    --border: #dee2e6;
+    --shadow: 0 6px 15px rgba(0,0,0,0.3);
+    --transition: all 0.3s ease;
 }
 
 * {
@@ -21,17 +22,11 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #002244 0%, #003366);
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, var(--prf-dark), var(--prf-blue));
     color: #333;
     min-height: 100vh;
     overflow-x: hidden;
-}
-
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 10px;
 }
 
 .screen {
@@ -43,50 +38,46 @@ body {
     display: block !important;
 }
 
+/* Tipografia */
 h1 {
-    font-family: 'Arial Black', 'Arial Bold', Gadget, sans-serif;
+    font-family: Arial Black, sans-serif;
     font-size: 2em;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 3px;
-    color: #FFCC00;
-    text-shadow: 2px 2px 0 #003366, 4px 4px 0 rgba(0,0,0,0.3), 0 0 15px rgba(255,204,0,0.5);
+    color: var(--prf-yellow);
+    text-shadow: 2px 2px 0 var(--prf-blue), 4px 4px 0 rgba(0,0,0,0.3);
     margin: 15px 0;
     text-align: center;
-    position: relative;
     padding: 10px 0;
+    position: relative;
 }
 
-h1:before, h1:after {
+h1::before, h1::after {
     content: "";
     position: absolute;
     left: 30%;
     right: 30%;
     height: 3px;
-    background: linear-gradient(90deg, transparent, #FFCC00, #fff, #FFCC00, transparent);
+    background: linear-gradient(90deg, transparent, var(--prf-yellow), #fff, var(--prf-yellow), transparent);
     border-radius: 2px;
 }
 
-h1:before { top: 0; }
-h1:after { bottom: 0; }
+h1::before { top: 0; }
+h1::after { bottom: 0; }
 
 h2, h3 {
     font-size: 1.1em;
-    color: var(--prf-white);
+    color: #fff;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     margin: 8px 0;
     text-align: center;
 }
 
-/* Animações básicas */
+/* Animações */
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideOut {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(100%); opacity: 0; }
 }
 
 @keyframes fadeIn {
@@ -100,45 +91,38 @@ h2, h3 {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 
-/* Badge do usuário */
+/* User Badge */
 .user-badge {
     position: absolute;
     top: 20px;
     right: 20px;
-    background: rgba(0, 51, 102, 0.9);
-    color: #FFCC00;
+    background: rgba(0,51,102,0.9);
+    color: var(--prf-yellow);
     padding: 8px 15px;
     border-radius: 20px;
-    border: 2px solid #FFCC00;
+    border: 2px solid var(--prf-yellow);
     font-weight: 600;
     font-size: 14px;
     display: flex;
     align-items: center;
     gap: 8px;
     z-index: 99;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
 }
 
 .user-badge:hover {
-    background: #003366;
+    background: var(--prf-blue);
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-}
-
-.user-icon {
-    font-size: 16px;
 }
 
 .master-badge {
-    background: #FFCC00;
-    color: #003366;
+    background: var(--prf-yellow);
+    color: var(--prf-blue);
     padding: 2px 6px;
     border-radius: 10px;
     font-size: 12px;
-    margin-left: 5px;
 }
