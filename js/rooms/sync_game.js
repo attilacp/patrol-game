@@ -1,4 +1,4 @@
-// js/rooms/sync-game.js - Sincronização automática de tela (ATUALIZADO)
+// js/rooms/sync-game.js - Sincronização automática de tela
 console.log('🔄 rooms/sync-game.js carregando...');
 
 RoomSystem.prototype.setupGameSync = function() {
@@ -39,10 +39,8 @@ RoomSystem.prototype.setupGameSync = function() {
 RoomSystem.prototype.syncQuestionDisplay = function(data) {
     console.log('📚 Sincronizando pergunta:', data.index + 1);
     
-    // Atualizar índice global
     window.currentQuestionIndex = data.index || 0;
     
-    // Atualizar display da pergunta
     const questionText = document.getElementById('question-text');
     if (questionText && data.questionHTML) {
         questionText.innerHTML = data.questionHTML;
@@ -50,19 +48,16 @@ RoomSystem.prototype.syncQuestionDisplay = function(data) {
         questionText.textContent = data.enunciado;
     }
     
-    // Atualizar contador
     const questionNumber = document.getElementById('question-number');
     const totalQuestions = document.getElementById('total-questions');
     if (questionNumber) questionNumber.textContent = (data.index + 1) || 1;
     if (totalQuestions) totalQuestions.textContent = data.total || window.questions?.length || 0;
     
-    // Atualizar equipe de plantão
     if (data.teamName) {
         const teamTurn = document.getElementById('team-turn');
         if (teamTurn) {
             teamTurn.textContent = `🎯 ${data.teamName} - DE PLANTÃO`;
             
-            // Aplicar cor da equipe se disponível
             if (window.teams && data.teamIndex !== undefined && window.teams[data.teamIndex]) {
                 const team = window.teams[data.teamIndex];
                 teamTurn.className = 'team-turn ' + (team.turnColorClass || 'team-color-1');
@@ -70,7 +65,6 @@ RoomSystem.prototype.syncQuestionDisplay = function(data) {
         }
     }
     
-    // LIMPAR COMENTÁRIOS ANTERIORES
     const commentary = document.getElementById('commentary');
     if (commentary) {
         commentary.innerHTML = '';
@@ -83,41 +77,34 @@ RoomSystem.prototype.syncQuestionDisplay = function(data) {
         correctAnswer.className = 'correct-answer';
     }
     
-    // Habilitar botões de resposta (se for a vez da equipe)
     this.syncButtonsState({
         certo: true,
         errado: true,
-        skip: this.isMaster, // Apenas mestre pode pular
+        skip: this.isMaster,
         next: false,
         podium: false
     });
 };
 
 RoomSystem.prototype.syncAnswerDisplay = function(data) {
-    console.log('✅ Sincronizando resposta e comentários:', data.isCorrect ? 'CORRETA' : 'ERRADA');
+    console.log('✅ Sincronizando resposta:', data.isCorrect ? 'CORRETA' : 'ERRADA');
     
-    // Mostrar se acertou ou errou
     const correctAnswer = document.getElementById('correct-answer');
     if (correctAnswer) {
         correctAnswer.textContent = data.isCorrect ? '✅ ACERTOU' : '❌ ERROU';
         correctAnswer.className = data.isCorrect ? 'correct-answer' : 'wrong-answer';
     }
     
-    // MOSTRAR COMENTÁRIOS SINCRONIZADOS
     const commentary = document.getElementById('commentary');
     if (commentary && data.comments) {
         commentary.innerHTML = data.comments;
         commentary.classList.add('active');
-        
-        console.log('📝 Comentários exibidos:', data.comments.substring(0, 50) + '...');
     }
     
-    // Mostrar gabarito se disponível
     if (data.correctAnswer && correctAnswer) {
         correctAnswer.textContent += ' - GABARITO: ' + data.correctAnswer;
     }
     
-    // Atualizar botões para mostrar "Continuar"
     this.syncButtonsState({
         certo: false,
         errado: false,
@@ -125,16 +112,9 @@ RoomSystem.prototype.syncAnswerDisplay = function(data) {
         next: true,
         podium: false
     });
-    
-    // Atualizar pontuação se disponível
-    if (data.teamName && data.playerName) {
-        console.log(`📊 ${data.playerName} (${data.teamName}) ${data.isCorrect ? 'acertou' : 'errou'}`);
-    }
 };
 
 RoomSystem.prototype.syncButtonsState = function(state) {
-    console.log('🔘 Sincronizando botões:', state);
-    
     const certoBtn = document.getElementById('certo-btn');
     const erradoBtn = document.getElementById('errado-btn');
     const skipBtn = document.getElementById('skip-btn');
@@ -178,7 +158,6 @@ RoomSystem.prototype.broadcastQuestionToAll = function() {
     const question = window.questions?.[window.currentQuestionIndex];
     if (!question) return;
     
-    // Criar HTML da pergunta com assunto
     let questionHTML = '';
     if (question.assuntoInfo) {
         questionHTML = '<div class="assunto-container">' +
@@ -205,11 +184,10 @@ RoomSystem.prototype.broadcastQuestionToAll = function() {
     firebase.database().ref('rooms/' + this.currentRoom + '/gameSync/currentQuestion')
         .set(syncData);
     
-    // Resetar botões para todos
     this.broadcastButtonsState({
         certo: true,
         errado: true,
-        skip: this.isMaster, // Apenas mestre pode pular
+        skip: this.isMaster,
         next: false,
         podium: false
     });
@@ -220,7 +198,6 @@ RoomSystem.prototype.broadcastQuestionToAll = function() {
 RoomSystem.prototype.broadcastAnswerToAll = function(isCorrect, question) {
     if (!this.isMaster || !this.currentRoom) return;
     
-    // Coletar todos os comentários
     let allComments = '';
     if (question.comentario) allComments += question.comentario;
     if (question.comentario2) allComments += (allComments ? '<br><br>' : '') + question.comentario2;
@@ -233,11 +210,10 @@ RoomSystem.prototype.broadcastAnswerToAll = function(isCorrect, question) {
         timestamp: Date.now()
     };
     
-    // Usar o mesmo caminho que o TurnSystem usa para sincronizar
     firebase.database().ref('rooms/' + this.currentRoom + '/answerResult')
         .set(syncData);
     
-    console.log('📤 Resposta e comentários transmitidos para todos');
+    console.log('📤 Resposta e comentários transmitidos');
 };
 
 RoomSystem.prototype.broadcastButtonsState = function(state) {
@@ -247,24 +223,21 @@ RoomSystem.prototype.broadcastButtonsState = function(state) {
         .set(state);
 };
 
-// AUTO-INICIAR SINCRONIZAÇÃO QUANDO MESTRE COMEÇAR JOGO
 RoomSystem.prototype.startGameForAllPlayers = async function() {
     if (!this.isMaster || !this.currentRoom) {
         alert('Apenas o mestre pode iniciar o jogo');
         return false;
     }
     
-    console.log('🚀 Mestre iniciando jogo para TODOS os jogadores...');
+    console.log('🚀 Mestre iniciando jogo para TODOS...');
     
     try {
-        // 1. ATUALIZAR STATUS DA SALA
         await firebase.database().ref('rooms/' + this.currentRoom).update({
             status: 'playing',
             gameStartedAt: Date.now(),
             masterStarted: true
         });
         
-        // 2. SINCRONIZAR DADOS DO JOGO
         if (window.questions && window.teams) {
             const gameData = {
                 questions: window.questions,
@@ -276,24 +249,20 @@ RoomSystem.prototype.startGameForAllPlayers = async function() {
             await firebase.database().ref('rooms/' + this.currentRoom + '/gameData').set(gameData);
         }
         
-        // 3. NOTIFICAR TODOS OS JOGADORES
         this.sendAction('game_started', {
             message: '🎮 O MESTRE INICIOU O JOGO!',
             masterName: this.playerName,
             timestamp: Date.now()
         });
         
-        this.showNotification('✅ Jogo iniciado! Todos os jogadores foram notificados.', 'success');
+        this.showNotification('✅ Jogo iniciado!', 'success');
         
-        // 4. INICIAR SINCRONIZAÇÃO
         this.setupGameSync();
         
-        // 5. TRANSMITIR PRIMEIRA PERGUNTA
         setTimeout(() => {
             this.broadcastQuestionToAll();
         }, 1000);
         
-        // 6. IR PARA TELA DO JOGO
         setTimeout(() => {
             if (window.authSystem && window.authSystem.showGameScreen) {
                 window.authSystem.showGameScreen();
@@ -303,10 +272,10 @@ RoomSystem.prototype.startGameForAllPlayers = async function() {
         return true;
         
     } catch (error) {
-        console.error('❌ Erro ao iniciar jogo para todos:', error);
+        console.error('❌ Erro ao iniciar jogo:', error);
         alert('Erro: ' + error.message);
         return false;
     }
 };
 
-console.log('✅ rooms/sync-game.js carregado com sucesso!');
+console.log('✅ rooms/sync-game.js carregado!');
