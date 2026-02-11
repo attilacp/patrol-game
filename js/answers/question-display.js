@@ -1,7 +1,7 @@
-// js/answers/question-display.js - Exibição de perguntas
+// js/answers/question-display.js - CORRIGIDO
 console.log('📝 question-display.js carregando...');
 
-function displayQuestionWithSubject() {
+function showQuestion() {
     if (window.currentQuestionIndex >= window.questions.length) {
         endGame();
         return;
@@ -12,7 +12,6 @@ function displayQuestionWithSubject() {
     
     if (!questionText) return;
     
-    // Criar HTML da pergunta com assunto
     let questionHTML = '';
     if (question.assuntoInfo) {
         questionHTML = '<div class="assunto-container">' +
@@ -30,19 +29,16 @@ function displayQuestionWithSubject() {
     
     questionText.innerHTML = questionHTML;
     
-    // Limpar elementos anteriores
     clearPreviousAnswer();
-    
-    // Atualizar contadores
     updateQuestionCounters();
-    
-    // Atualizar equipe de plantão
     updateCurrentTeamDisplay();
-    
-    // Habilitar controles
     enableQuestionControls();
     
     console.log('✅ Pergunta ' + (window.currentQuestionIndex + 1) + ' exibida');
+}
+
+function displayQuestionWithSubject() {
+    showQuestion();
 }
 
 function clearPreviousAnswer() {
@@ -90,7 +86,6 @@ function updateCurrentTeamDisplay() {
 }
 
 function enableQuestionControls() {
-    // Habilitar botões de resposta
     const certoBtn = document.getElementById('certo-btn');
     const erradoBtn = document.getElementById('errado-btn');
     const skipBtn = document.getElementById('skip-btn');
@@ -99,18 +94,17 @@ function enableQuestionControls() {
     if (erradoBtn) erradoBtn.disabled = false;
     if (skipBtn && window.roomSystem?.isMaster) skipBtn.disabled = false;
     
-    // Ocultar botões de continuação
     const nextBtn = document.getElementById('next-question-btn');
     const podiumBtn = document.getElementById('podium-btn');
     
     if (nextBtn) nextBtn.style.display = 'none';
     if (podiumBtn) podiumBtn.style.display = 'none';
     
-    // Habilitar teclado
     window.keyboardEnabled = true;
-    console.log('⌨️ Teclado habilitado para nova pergunta');
+    console.log('⌨️ Teclado habilitado');
 }
 
+window.showQuestion = showQuestion;
 window.displayQuestionWithSubject = displayQuestionWithSubject;
 window.clearPreviousAnswer = clearPreviousAnswer;
 window.updateQuestionCounters = updateQuestionCounters;

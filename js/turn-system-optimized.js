@@ -1,4 +1,4 @@
-// js/turn-system-optimized.js - Sistema de turnos unificado
+// js/turn-system-optimized.js - Sistema de turnos COMPLETO
 console.log('🔄 Sistema de turnos otimizado carregando...');
 
 class TurnSystem {
@@ -10,7 +10,72 @@ class TurnSystem {
         this.teamAssigned = false;
     }
 
+    // ========================================
+    // SUBMIT ANSWER (PRINCIPAL)
+    // ========================================
+    async submitAnswer(isCorrect) {
+        if (!this.roomSystem.isMaster) {
+            console.warn('⚠️ Apenas o mestre pode submeter respostas');
+            return;
+        }
+
+        const question = window.questions?.[window.currentQuestionIndex];
+        if (!question) {
+            console.error('❌ Pergunta não encontrada');
+            return;
+        }
+
+        console.log(`📤 Submetendo resposta: ${isCorrect ? 'CORRETA' : 'ERRADA'}`);
+
+        try {
+            // 1. Processar resposta localmente
+            if (isCorrect) {
+                if (typeof handleCorrectAnswer === 'function') {
+                    handleCorrectAnswer();
+                }
+            } else {
+                if (typeof handleWrongAnswer === 'function') {
+                    handleWrongAnswer();
+                }
+            }
+
+            // 2. Sincronizar resultado para todos
+            await this.broadcastAnswerResult(isCorrect, question);
+
+            console.log('✅ Resposta processada e sincronizada');
+
+        } catch (error) {
+            console.error('❌ Erro ao submeter resposta:', error);
+        }
+    }
+
+    async broadcastAnswerResult(isCorrect, question) {
+        if (!this.roomSystem.currentRoom) return;
+
+        let allComments = '';
+        if (question.comentario) allComments += question.comentario;
+        if (question.comentario2) allComments += (allComments ? '<br><br>' : '') + question.comentario2;
+        if (question.comentario3) allComments += (allComments ? '<br><br>' : '') + question.comentario3;
+
+        const resultData = {
+            isCorrect: isCorrect,
+            correctAnswer: question.gabarito || 'Não informado',
+            comments: allComments,
+            questionIndex: window.currentQuestionIndex,
+            teamName: window.teams?.[window.currentTeamIndex]?.name,
+            timestamp: Date.now()
+        };
+
+        await firebase.database()
+            .ref(`rooms/${this.roomSystem.currentRoom}/answerResult`)
+            .set(resultData);
+
+        console.log('📤 Resultado transmitido:', resultData);
+    }
+
+    // ========================================
     // LISTENERS
+    // ========================================
     setupTurnListeners() {
         if (!this.roomSystem.currentRoom) return;
 
@@ -54,296 +119,285 @@ class TurnSystem {
 
         const room = this.roomSystem.currentRoom;
         
-        firebase.database().ref(`rooms/${room}/currentQuestion`).once('value')
-            .then(snap => {
-                const data = snap.val();
-                if (data) {
-                    window.currentQuestionIndex = data.index || 0;
-                    window.currentTeamIndex = data.teamIndex || 0;
-                }
-            });
+        firebase.database().ref(`rooms/${room}/currentTurn`).once('value', snap => {
+            const data = snap.val();
+            if (data) {
+                console.log('🔄 Estado inicial do turno:', data);
+                this.handleTurnChange(data);
+            }
+        });
 
-        firebase.database().ref(`rooms/${room}/currentTurn`).once('value')
-            .then(snap => {
-                const data = snap.val();
-                if (data) this.currentTurn = data;
-            });
+        firebase.database().ref(`rooms/${room}/currentQuestion`).once('value', snap => {
+            const data = snap.val();
+            if (data) {
+                console.log('📚 Estado inicial da pergunta:', data);
+                this.handleQuestionChange(data);
+            }
+        });
     }
 
+    // ========================================
     // TEAMS
+    // ========================================
     updatePlayerTeam(teamId) {
-        if (!window.teams) {
-            setTimeout(() => this.updatePlayerTeam(teamId), 1000);
-            return;
-        }
+        if (this.teamAssigned) return;
 
-        if (this.playerTeamId === teamId) return;
-
-        const team = window.teams.find(t => t.id === teamId);
-        if (team) {
-            this.playerTeam = team;
-            this.playerTeamId = teamId;
-
-            if (this.roomSystem.isMaster) {
-                this.roomSystem.showMasterTeam(team.name);
-            }
-
-            this.updateAnswerButtons();
-
-            if (!this.teamAssigned) {
+        this.playerTeamId = teamId;
+        
+        if (window.teams) {
+            const team = window.teams.find(t => t.id === teamId);
+            if (team) {
+                this.playerTeam = team;
                 this.teamAssigned = true;
-                setTimeout(() => {
-                    this.showNotification(`🎯 Você está na equipe: ${team.name}`, 'success');
-                }, 500);
+                console.log(`✅ Jogador atribuído à equipe: ${team.name}`);
             }
         }
     }
 
     assignMasterToTeam() {
-        if (!this.roomSystem.isMaster || !window.teams?.length) return;
-        if (this.playerTeamId === window.teams[0].id) return;
-
-        const team = window.teams[0];
-        this.playerTeam = team;
-        this.playerTeamId = team.id;
-
-        firebase.database().ref(`rooms/${this.roomSystem.currentRoom}/players/${this.roomSystem.playerId}`)
-            .update({
-                teamId: team.id,
-                teamName: team.name,
-                isMaster: true,
-                assignedAt: Date.now()
-            });
-
-        this.roomSystem.showMasterTeam(team.name);
-        this.updateAnswerButtons();
+        if (!this.roomSystem.isMaster || !window.teams?.[0]) return;
+        
+        const firstTeam = window.teams[0];
+        this.updatePlayerTeam(firstTeam.id);
+        
+        console.log(`👑 Mestre atribuído à equipe: ${firstTeam.name}`);
     }
 
     canPlayerAnswer() {
         if (this.roomSystem.isMaster) return true;
-        if (!this.currentTurn || !this.playerTeamId) return false;
-        return this.playerTeamId === this.currentTurn.teamId;
+        if (!this.currentTurn) return false;
+        if (!this.playerTeamId) return false;
+        
+        return this.currentTurn.teamId === this.playerTeamId;
     }
 
-    setCurrentTurn(teamIndex, teamId, teamName) {
-        if (!this.roomSystem.isMaster) return;
+    // ========================================
+    // INTERFACE
+    // ========================================
+    async setCurrentTurn(teamIndex) {
+        if (!this.roomSystem.isMaster || !this.roomSystem.currentRoom) return;
+
+        const team = window.teams?.[teamIndex];
+        if (!team) return;
 
         const turnData = {
-            teamIndex,
-            teamId,
-            teamName,
-            questionIndex: window.currentQuestionIndex || 0,
+            teamId: team.id,
+            teamIndex: teamIndex,
+            teamName: team.name,
+            questionIndex: window.currentQuestionIndex,
             startTime: Date.now(),
             answered: false
         };
 
-        this.currentTurn = turnData;
-
-        firebase.database().ref(`rooms/${this.roomSystem.currentRoom}/currentTurn`)
+        await firebase.database()
+            .ref(`rooms/${this.roomSystem.currentRoom}/currentTurn`)
             .set(turnData);
 
-        setTimeout(() => this.updateAnswerButtons(), 100);
+        console.log(`🎯 Turno definido: ${team.name}`);
     }
 
     rotateTeam() {
-        if (!this.roomSystem.isMaster || !window.teams?.length) return;
+        if (!window.teams) return;
 
-        const nextIndex = (window.currentTeamIndex + 1) % window.teams.length;
-        const nextTeam = window.teams[nextIndex];
-
-        window.currentTeamIndex = nextIndex;
-        window.consecutiveCorrect = 0;
-
-        this.setCurrentTurn(nextIndex, nextTeam.id, nextTeam.name);
+        window.currentTeamIndex = (window.currentTeamIndex + 1) % window.teams.length;
+        console.log(`🔄 Rodando equipe: ${window.teams[window.currentTeamIndex].name}`);
+        
+        return window.currentTeamIndex;
     }
 
-    // INTERFACE
     handleTurnChange(turnData) {
         this.currentTurn = turnData;
-        window.currentTeamIndex = turnData.teamIndex;
-        window.currentQuestionIndex = turnData.questionIndex;
-
-        this.updateTurnUI();
-        this.updateAnswerButtons();
+        this.updateTurnUI(turnData);
+        this.updateAnswerButtons(turnData);
     }
 
-    updateTurnUI() {
-        const el = document.getElementById('team-turn');
-        if (!el) return;
+    updateTurnUI(turnData) {
+        const teamTurn = document.getElementById('team-turn');
+        if (!teamTurn) return;
 
-        const team = window.teams?.[window.currentTeamIndex];
-        if (team) {
-            el.textContent = `🎯 ${team.name} - DE PLANTÃO`;
-            el.className = `team-turn ${team.turnColorClass}`;
+        teamTurn.textContent = `🎯 ${turnData.teamName} - DE PLANTÃO`;
+        
+        if (window.teams) {
+            const team = window.teams[turnData.teamIndex];
+            if (team) {
+                teamTurn.className = 'team-turn ' + (team.turnColorClass || 'team-color-1');
+            }
         }
     }
 
-    updateAnswerButtons() {
+    updateAnswerButtons(turnData) {
+        const canAnswer = this.canPlayerAnswer();
         const certoBtn = document.getElementById('certo-btn');
         const erradoBtn = document.getElementById('errado-btn');
 
-        if (!certoBtn || !erradoBtn) return;
+        if (certoBtn) {
+            certoBtn.disabled = !canAnswer && !this.roomSystem.isMaster;
+            certoBtn.style.opacity = (canAnswer || this.roomSystem.isMaster) ? '1' : '0.5';
+        }
 
-        const canAnswer = this.canPlayerAnswer();
-        const disabled = !canAnswer;
-
-        [certoBtn, erradoBtn].forEach(btn => {
-            btn.disabled = disabled;
-            btn.style.opacity = disabled ? '0.5' : '1';
-            btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
-            btn.title = this.roomSystem.isMaster 
-                ? (canAnswer ? 'Responder' : 'Aguardando jogadores...')
-                : (canAnswer ? 'Sua vez!' : 'Aguarde sua equipe');
-        });
-
-        if (this.roomSystem.isMaster && canAnswer) {
-            certoBtn.style.background = '#28a745';
-            erradoBtn.style.background = '#dc3545';
+        if (erradoBtn) {
+            erradoBtn.disabled = !canAnswer && !this.roomSystem.isMaster;
+            erradoBtn.style.opacity = (canAnswer || this.roomSystem.isMaster) ? '1' : '0.5';
         }
     }
 
-    handleQuestionChange(questionData) {
-        window.currentQuestionIndex = questionData.index || 0;
-        window.currentTeamIndex = questionData.teamIndex || 0;
-
-        if (questionData.teamIndex !== undefined && window.teams?.[questionData.teamIndex]) {
-            const team = window.teams[questionData.teamIndex];
-            this.setCurrentTurn(questionData.teamIndex, team.id, team.name);
-        }
-
-        setTimeout(() => window.showQuestion?.(), 300);
-    }
-
+    // ========================================
     // RESULTS
+    // ========================================
+    handleQuestionChange(questionData) {
+        console.log('📚 Nova pergunta:', questionData.index + 1);
+        
+        window.currentQuestionIndex = questionData.index || 0;
+        
+        if (typeof showQuestion === 'function') {
+            showQuestion();
+        } else if (typeof displayQuestionWithSubject === 'function') {
+            displayQuestionWithSubject();
+        }
+    }
+
     handleAnswerResult(resultData) {
+        console.log('✅ Resultado recebido:', resultData.isCorrect ? 'CORRETO' : 'ERRADO');
+        
         this.showResult(resultData);
+        
+        if (resultData.isCorrect && window.currentTeamIndex !== undefined) {
+            const team = window.teams?.[window.currentTeamIndex];
+            if (team) {
+                team.score = (team.score || 0) + 1;
+                
+                if (typeof updateTeamsDisplay === 'function') {
+                    updateTeamsDisplay();
+                }
+            }
+        }
     }
 
     showResult(resultData) {
-        const qt = document.getElementById('question-text');
-        if (!qt) return;
+        const correctAnswer = document.getElementById('correct-answer');
+        if (correctAnswer) {
+            correctAnswer.textContent = resultData.isCorrect ? '✅ ACERTOU' : '❌ ERROU';
+            correctAnswer.className = resultData.isCorrect ? 'correct-answer' : 'wrong-answer';
+            
+            if (resultData.correctAnswer) {
+                correctAnswer.textContent += ' - GABARITO: ' + resultData.correctAnswer;
+            }
+        }
 
-        const color = resultData.isCorrect ? '#d4edda' : '#f8d7da';
-        const border = resultData.isCorrect ? '#28a745' : '#dc3545';
-        const icon = resultData.isCorrect ? '✅ CORRETO!' : '❌ ERRADO!';
+        const commentary = document.getElementById('commentary');
+        if (commentary && resultData.comments) {
+            commentary.innerHTML = resultData.comments;
+            commentary.classList.add('active');
+        }
 
-        qt.innerHTML = `
-            <div style="background: ${color}; padding: 15px; border-radius: 10px; border: 2px solid ${border};">
-                <h3 style="margin: 0 0 10px 0;">${icon}</h3>
-                <p><strong>${resultData.playerName}</strong> (${resultData.teamName}) 
-                ${resultData.isCorrect ? 'acertou' : 'errou'}!</p>
-                <p>Pontos: ${resultData.points > 0 ? '+' : ''}${resultData.points}</p>
-                <p><strong>Resposta: ${resultData.correctAnswer || 'N/A'}</strong></p>
-            </div>
-        ` + (qt.innerHTML || '');
+        const certoBtn = document.getElementById('certo-btn');
+        const erradoBtn = document.getElementById('errado-btn');
+        const nextBtn = document.getElementById('next-question-btn');
+
+        if (certoBtn) certoBtn.disabled = true;
+        if (erradoBtn) erradoBtn.disabled = true;
+        if (nextBtn) nextBtn.style.display = 'inline-block';
     }
 
-    advanceToNextQuestion() {
-        window.currentQuestionIndex++;
-        this.broadcastQuestionChange();
-        setTimeout(() => window.showQuestion?.(), 500);
-    }
-
-    broadcastQuestionChange() {
+    async advanceToNextQuestion() {
         if (!this.roomSystem.isMaster) return;
 
-        const data = {
+        window.currentQuestionIndex++;
+        
+        if (window.currentQuestionIndex >= window.questions.length) {
+            console.log('🏁 Fim do jogo');
+            if (typeof showPodium === 'function') {
+                showPodium();
+            }
+            return;
+        }
+
+        const nextTeamIndex = this.rotateTeam();
+        await this.setCurrentTurn(nextTeamIndex);
+        await this.broadcastQuestionChange();
+    }
+
+    async broadcastQuestionChange() {
+        if (!this.roomSystem.isMaster || !this.roomSystem.currentRoom) return;
+
+        const question = window.questions?.[window.currentQuestionIndex];
+        if (!question) return;
+
+        let questionHTML = '';
+        if (question.assuntoInfo) {
+            questionHTML = `<div class="assunto-container">
+                <div class="assunto-icon">📚</div>
+                <div class="assunto-text">${question.assuntoInfo}</div>
+            </div>
+            <div class="pergunta-texto">${question.enunciado || 'Pergunta sem enunciado'}</div>`;
+        } else {
+            questionHTML = `<div class="pergunta-texto">${question.enunciado || 'Pergunta sem enunciado'}</div>`;
+        }
+
+        const questionData = {
             index: window.currentQuestionIndex,
             total: window.questions.length,
-            teamIndex: window.currentTeamIndex,
-            teamName: window.teams?.[window.currentTeamIndex]?.name || 'Equipe',
+            questionHTML: questionHTML,
+            enunciado: question.enunciado,
             timestamp: Date.now()
         };
 
-        firebase.database().ref(`rooms/${this.roomSystem.currentRoom}/currentQuestion`).set(data);
+        await firebase.database()
+            .ref(`rooms/${this.roomSystem.currentRoom}/currentQuestion`)
+            .set(questionData);
 
-        if (window.teams?.[window.currentTeamIndex]) {
-            const team = window.teams[window.currentTeamIndex];
-            this.setCurrentTurn(window.currentTeamIndex, team.id, team.name);
-        }
+        console.log('📤 Pergunta transmitida');
     }
 
-    broadcastAnswerResult(isCorrect, points, answerData) {
-        const data = {
+    async broadcastAnswerResult(isCorrect, question) {
+        if (!this.roomSystem.currentRoom) return;
+
+        let allComments = '';
+        if (question.comentario) allComments += question.comentario;
+        if (question.comentario2) allComments += (allComments ? '<br><br>' : '') + question.comentario2;
+        if (question.comentario3) allComments += (allComments ? '<br><br>' : '') + question.comentario3;
+
+        const resultData = {
+            isCorrect: isCorrect,
+            correctAnswer: question.gabarito || 'Não informado',
+            comments: allComments,
             questionIndex: window.currentQuestionIndex,
-            isCorrect,
-            points,
-            teamId: answerData.teamId,
-            teamName: answerData.teamName,
-            playerName: answerData.playerName,
-            correctAnswer: window.questions[window.currentQuestionIndex]?.gabarito,
+            teamName: window.teams?.[window.currentTeamIndex]?.name,
             timestamp: Date.now()
         };
 
-        firebase.database().ref(`rooms/${this.roomSystem.currentRoom}/answerResult`).set(data);
+        await firebase.database()
+            .ref(`rooms/${this.roomSystem.currentRoom}/answerResult`)
+            .set(resultData);
+
+        console.log('📤 Resultado transmitido');
     }
 
-    // NOTIFICATIONS
     showNotification(message, type = 'info') {
-        const colors = {
-            success: '#28a745',
-            error: '#dc3545',
-            warning: '#ffc107',
-            info: '#007bff'
-        };
-
-        const notif = document.createElement('div');
-        notif.style.cssText = `
-            position: fixed; top: 20px; right: 20px; z-index: 9999;
-            background: ${colors[type]}; color: ${type === 'warning' ? '#000' : '#fff'};
-            padding: 15px 20px; border-radius: 5px; max-width: 300px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            animation: slideIn 0.3s ease;
-        `;
-        notif.textContent = message;
-
-        document.body.appendChild(notif);
-
-        setTimeout(() => {
-            notif.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notif.remove(), 300);
-        }, 5000);
+        console.log(`📢 ${message}`);
     }
 
     syncCurrentQuestion() {
-        if (!this.roomSystem.currentRoom) return;
-
-        firebase.database().ref(`rooms/${this.roomSystem.currentRoom}/currentQuestion`)
-            .once('value').then(snap => {
-                const data = snap.val();
-                if (data) {
-                    window.currentQuestionIndex = data.index || 0;
-                    window.currentTeamIndex = data.teamIndex || 0;
-
-                    if (window.showQuestion) window.showQuestion();
-
-                    if (data.teamIndex !== undefined && window.teams?.[data.teamIndex]) {
-                        const team = window.teams[data.teamIndex];
-                        this.setCurrentTurn(data.teamIndex, team.id, team.name);
-                    }
-                }
-            });
+        if (!this.roomSystem.isMaster) return;
+        this.broadcastQuestionChange();
     }
 }
 
-window.TurnSystem = TurnSystem;
-
-// Auto-start
-function startTurnSystem() {
-    if (window.roomSystem && window.TurnSystem) {
+// Auto-inicialização
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.roomSystem) {
         window.turnSystem = new TurnSystem(window.roomSystem);
-        window.turnSystem.setupTurnListeners();
-
-        if (window.roomSystem.currentRoom && !window.roomSystem.isMaster) {
-            setTimeout(() => window.turnSystem.syncCurrentQuestion(), 1000);
-        }
-
         console.log('✅ Sistema de turnos inicializado');
     } else {
-        setTimeout(startTurnSystem, 1000);
+        setTimeout(() => {
+            if (window.roomSystem) {
+                window.turnSystem = new TurnSystem(window.roomSystem);
+                console.log('✅ Sistema de turnos inicializado');
+            }
+        }, 2000);
     }
-}
+});
 
-setTimeout(startTurnSystem, 2000);
+window.TurnSystem = TurnSystem;
 
 console.log('✅ turn-system-optimized.js carregado');
