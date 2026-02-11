@@ -1,11 +1,10 @@
-// js/templates.js - VERSÃO CORRIGIDA
+// js/templates.js - CORRIGIDO (Erros 5, 6, 9, 10, 11)
 console.log('📄 templates.js carregando...');
 
 const TEMPLATES = {
     // TELA DE LOGIN
     login: `
         <div id="login-screen" class="screen active">
-
             <h1>PATROL</h1>
             
             <div class="login-container">
@@ -16,7 +15,7 @@ const TEMPLATES = {
                     <input type="password" id="login-password" placeholder="Sua senha" class="login-input">
                     <button id="login-btn" class="login-btn">🎮 Entrar</button>
                     <button id="signup-btn" class="signup-btn">📝 Criar Conta</button>
-                    <button id="reset-btn" class="reset-btn">🔑 Esqueci a senha</button>
+                    <button id="reset-btn" class="reset-btn">🔓 Esqueci a senha</button>
                 </div>
                 
                 <div class="login-options">
@@ -32,10 +31,10 @@ const TEMPLATES = {
         </div>
     `,
     
-    // TELA DE LOBBY
+    // TELA DE LOBBY - CORRIGIDO (Erro 11)
     lobby: `
         <div id="lobby-screen" class="screen">
-    <button id="back-to-lobby-login" class="logout-btn">🚪 Logout</button>
+            <button id="back-to-lobby-login" class="logout-btn">🚪 Logout</button>
             
             <h1>PATROL</h1>
             
@@ -45,7 +44,7 @@ const TEMPLATES = {
                 <div class="lobby-options">
                     <!-- Criar Nova Sala -->
                     <div class="lobby-option">
-                        <h3>🏠 Criar Nova Partida</h3>
+                        <h3>🏁 Criar Nova Partida</h3>
                         <button id="create-room-btn" class="lobby-btn">
                             Criar como Mestre 👑
                         </button>
@@ -70,7 +69,7 @@ const TEMPLATES = {
                 <!-- Código da Sala (quando mestre) -->
                 <div id="room-info" style="display: none;">
                     <h3>📋 Código da Sala: <span id="current-room-code">ABC123</span></h3>
-                    <p class="room-success">✓ Compartilhe este código com os jogadores</p>
+                    <p class="room-success">✔ Compartilhe este código com os jogadores</p>
                     <div id="players-list"></div>
                     <button id="start-game-btn-lobby" class="lobby-btn start-btn">
                         🚀 Ir para Configuração
@@ -80,14 +79,13 @@ const TEMPLATES = {
         </div>
     `,
     
-    // TELA DE CONFIGURAÇÃO
+    // TELA DE CONFIGURAÇÃO - CORRIGIDO (Erros 5, 6, 11)
     config: `
         <div id="config-screen" class="screen">
-    <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>
-    <button id="back-to-lobby-config" class="logout-btn">🚪 Logout</button>
-    <button id="logout-btn" class="logout-btn">🚪 Logout</button>
-    
-    <h1>PATROL</h1>         
+            <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>
+            <button id="back-to-lobby-config" class="logout-btn">🚪 Logout</button>
+            <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+            
             <h1>PATROL</h1>
             
             <div class="config-main-area">
@@ -107,7 +105,7 @@ const TEMPLATES = {
                     <div class="file-upload">
                         <h3>Perguntas</h3>
                         <input type="file" id="excel-file" accept=".xlsx, .xls">
-                        <div id="file-status">📄 Nenhum arquivo selecionado</div>
+                        <div id="file-status">📁 Nenhum arquivo selecionado</div>
                         <div id="file-error" class="error-message">⚠️ Carregue um arquivo de perguntas</div>
                         
                         <div class="checkbox-container">
@@ -159,11 +157,11 @@ const TEMPLATES = {
         </div>
     `,
     
-    // TELA DO JOGO
+    // TELA DO JOGO - CORRIGIDO (Erros 5, 9, 10, 11)
     game: `
         <div id="game-screen" class="screen">
+            <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>
             
- <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>           
             <h1>PATROL <span id="game-status" class="game-status">● Conectado</span></h1>
             
             <div class="question-main-area">
@@ -173,12 +171,11 @@ const TEMPLATES = {
                             Pergunta <span id="question-number">1</span>/<span id="total-questions">0</span>
                         </div>
                         <div id="team-turn" class="team-turn">🎯 Aguardando início...</div>
-<span id="user-name-display" class="user-name"></span>
                         <div class="question-header-buttons">
-    <span id="user-name-display" class="user-name"></span>
-    <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
-    <button id="back-to-lobby-game" class="logout-btn">🚪 Logout</button>
-    <div id="master-controls" class="master-controls" style="display: none;">
+                            <span id="user-name-display" class="user-name"></span>
+                            <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
+                            <button id="back-to-lobby-game" class="logout-btn">🚪 Logout</button>
+                            <div id="master-controls" class="master-controls" style="display: none;">
                                 <button id="master-next-btn" class="config-btn">⏭️ Avançar</button>
                             </div>
                         </div>
@@ -200,11 +197,28 @@ const TEMPLATES = {
 
                 <div class="active-team-sidebar">
                     <div id="active-team-display"></div>
+                    <!-- Placar em tempo real -->
+                    <div id="live-scoreboard" class="live-scoreboard">
+                        <h4>🏆 Placar ao Vivo</h4>
+                        <div id="scoreboard-content"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="teams-area">
                 <div id="teams-display"></div>
+            </div>
+            
+            <!-- Chat multiplayer -->
+            <div id="game-chat" class="game-chat" style="display: none;">
+                <div class="chat-container">
+                    <h4>💬 Chat da Partida</h4>
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Digite uma mensagem...">
+                        <button id="send-chat-btn">Enviar</button>
+                    </div>
+                </div>
             </div>
         </div>
     `,
