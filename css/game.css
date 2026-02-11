@@ -1,4 +1,4 @@
-/* css/game.css - Estilos da tela do jogo */
+/* css/game.css - CORRIGIDO (Erro 8 - Assunto menor) */
 .config-main-area {
     display: flex;
     gap: 20px;
@@ -179,6 +179,17 @@
     margin: 5px;
 }
 
+/* CORREÇÃO ERRO 10: Nome do usuário */
+.user-name {
+    font-size: 0.9em;
+    color: #003366;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: rgba(255,204,0,0.2);
+    border-radius: 8px;
+    border: 1px solid #FFCC00;
+}
+
 /* Cores das equipes */
 .team-turn.team-color-1 {
     --team-bg: #E53935;
@@ -314,13 +325,13 @@
     margin-left: 10px;
 }
 
-/* Assunto da pergunta */
+/* CORREÇÃO ERRO 8: Assunto da pergunta MENOR */
 .assunto-container {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 25px;
-    padding: 15px;
+    margin-bottom: 10px; /* ANTES: 25px */
+    padding: 8px 15px; /* ANTES: 15px */
     background: linear-gradient(145deg, rgba(0,51,102,0.05), rgba(0,51,102,0.1));
     border-radius: 12px;
     border-left: 4px solid #FFCC00;
@@ -329,29 +340,29 @@
 }
 
 .assunto-icon {
-    font-size: 1.4em;
+    font-size: 1.2em; /* ANTES: 1.4em */
     color: #003366;
     opacity: 0.9;
-    min-width: 30px;
+    min-width: 25px; /* ANTES: 30px */
     text-align: center;
 }
 
 .assunto-text {
-    font-size: 0.95em;
+    font-size: 0.9em; /* ANTES: 0.95em */
     color: #003366;
     font-weight: 600;
     flex: 1;
     text-align: left;
     font-style: normal;
-    line-height: 1.5;
-    padding-left: 10px;
+    line-height: 1.3; /* ANTES: 1.5 */
+    padding-left: 8px; /* ANTES: 10px */
     border-left: 2px solid rgba(255,204,0,0.5);
 }
 
 .pergunta-texto {
     font-size: 1.15em;
     line-height: 1.7;
-    margin-top: 0;
+    margin-top: 5px; /* ANTES: 0 - Ajuste para compensar assunto menor */
     width: 100%;
     text-align: left;
     color: #222;
@@ -644,4 +655,26 @@
     color: #FFCC00 !important;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     white-space: nowrap !important;
+}
+
+/* CORREÇÃO ERRO 5: Código da sala */
+.room-code-header {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0,51,102,0.9);
+    color: #FFCC00;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    font-weight: 700;
+    border: 2px solid #FFCC00;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 100;
+}
+
+#room-code-display {
+    font-size: 1.1em;
+    letter-spacing: 2px;
+    margin-left: 5px;
 }

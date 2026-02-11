@@ -35,7 +35,7 @@ const TEMPLATES = {
     // TELA DE LOBBY
     lobby: `
         <div id="lobby-screen" class="screen">
-            <button id="back-to-lobby-login" class="back-to-lobby">← Voltar</button>
+    <button id="back-to-lobby-login" class="logout-btn">🚪 Logout</button>
             
             <h1>PATROL</h1>
             
@@ -83,9 +83,11 @@ const TEMPLATES = {
     // TELA DE CONFIGURAÇÃO
     config: `
         <div id="config-screen" class="screen">
-            <button id="back-to-lobby-config" class="logout-btn">← Logout</button>
-            <button id="logout-btn" class="logout-btn">🚪 Logout</button>
- <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>           
+    <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>
+    <button id="back-to-lobby-config" class="logout-btn">🚪 Logout</button>
+    <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+    
+    <h1>PATROL</h1>         
             <h1>PATROL</h1>
             
             <div class="config-main-area">
@@ -173,9 +175,10 @@ const TEMPLATES = {
                         <div id="team-turn" class="team-turn">🎯 Aguardando início...</div>
 <span id="user-name-display" class="user-name"></span>
                         <div class="question-header-buttons">
-                            <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
-<button id="back-to-lobby-game" class="logout-btn">← Logout</button>
-                            <div id="master-controls" class="master-controls" style="display: none;">
+    <span id="user-name-display" class="user-name"></span>
+    <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
+    <button id="back-to-lobby-game" class="logout-btn">🚪 Logout</button>
+    <div id="master-controls" class="master-controls" style="display: none;">
                                 <button id="master-next-btn" class="config-btn">⏭️ Avançar</button>
                             </div>
                         </div>

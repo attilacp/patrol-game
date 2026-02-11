@@ -201,20 +201,22 @@ console.log('🔐 auth.js CARREGADO');
             console.log('🎯 Mostrando jogo...');
             this.hideAllScreens();
             document.getElementById('game-screen')?.classList.add('active');
-            
-	    // Mostrar código da sala
-            if (window.roomSystem && window.roomSystem.currentRoom) {
-            	const codeDisplay = document.getElementById('room-code-display');
-            	if (codeDisplay) {
-            		codeDisplay.textContent = window.roomSystem.currentRoom;
-            	}
-            }
-const userDisplay = document.getElementById('user-name-display');
-if (userDisplay && firebase.auth().currentUser) {
-    const email = firebase.auth().currentUser.email;
-    const name = email.split('@')[0];
-    userDisplay.textContent = name;
-}
+           
+// CORREÇÃO ERRO 5: Mostrar código da sala
+    if (window.roomSystem && window.roomSystem.currentRoom) {
+        const codeDisplay = document.getElementById('room-code-display');
+        if (codeDisplay) {
+            codeDisplay.textContent = window.roomSystem.currentRoom;
+        }
+    }
+    
+    // CORREÇÃO ERRO 10: Mostrar nome do usuário
+    const userDisplay = document.getElementById('user-name-display');
+    if (userDisplay && firebase.auth().currentUser) {
+        const email = firebase.auth().currentUser.email;
+        const name = email.split('@')[0];
+        userDisplay.textContent = name;
+    }
         }
         
         // TELA DE PÓDIO

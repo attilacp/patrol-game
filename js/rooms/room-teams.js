@@ -1,4 +1,4 @@
-// js/rooms/room-teams.js - VERSÃO COMPLETA
+// js/rooms/room-teams.js - CORRIGIDO (Erro 7 - Entrar a qualquer momento)
 console.log('🏠 rooms/room-teams.js carregando...');
 
 RoomSystem.prototype.assignPlayerToTeam = function() {
@@ -15,6 +15,9 @@ RoomSystem.prototype.assignPlayerToTeam = function() {
     }
     
     console.log('🎯 Atribuindo equipe para jogador...');
+    
+    // CORREÇÃO ERRO 7: Removida verificação de status
+    // Jogadores podem entrar a qualquer momento, mesmo com jogo em andamento
     
     // Buscar jogadores já atribuídos
     this.getAssignedPlayers().then(assignedPlayers => {
