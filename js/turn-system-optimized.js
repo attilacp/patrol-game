@@ -1,4 +1,4 @@
-// js/turn-system-optimized.js - Sistema de turnos COMPLETO
+// js/turn-system-optimized.js - CORRIGIDO (Erro 1)
 console.log('🔄 Sistema de turnos otimizado carregando...');
 
 class TurnSystem {
@@ -249,10 +249,16 @@ class TurnSystem {
         
         window.currentQuestionIndex = questionData.index || 0;
         
+        // CORREÇÃO ERRO 1: Chamar showQuestion E habilitar controles
         if (typeof showQuestion === 'function') {
             showQuestion();
         } else if (typeof displayQuestionWithSubject === 'function') {
             displayQuestionWithSubject();
+        }
+
+        // HABILITAR BOTÕES APÓS NOVA PERGUNTA
+        if (typeof enableQuestionControls === 'function') {
+            enableQuestionControls();
         }
     }
 
@@ -347,30 +353,6 @@ class TurnSystem {
             .set(questionData);
 
         console.log('📤 Pergunta transmitida');
-    }
-
-    async broadcastAnswerResult(isCorrect, question) {
-        if (!this.roomSystem.currentRoom) return;
-
-        let allComments = '';
-        if (question.comentario) allComments += question.comentario;
-        if (question.comentario2) allComments += (allComments ? '<br><br>' : '') + question.comentario2;
-        if (question.comentario3) allComments += (allComments ? '<br><br>' : '') + question.comentario3;
-
-        const resultData = {
-            isCorrect: isCorrect,
-            correctAnswer: question.gabarito || 'Não informado',
-            comments: allComments,
-            questionIndex: window.currentQuestionIndex,
-            teamName: window.teams?.[window.currentTeamIndex]?.name,
-            timestamp: Date.now()
-        };
-
-        await firebase.database()
-            .ref(`rooms/${this.roomSystem.currentRoom}/answerResult`)
-            .set(resultData);
-
-        console.log('📤 Resultado transmitido');
     }
 
     showNotification(message, type = 'info') {
