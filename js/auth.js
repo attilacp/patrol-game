@@ -186,6 +186,14 @@ console.log('🔐 auth.js CARREGADO');
             // Mostrar botão de logout
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) logoutBtn.style.display = 'block';
+
+            // Mostrar código da sala
+            if (window.roomSystem && window.roomSystem.currentRoom) {
+            	const codeDisplay = document.getElementById('room-code-display');
+            	if (codeDisplay) {
+            		codeDisplay.textContent = window.roomSystem.currentRoom;
+            	}
+            }
         }
         
         // TELA DO JOGO (TODOS)
@@ -193,6 +201,20 @@ console.log('🔐 auth.js CARREGADO');
             console.log('🎯 Mostrando jogo...');
             this.hideAllScreens();
             document.getElementById('game-screen')?.classList.add('active');
+            
+	    // Mostrar código da sala
+            if (window.roomSystem && window.roomSystem.currentRoom) {
+            	const codeDisplay = document.getElementById('room-code-display');
+            	if (codeDisplay) {
+            		codeDisplay.textContent = window.roomSystem.currentRoom;
+            	}
+            }
+const userDisplay = document.getElementById('user-name-display');
+if (userDisplay && firebase.auth().currentUser) {
+    const email = firebase.auth().currentUser.email;
+    const name = email.split('@')[0];
+    userDisplay.textContent = name;
+}
         }
         
         // TELA DE PÓDIO

@@ -5,6 +5,7 @@ const TEMPLATES = {
     // TELA DE LOGIN
     login: `
         <div id="login-screen" class="screen active">
+
             <h1>PATROL</h1>
             
             <div class="login-container">
@@ -82,10 +83,10 @@ const TEMPLATES = {
     // TELA DE CONFIGURAÇÃO
     config: `
         <div id="config-screen" class="screen">
-            <button id="back-to-lobby-config" class="back-to-lobby">← Voltar ao Lobby</button>
-            <button id="logout-btn" class="logout-btn">🚪 Sair</button>
-            
-            <h1>PATROL - Configuração do Mestre</h1>
+            <button id="back-to-lobby-config" class="logout-btn">← Logout</button>
+            <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+ <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>           
+            <h1>PATROL</h1>
             
             <div class="config-main-area">
                 <div class="team-config">
@@ -159,8 +160,8 @@ const TEMPLATES = {
     // TELA DO JOGO
     game: `
         <div id="game-screen" class="screen">
-            <button id="back-to-lobby-game" class="back-to-lobby">← Sair da Partida</button>
             
+ <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>           
             <h1>PATROL <span id="game-status" class="game-status">● Conectado</span></h1>
             
             <div class="question-main-area">
@@ -170,8 +171,10 @@ const TEMPLATES = {
                             Pergunta <span id="question-number">1</span>/<span id="total-questions">0</span>
                         </div>
                         <div id="team-turn" class="team-turn">🎯 Aguardando início...</div>
+<span id="user-name-display" class="user-name"></span>
                         <div class="question-header-buttons">
                             <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
+<button id="back-to-lobby-game" class="logout-btn">← Logout</button>
                             <div id="master-controls" class="master-controls" style="display: none;">
                                 <button id="master-next-btn" class="config-btn">⏭️ Avançar</button>
                             </div>
