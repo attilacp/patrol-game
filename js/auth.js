@@ -70,22 +70,22 @@ console.log('🔐 auth.js CARREGADO');
                 logoutBtn.addEventListener('click', () => this.logout());
             }
             
+            const logoutBtnGame = document.getElementById('logout-btn-game');
+            if (logoutBtnGame) {
+                logoutBtnGame.addEventListener('click', () => this.logout());
+            }
+            
             // Botões de voltar
             const backToLogin = document.getElementById('back-to-lobby-login');
             if (backToLogin) {
-                backToLogin.addEventListener('click', () => this.showLoginScreen());
+                backToLogin.addEventListener('click', () => this.logout());
             }
             
-            const backToLobbyConfig = document.getElementById('back-to-lobby-config');
-            if (backToLobbyConfig) {
-                backToLobbyConfig.addEventListener('click', () => this.showLobbyScreen());
-            }
-            
-            const backToLobbyGame = document.getElementById('back-to-lobby-game');
-            if (backToLobbyGame) {
-                backToLobbyGame.addEventListener('click', () => {
-                    if (confirm('Sair da partida atual?')) {
-                        this.showLobbyScreen();
+            const backToConfig = document.getElementById('back-to-config-btn');
+            if (backToConfig) {
+                backToConfig.addEventListener('click', () => {
+                    if (window.roomSystem && window.roomSystem.isMaster) {
+                        this.showConfigScreen();
                     }
                 });
             }
@@ -157,7 +157,9 @@ console.log('🔐 auth.js CARREGADO');
         }
         
         logout() {
-            firebase.auth().signOut();
+            if (confirm('🚪 Deseja realmente sair do PATROL?')) {
+                firebase.auth().signOut();
+            }
         }
         
         // TELA DE LOGIN

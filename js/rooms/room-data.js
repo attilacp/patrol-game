@@ -38,6 +38,10 @@ RoomSystem.prototype.syncGameDataFromFirebase = function(gameData) {
 };
 
 RoomSystem.prototype.applyFirebaseOrder = function(orderData) {
+    if (!orderData) {
+        console.log('⏭️ Sem dados de ordem, usando ordem padrão');
+        return;
+    }
     console.log('🔄 Aplicando ordem do Firebase:', orderData.isRandom ? 'ALEATÓRIA' : 'NORMAL');
     
     if (orderData.isRandom && window.questions) {

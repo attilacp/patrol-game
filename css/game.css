@@ -678,3 +678,32 @@
     letter-spacing: 2px;
     margin-left: 5px;
 }
+
+/* Botão Logout Discreto */
+.logout-btn-discrete {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.1) !important;
+    color: #666 !important;
+    border: 1px solid rgba(0,0,0,0.2) !important;
+    padding: 6px 12px !important;
+    font-size: 0.85em !important;
+    border-radius: 6px !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 100;
+    min-width: auto !important;
+}
+
+.logout-btn-discrete:hover {
+    background: rgba(0,0,0,0.2) !important;
+    color: #333 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Esconder placar ao vivo */
+.live-scoreboard {
+    display: none !important;
+}
