@@ -5,10 +5,16 @@ console.log('🔐 auth.js CARREGADO');
     class AuthSystem {
         constructor() {
             this.currentUser = null;
-            this.init();
+            // NÃO inicializar ainda, esperar Firebase
         }
         
         init() {
+            if (!firebase?.auth) {
+                console.warn('⏳ Aguardando Firebase...');
+                setTimeout(() => this.init(), 500);
+                return;
+            }
+            
             firebase.auth().onAuthStateChanged((user) => {
                 this.handleAuthStateChange(user);
             });
@@ -207,6 +213,17 @@ console.log('🔐 auth.js CARREGADO');
     }
     
     window.authSystem = new AuthSystem();
+    
+    // Inicializar quando Firebase estiver pronto
+    if (window.firebase?.auth) {
+        window.authSystem.init();
+    } else {
+        document.addEventListener('firebaseReady', () => {
+            window.authSystem.init();
+        });
+        setTimeout(() => window.authSystem.init(), 1000);
+    }
+    
     window.showLoginScreen = () => window.authSystem.showLoginScreen();
     window.showLobbyScreen = () => window.authSystem.showLobbyScreen();
     window.showConfigScreen = () => window.authSystem.showConfigScreen();
