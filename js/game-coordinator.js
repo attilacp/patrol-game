@@ -55,22 +55,46 @@ class GameCoordinator {
     setupButtonListeners() {
         console.log('🎯 Configurando listeners centralizados...');
 
-        // Botão PRÓXIMA - UMA ÚNICA VEZ
-        const nextBtn = document.getElementById('next-question-btn');
-        if (nextBtn) {
-            // Remover listeners antigos
-            const newNextBtn = nextBtn.cloneNode(true);
-            nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+        // Usar MutationObserver para detectar quando botão "Próxima" aparece
+        const observeNextButton = () => {
+            const nextBtn = document.getElementById('next-question-btn');
+            if (nextBtn && !nextBtn.dataset.coordinatorConfigured) {
+                console.log('📍 Botão PRÓXIMA detectado, configurando...');
+                
+                // Marcar como configurado
+                nextBtn.dataset.coordinatorConfigured = 'true';
+                
+                // Remover listeners antigos
+                const newNextBtn = nextBtn.cloneNode(true);
+                nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+                newNextBtn.dataset.coordinatorConfigured = 'true';
 
-            // Adicionar NOVO listener
-            newNextBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handleNextQuestion();
-            });
+                // Adicionar NOVO listener
+                newNextBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🎯 Botão PRÓXIMA clicado (GameCoordinator)');
+                    this.handleNextQuestion();
+                });
 
-            console.log('✅ Botão PRÓXIMA configurado (SEM duplicação)');
-        }
+                console.log('✅ Botão PRÓXIMA configurado (SEM duplicação)');
+            }
+        };
+
+        // Observar mudanças no DOM para detectar botão
+        const observer = new MutationObserver(() => {
+            observeNextButton();
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style']
+        });
+
+        // Tentar configurar imediatamente também
+        observeNextButton();
 
         // Botão PÓDIO
         const podiumBtn = document.getElementById('podium-btn');
@@ -86,13 +110,14 @@ class GameCoordinator {
 // Instanciar coordenador
 window.gameCoordinator = new GameCoordinator();
 
-// Configurar quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        if (window.gameCoordinator) {
-            window.gameCoordinator.setupButtonListeners();
-        }
-    }, 2000);
-});
+// Configurar IMEDIATAMENTE
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.gameCoordinator.setupButtonListeners();
+    });
+} else {
+    // DOM já carregado
+    window.gameCoordinator.setupButtonListeners();
+}
 
 console.log('✅ game-coordinator.js carregado');
