@@ -22,6 +22,9 @@ class TurnSystem {
             return;
         }
 
+        // RESETAR FLAG ANTES DE PROCESSAR
+        window.currentQuestionProcessed = false;
+
         // Normalizar resposta (aceita 'CERTO'/'ERRADO' ou true/false)
         let playerAnswer = answer;
         if (typeof answer === 'string') {
@@ -191,15 +194,32 @@ class TurnSystem {
     handleAnswerResult(resultData) {
         console.log('📊 Processando resultado:', resultData);
         
-        // Atualizar pontuação da equipe
+        // Atualizar pontuação da equipe SE ACERTOU
         if (resultData.isCorrect) {
             const team = window.teams?.[window.currentTeamIndex];
             if (team) {
+                // Incrementar pontuação
                 team.score = (team.score || 0) + 1;
+                team.questionsAnswered = (team.questionsAnswered || 0) + 1;
+                team.questionsCorrect = (team.questionsCorrect || 0) + 1;
+                
                 console.log(`✅ ${team.name} agora tem ${team.score} pontos`);
                 
+                // Forçar atualização visual
                 if (typeof updateTeamsDisplay === 'function') {
-                    updateTeamsDisplay();
+                    setTimeout(() => updateTeamsDisplay(), 100);
+                }
+            }
+        } else {
+            // Incrementar contador de erros
+            const team = window.teams?.[window.currentTeamIndex];
+            if (team) {
+                team.questionsAnswered = (team.questionsAnswered || 0) + 1;
+                team.questionsWrong = (team.questionsWrong || 0) + 1;
+                
+                // Forçar atualização visual
+                if (typeof updateTeamsDisplay === 'function') {
+                    setTimeout(() => updateTeamsDisplay(), 100);
                 }
             }
         }
@@ -241,14 +261,9 @@ class TurnSystem {
             return;
         }
 
-        // Verificar se deve rodar equipe
-        let nextTeamIndex = window.currentTeamIndex;
-        if (window.nextTeamRotation === true) {
-            nextTeamIndex = this.rotateTeam();
-            window.nextTeamRotation = false;
-        }
-
-        await this.setCurrentTurn(nextTeamIndex);
+        // NÃO rodar equipe aqui - deixar GameCoordinator fazer isso
+        // Apenas manter a equipe atual
+        await this.setCurrentTurn(window.currentTeamIndex);
         await this.broadcastQuestionChange();
     }
 
