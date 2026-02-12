@@ -14,15 +14,28 @@ RoomSystem.prototype.syncGameDataFromFirebase = function(gameData) {
     if (gameData.teams && Array.isArray(gameData.teams)) {
         console.log('📦 Dados brutos das equipes do Firebase:', JSON.stringify(gameData.teams, null, 2));
         
-        window.teams = gameData.teams.map((team, index) => ({
-            id: team.id || index + 1,
-            name: team.name || `Equipe ${index + 1}`,
-            players: Array.isArray(team.players) ? team.players : [],
-            assignedPlayers: Array.isArray(team.assignedPlayers) ? team.assignedPlayers : [], // SINCRONIZAR
-            score: team.score || 0,
-            colorClass: team.colorClass || `team-bg-${(index % 10) + 1}`,
-            turnColorClass: team.turnColorClass || `team-color-${(index % 10) + 1}`
-        }));
+        // PRESERVAR assignedPlayers locais antes de sobrescrever
+        const previousTeams = window.teams || [];
+        
+        window.teams = gameData.teams.map((team, index) => {
+            // Buscar equipe anterior para preservar assignedPlayers local
+            const prevTeam = previousTeams.find(t => t.id === team.id || t.name === team.name);
+            
+            return {
+                id: team.id || index + 1,
+                name: team.name || `Equipe ${index + 1}`,
+                players: Array.isArray(team.players) ? team.players : [],
+                // Preferir Firebase, mas preservar local se Firebase vazio
+                assignedPlayers: (Array.isArray(team.assignedPlayers) && team.assignedPlayers.length > 0)
+                    ? team.assignedPlayers  // Do Firebase (tem prioridade)
+                    : (prevTeam?.assignedPlayers || []), // Preservar local
+                score: team.score || 0,
+                colorClass: team.colorClass || `team-bg-${(index % 10) + 1}`,
+                turnColorClass: team.turnColorClass || `team-color-${(index % 10) + 1}`,
+                questionsAnswered: team.questionsAnswered || 0,
+                questionsWrong: team.questionsWrong || 0
+            };
+        });
         console.log('✅ Equipes sincronizadas:', window.teams.length);
         console.log('📋 assignedPlayers após map:', window.teams.map(t => ({name: t.name, players: t.assignedPlayers})));
     }

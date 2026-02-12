@@ -33,6 +33,19 @@ class GameCoordinator {
         console.log('⏭️ Avançando para próxima pergunta...');
 
         try {
+            // SE É JOGADOR, transmitir sinal ao Firebase para mestre avançar
+            if (!window.roomSystem?.isMaster && window.roomSystem?.currentRoom) {
+                console.log('📤 Jogador enviando sinal de avanço ao mestre...');
+                await firebase.database()
+                    .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
+                    .set({
+                        timestamp: Date.now(),
+                        fromPlayer: window.roomSystem.playerEmail
+                    });
+                return; // Jogador não avança localmente
+            }
+            
+            // APENAS MESTRE executa daqui pra frente
             // Buscar flag de rodízio do Firebase
             if (window.roomSystem && window.roomSystem.currentRoom) {
                 const rotationSnapshot = await firebase.database()
@@ -159,6 +172,29 @@ class GameCoordinator {
             console.log('🔁 Tentando novamente...');
             observeNextButton();
         }, 1000);
+        
+        // MESTRE: escutar sinal de avanço do jogador
+        if (window.roomSystem?.isMaster && window.roomSystem?.currentRoom) {
+            firebase.database()
+                .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
+                .on('value', (snapshot) => {
+                    const signal = snapshot.val();
+                    if (signal && signal.timestamp) {
+                        const timeSinceSignal = Date.now() - signal.timestamp;
+                        // Apenas processar sinais recentes (últimos 2 segundos)
+                        if (timeSinceSignal < 2000) {
+                            console.log('📥 Mestre recebeu sinal de avanço do jogador:', signal.fromPlayer);
+                            this.handleNextQuestion();
+                            
+                            // Limpar sinal
+                            firebase.database()
+                                .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
+                                .remove();
+                        }
+                    }
+                });
+            console.log('✅ Listener de sinal de avanço configurado (mestre)');
+        }
 
         // Botão PÓDIO
         const podiumBtn = document.getElementById('podium-btn');

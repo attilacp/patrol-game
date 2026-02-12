@@ -192,7 +192,14 @@ class TurnSystem {
     }
 
     handleTurnChange(turnData) {
+        const previousTeamId = this.currentTurn?.teamId;
         this.currentTurn = turnData;
+        
+        // RESETAR consecutivos se mudou de equipe
+        if (previousTeamId && previousTeamId !== turnData.teamId) {
+            console.log('🔄 Equipe mudou, resetando consecutivos');
+            window.consecutiveCorrect = 0;
+        }
         
         const teamTurn = document.getElementById('team-turn');
         if (teamTurn) {
