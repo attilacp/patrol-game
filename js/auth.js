@@ -1,10 +1,7 @@
-// js/auth.js - COM SISTEMA DE LOBBY
+// js/auth.js - VERSÃO FINAL
 console.log('🔐 auth.js CARREGADO');
 
 (function() {
-    console.log('🚀 Iniciando sistema de autenticação...');
-    
-    // Sistema principal
     class AuthSystem {
         constructor() {
             this.currentUser = null;
@@ -12,22 +9,16 @@ console.log('🔐 auth.js CARREGADO');
         }
         
         init() {
-            // Observar estado de login
             firebase.auth().onAuthStateChanged((user) => {
                 this.handleAuthStateChange(user);
             });
-            
             this.setupEventListeners();
         }
         
         handleAuthStateChange(user) {
-            console.log('👤 Estado auth:', user ? user.email : 'Nenhum usuário');
-            
             if (user) {
                 this.currentUser = user;
-                this.showLobbyScreen(); // MUDANÇA AQUI: Vai para LOBBY, não para jogo direto
-                
-                // Salvar no localStorage
+                this.showLobbyScreen();
                 localStorage.setItem('patrol_user', JSON.stringify({
                     uid: user.uid,
                     email: user.email
@@ -40,55 +31,17 @@ console.log('🔐 auth.js CARREGADO');
         }
         
         setupEventListeners() {
-            // Login com email/senha
-            const loginBtn = document.getElementById('login-btn');
-            if (loginBtn) {
-                loginBtn.addEventListener('click', () => this.loginWithEmail());
-            }
+            document.getElementById('login-btn')?.addEventListener('click', () => this.loginWithEmail());
+            document.getElementById('signup-btn')?.addEventListener('click', () => this.signupWithEmail());
+            document.getElementById('google-login-btn')?.addEventListener('click', () => this.loginWithGoogle());
+            document.getElementById('reset-btn')?.addEventListener('click', () => this.resetPassword());
+            document.getElementById('logout-btn')?.addEventListener('click', () => this.logout());
+            document.getElementById('logout-btn-game')?.addEventListener('click', () => this.logout());
+            document.getElementById('back-to-lobby-login')?.addEventListener('click', () => this.logout());
             
-            // Criar conta
-            const signupBtn = document.getElementById('signup-btn');
-            if (signupBtn) {
-                signupBtn.addEventListener('click', () => this.signupWithEmail());
-            }
-            
-            // Google
-            const googleBtn = document.getElementById('google-login-btn');
-            if (googleBtn) {
-                googleBtn.addEventListener('click', () => this.loginWithGoogle());
-            }
-            
-            // Reset senha
-            const resetBtn = document.getElementById('reset-btn');
-            if (resetBtn) {
-                resetBtn.addEventListener('click', () => this.resetPassword());
-            }
-            
-            // Logout
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', () => this.logout());
-            }
-            
-            const logoutBtnGame = document.getElementById('logout-btn-game');
-            if (logoutBtnGame) {
-                logoutBtnGame.addEventListener('click', () => this.logout());
-            }
-            
-            // Botões de voltar
-            const backToLogin = document.getElementById('back-to-lobby-login');
-            if (backToLogin) {
-                backToLogin.addEventListener('click', () => this.logout());
-            }
-            
-            const backToConfig = document.getElementById('back-to-config-btn');
-            if (backToConfig) {
-                backToConfig.addEventListener('click', () => {
-                    if (window.roomSystem && window.roomSystem.isMaster) {
-                        this.showConfigScreen();
-                    }
-                });
-            }
+            document.getElementById('back-to-config-btn')?.addEventListener('click', () => {
+                if (window.roomSystem?.isMaster) this.showConfigScreen();
+            });
         }
         
         async loginWithEmail() {
@@ -96,13 +49,12 @@ console.log('🔐 auth.js CARREGADO');
             const password = document.getElementById('login-password')?.value;
             
             if (!email || !password) {
-                this.showError('Digite email e senha');
+                this.showError('Preencha email e senha');
                 return;
             }
             
             try {
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                console.log('✅ Login realizado');
             } catch (error) {
                 this.showError(this.getErrorMessage(error.code));
             }
@@ -113,18 +65,17 @@ console.log('🔐 auth.js CARREGADO');
             const password = document.getElementById('login-password')?.value;
             
             if (!email || !password) {
-                this.showError('Digite email e senha');
+                this.showError('Preencha email e senha');
                 return;
             }
             
             if (password.length < 6) {
-                this.showError('Senha precisa 6+ caracteres');
+                this.showError('Senha deve ter no mínimo 6 caracteres');
                 return;
             }
             
             try {
                 await firebase.auth().createUserWithEmailAndPassword(email, password);
-                console.log('✅ Conta criada');
             } catch (error) {
                 this.showError(this.getErrorMessage(error.code));
             }
@@ -134,9 +85,8 @@ console.log('🔐 auth.js CARREGADO');
             try {
                 const provider = new firebase.auth.GoogleAuthProvider();
                 await firebase.auth().signInWithPopup(provider);
-                console.log('✅ Login Google realizado');
             } catch (error) {
-                this.showError('Erro ao entrar com Google');
+                this.showError(this.getErrorMessage(error.code));
             }
         }
         
@@ -144,7 +94,7 @@ console.log('🔐 auth.js CARREGADO');
             const email = document.getElementById('login-email')?.value;
             
             if (!email) {
-                this.showError('Digite seu email');
+                this.showError('Digite seu email primeiro');
                 return;
             }
             
@@ -162,60 +112,38 @@ console.log('🔐 auth.js CARREGADO');
             }
         }
         
-        // TELA DE LOGIN
         showLoginScreen() {
-            console.log('📱 Mostrando tela de login...');
             this.hideAllScreens();
             document.getElementById('login-screen')?.classList.add('active');
         }
         
-        // TELA DE LOBBY (NOVO)
         showLobbyScreen() {
-            console.log('🎮 Mostrando lobby...');
             this.hideAllScreens();
             document.getElementById('lobby-screen')?.classList.add('active');
-            
-            // Configurar botões do lobby
             this.setupLobbyButtons();
         }
         
-        // TELA DE CONFIGURAÇÃO (APENAS MESTRE)
         showConfigScreen() {
-            console.log('⚙️ Mostrando configuração (mestre)...');
             this.hideAllScreens();
             document.getElementById('config-screen')?.classList.add('active');
-            
-            // Atualizar código da sala
             this.updateRoomCodeDisplay();
-            
-            // Mostrar botão de logout
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) logoutBtn.style.display = 'block';
+            document.getElementById('logout-btn').style.display = 'block';
         }
         
-        // TELA DO JOGO (TODOS)
         showGameScreen() {
-            console.log('🎯 Mostrando jogo...');
             this.hideAllScreens();
             document.getElementById('game-screen')?.classList.add('active');
-            
-            // Atualizar código da sala e nome
             this.updateRoomCodeDisplay();
             this.updateUserDisplay();
         }
         
         updateRoomCodeDisplay() {
-            const attempts = [0, 100, 300, 500]; // Tentar várias vezes
-            attempts.forEach(delay => {
+            [0, 100, 300, 500].forEach(delay => {
                 setTimeout(() => {
-                    if (window.roomSystem && window.roomSystem.currentRoom) {
-                        const codeDisplays = document.querySelectorAll('#room-code-display');
-                        codeDisplays.forEach(el => {
-                            if (el) {
-                                el.textContent = window.roomSystem.currentRoom;
-                            }
+                    if (window.roomSystem?.currentRoom) {
+                        document.querySelectorAll('#room-code-display').forEach(el => {
+                            el.textContent = window.roomSystem.currentRoom;
                         });
-                        console.log('✅ Código da sala exibido:', window.roomSystem.currentRoom);
                     }
                 }, delay);
             });
@@ -225,15 +153,11 @@ console.log('🔐 auth.js CARREGADO');
             setTimeout(() => {
                 const userDisplay = document.getElementById('user-name-display');
                 if (userDisplay && firebase.auth().currentUser) {
-                    const email = firebase.auth().currentUser.email;
-                    const name = email.split('@')[0];
-                    userDisplay.textContent = name;
-                    console.log('✅ Nome do usuário exibido:', name);
+                    userDisplay.textContent = firebase.auth().currentUser.email.split('@')[0];
                 }
             }, 200);
         }
         
-        // TELA DE PÓDIO
         showPodiumScreen() {
             this.hideAllScreens();
             document.getElementById('podium-screen')?.classList.add('active');
@@ -246,50 +170,19 @@ console.log('🔐 auth.js CARREGADO');
         }
         
         setupLobbyButtons() {
-            // Botão Criar Sala
-            const createBtn = document.getElementById('create-room-btn');
-            if (createBtn) {
-                createBtn.onclick = () => {
-                    if (window.roomSystem) {
-                        const roomCode = window.roomSystem.createRoom();
-                        console.log('🏁 Sala criada:', roomCode);
-                        // Vai para configuração (mestre)
-                        this.showConfigScreen();
-                    } else {
-                        alert('Sistema de salas não carregado');
-                    }
-                };
-            }
-            
-            // Botão Entrar na Sala
-            const joinBtn = document.getElementById('join-room-btn');
-            if (joinBtn) {
-                joinBtn.onclick = () => {
-                    const roomCode = document.getElementById('room-code')?.value.toUpperCase();
-                    if (roomCode && roomCode.length === 6) {
-                        if (window.roomSystem) {
-                            const isMaster = false; // Jogador nunca é mestre ao entrar
-                            window.roomSystem.joinRoom(roomCode, isMaster);
-                            console.log('🔑 Entrando na sala:', roomCode);
-                            
-                            // CORREÇÃO: Jogador fica no LOBBY, não vai para jogo
-                            // Apenas mostra mensagem de sucesso
-                            this.showLobbyScreen();
-                            alert(`✅ Entrou na sala ${roomCode}!\nAguardando o mestre iniciar...`);
-                        }
-                    } else {
-                        alert('Digite um código de 6 letras/números');
-                    }
-                };
-            }
-            
-            // Botão Iniciar Jogo (no lobby)
-            const startBtnLobby = document.getElementById('start-game-btn-lobby');
-            if (startBtnLobby) {
-                startBtnLobby.onclick = () => {
+            document.getElementById('create-room-btn').onclick = () => {
+                if (window.roomSystem) {
+                    window.roomSystem.createRoom();
                     this.showConfigScreen();
-                };
-            }
+                }
+            };
+            
+            document.getElementById('join-room-btn').onclick = () => {
+                const code = document.getElementById('room-code')?.value.trim().toUpperCase();
+                if (code && window.roomSystem) {
+                    window.roomSystem.joinRoom(code);
+                }
+            };
         }
         
         showError(message) {
@@ -298,30 +191,27 @@ console.log('🔐 auth.js CARREGADO');
                 errorDiv.textContent = message;
                 errorDiv.style.display = 'block';
                 setTimeout(() => errorDiv.style.display = 'none', 5000);
-            } else {
-                alert('Erro: ' + message);
             }
         }
         
-        getErrorMessage(errorCode) {
-            const messages = {
+        getErrorMessage(code) {
+            const errors = {
+                'auth/email-already-in-use': 'Email já cadastrado',
                 'auth/invalid-email': 'Email inválido',
                 'auth/user-not-found': 'Usuário não encontrado',
                 'auth/wrong-password': 'Senha incorreta',
-                'auth/email-already-in-use': 'Email já cadastrado'
+                'auth/weak-password': 'Senha muito fraca'
             };
-            return messages[errorCode] || 'Erro: ' + errorCode;
+            return errors[code] || 'Erro ao autenticar';
         }
     }
     
-    // Inicializar quando DOM estiver pronto
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            window.authSystem = new AuthSystem();
-            console.log('✅ Sistema de auth com lobby inicializado');
-        });
-    } else {
-        window.authSystem = new AuthSystem();
-        console.log('✅ Sistema de auth com lobby inicializado');
-    }
+    window.authSystem = new AuthSystem();
+    window.showLoginScreen = () => window.authSystem.showLoginScreen();
+    window.showLobbyScreen = () => window.authSystem.showLobbyScreen();
+    window.showConfigScreen = () => window.authSystem.showConfigScreen();
+    window.showGameScreen = () => window.authSystem.showGameScreen();
+    window.showPodiumScreen = () => window.authSystem.showPodiumScreen();
+    
+    console.log('✅ auth.js PRONTO');
 })();
