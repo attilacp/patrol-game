@@ -6,7 +6,11 @@ function setupTeamTurnClickEvent() {
     
     const teamTurnElement = document.getElementById('team-turn');
     if (teamTurnElement) {
-        teamTurnElement.addEventListener('click', function() {
+        // PREVENIR DUPLICAÇÃO: remover listeners antigos
+        const newElement = teamTurnElement.cloneNode(true);
+        teamTurnElement.parentNode.replaceChild(newElement, teamTurnElement);
+        
+        newElement.addEventListener('click', function() {
             console.log('🔄 Retângulo da equipe de plantão clicado');
             
             // Apenas mestre pode rodar equipe
@@ -14,16 +18,17 @@ function setupTeamTurnClickEvent() {
                 if (confirm('Deseja rotacionar para a próxima equipe?')) {
                     console.log('✅ Confirmado mudança de equipe');
                     
-                    // Usar sistema de turnos se disponível
+                    // Rodar equipe e salvar no Firebase
                     if (window.turnSystem) {
-                        window.turnSystem.rotateTeam();
+                        const nextIndex = window.turnSystem.rotateTeam();
+                        window.turnSystem.setCurrentTurn(nextIndex);
                     } 
                     // Fallback manual
                     else if (window.teams && window.teams.length > 1) {
                         const nextIndex = (window.currentTeamIndex + 1) % window.teams.length;
                         window.currentTeamIndex = nextIndex;
                         
-                        console.log(`🔄 ${window.teams[window.currentTeamIndex-1]?.name} → ${window.teams[nextIndex].name}`);
+                        console.log(`🔄 Mudou para: ${window.teams[nextIndex].name}`);
                         
                         if (window.updateTeamsDisplay) {
                             window.updateTeamsDisplay();

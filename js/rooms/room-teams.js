@@ -59,6 +59,21 @@ RoomSystem.prototype.assignPlayerToTeam = function() {
         
         console.log(`👤 Jogador atribuído à equipe: ${team.name} (ID: ${targetTeamId})`);
         
+        // ADICIONAR JOGADOR AO ARRAY DA EQUIPE
+        if (!team.assignedPlayers) {
+            team.assignedPlayers = [];
+        }
+        const playerEmail = firebase.auth().currentUser?.email;
+        if (playerEmail && !team.assignedPlayers.includes(playerEmail)) {
+            team.assignedPlayers.push(playerEmail);
+            console.log(`✅ ${playerEmail} adicionado à equipe ${team.name}`);
+            
+            // Atualizar display
+            if (typeof updateTeamsDisplay === 'function') {
+                updateTeamsDisplay();
+            }
+        }
+        
         // Salvar no Firebase APENAS UMA VEZ
         this.savePlayerTeamAssignment(targetTeamId, team.name);
         

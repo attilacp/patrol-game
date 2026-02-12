@@ -192,33 +192,48 @@ class TurnSystem {
     }
 
     handleAnswerResult(resultData) {
-        console.log('📊 Processando resultado:', resultData);
+        console.log('📊 ===== PROCESSANDO RESULTADO =====');
+        console.log('📊 Dados:', resultData);
+        console.log('📊 Equipe atual (index):', window.currentTeamIndex);
+        console.log('📊 Equipes disponíveis:', window.teams?.map(t => t.name));
         
         // Atualizar pontuação da equipe SE ACERTOU
         if (resultData.isCorrect) {
             const team = window.teams?.[window.currentTeamIndex];
+            console.log('✅ Acertou! Equipe:', team?.name);
+            
             if (team) {
+                const oldScore = team.score || 0;
                 // Incrementar pontuação
-                team.score = (team.score || 0) + 1;
+                team.score = oldScore + 1;
                 team.questionsAnswered = (team.questionsAnswered || 0) + 1;
                 team.questionsCorrect = (team.questionsCorrect || 0) + 1;
                 
-                console.log(`✅ ${team.name} agora tem ${team.score} pontos`);
+                console.log(`✅ ${team.name}: ${oldScore} → ${team.score} pontos`);
                 
-                // Forçar atualização visual
+                // Forçar atualização visual MÚLTIPLAS vezes
                 if (typeof updateTeamsDisplay === 'function') {
+                    updateTeamsDisplay();
                     setTimeout(() => updateTeamsDisplay(), 100);
+                    setTimeout(() => updateTeamsDisplay(), 500);
+                } else {
+                    console.error('❌ updateTeamsDisplay não existe!');
                 }
+            } else {
+                console.error('❌ Equipe não encontrada!');
             }
         } else {
             // Incrementar contador de erros
             const team = window.teams?.[window.currentTeamIndex];
+            console.log('❌ Errou! Equipe:', team?.name);
+            
             if (team) {
                 team.questionsAnswered = (team.questionsAnswered || 0) + 1;
                 team.questionsWrong = (team.questionsWrong || 0) + 1;
                 
                 // Forçar atualização visual
                 if (typeof updateTeamsDisplay === 'function') {
+                    updateTeamsDisplay();
                     setTimeout(() => updateTeamsDisplay(), 100);
                 }
             }
@@ -249,6 +264,8 @@ class TurnSystem {
 
         const nextBtn = document.getElementById('next-question-btn');
         if (nextBtn) nextBtn.style.display = 'inline-block';
+        
+        console.log('📊 ===== FIM PROCESSAMENTO =====');
     }
 
     async advanceToNextQuestion() {

@@ -97,14 +97,17 @@ function enableQuestionControls() {
     if (certoBtn) {
         certoBtn.disabled = false;
         certoBtn.style.opacity = '1';
+        certoBtn.style.cursor = 'pointer';
     }
     if (erradoBtn) {
         erradoBtn.disabled = false;
         erradoBtn.style.opacity = '1';
+        erradoBtn.style.cursor = 'pointer';
     }
     if (skipBtn && window.roomSystem?.isMaster) {
         skipBtn.disabled = false;
         skipBtn.style.opacity = '1';
+        skipBtn.style.cursor = 'pointer';
     }
     
     const nextBtn = document.getElementById('next-question-btn');
