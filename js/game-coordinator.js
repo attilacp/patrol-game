@@ -36,11 +36,17 @@ class GameCoordinator {
             // SE É JOGADOR, transmitir sinal ao Firebase para mestre avançar
             if (!window.roomSystem?.isMaster && window.roomSystem?.currentRoom) {
                 console.log('📤 Jogador enviando sinal de avanço ao mestre...');
+                
+                // Usar ID ou email (o que estiver disponível)
+                const playerIdentifier = window.roomSystem.playerEmail || 
+                                        window.roomSystem.playerId || 
+                                        'jogador-anonimo';
+                
                 await firebase.database()
                     .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
                     .set({
                         timestamp: Date.now(),
-                        fromPlayer: window.roomSystem.playerEmail
+                        fromPlayer: playerIdentifier
                     });
                 return; // Jogador não avança localmente
             }
@@ -175,12 +181,17 @@ class GameCoordinator {
         
         // MESTRE: escutar sinal de avanço do jogador
         if (window.roomSystem?.isMaster && window.roomSystem?.currentRoom) {
+            console.log('🎧 Mestre configurando listener de sinal de avanço...');
             firebase.database()
                 .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
                 .on('value', (snapshot) => {
                     const signal = snapshot.val();
+                    console.log('📨 Sinal recebido:', signal);
+                    
                     if (signal && signal.timestamp) {
                         const timeSinceSignal = Date.now() - signal.timestamp;
+                        console.log(`⏱️ Tempo desde sinal: ${timeSinceSignal}ms`);
+                        
                         // Apenas processar sinais recentes (últimos 2 segundos)
                         if (timeSinceSignal < 2000) {
                             console.log('📥 Mestre recebeu sinal de avanço do jogador:', signal.fromPlayer);
@@ -190,6 +201,8 @@ class GameCoordinator {
                             firebase.database()
                                 .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
                                 .remove();
+                        } else {
+                            console.log('⏰ Sinal muito antigo, ignorando');
                         }
                     }
                 });

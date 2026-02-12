@@ -17,18 +17,26 @@ RoomSystem.prototype.syncGameDataFromFirebase = function(gameData) {
         // PRESERVAR assignedPlayers locais antes de sobrescrever
         const previousTeams = window.teams || [];
         
+        console.log('🔍 Equipes anteriores:', previousTeams.map(t => ({
+            name: t.name,
+            assignedPlayers: t.assignedPlayers
+        })));
+        
         window.teams = gameData.teams.map((team, index) => {
             // Buscar equipe anterior para preservar assignedPlayers local
             const prevTeam = previousTeams.find(t => t.id === team.id || t.name === team.name);
+            
+            const preservedPlayers = (Array.isArray(team.assignedPlayers) && team.assignedPlayers.length > 0)
+                ? team.assignedPlayers  // Do Firebase (tem prioridade)
+                : (prevTeam?.assignedPlayers || []); // Preservar local
+            
+            console.log(`📌 ${team.name}: Firebase=${team.assignedPlayers?.length || 0}, Local=${prevTeam?.assignedPlayers?.length || 0}, Final=${preservedPlayers.length}`);
             
             return {
                 id: team.id || index + 1,
                 name: team.name || `Equipe ${index + 1}`,
                 players: Array.isArray(team.players) ? team.players : [],
-                // Preferir Firebase, mas preservar local se Firebase vazio
-                assignedPlayers: (Array.isArray(team.assignedPlayers) && team.assignedPlayers.length > 0)
-                    ? team.assignedPlayers  // Do Firebase (tem prioridade)
-                    : (prevTeam?.assignedPlayers || []), // Preservar local
+                assignedPlayers: preservedPlayers,
                 score: team.score || 0,
                 colorClass: team.colorClass || `team-bg-${(index % 10) + 1}`,
                 turnColorClass: team.turnColorClass || `team-color-${(index % 10) + 1}`,

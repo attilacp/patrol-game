@@ -265,23 +265,14 @@ class TurnSystem {
             
             console.log(`✅ ${team.name}: ${oldScore} → ${team.score} pontos`);
             
-            // RESTAURAR assignedPlayers antes de atualizar display
-            team.assignedPlayers = preservedAssignedPlayers;
+            // RESTAURAR assignedPlayers (que pode ter sido perdido)
+            if (!team.assignedPlayers || team.assignedPlayers.length === 0) {
+                team.assignedPlayers = preservedAssignedPlayers;
+            }
             
-            // Forçar atualização visual MÚLTIPLAS vezes
+            // Atualizar display UMA VEZ
             if (typeof updateTeamsDisplay === 'function') {
                 updateTeamsDisplay();
-                setTimeout(() => {
-                    // Garantir que não foi perdido
-                    team.assignedPlayers = preservedAssignedPlayers;
-                    updateTeamsDisplay();
-                }, 100);
-                setTimeout(() => {
-                    team.assignedPlayers = preservedAssignedPlayers;
-                    updateTeamsDisplay();
-                }, 500);
-            } else {
-                console.error('❌ updateTeamsDisplay não existe!');
             }
         } else {
             team.questionsAnswered = (team.questionsAnswered || 0) + 1;
