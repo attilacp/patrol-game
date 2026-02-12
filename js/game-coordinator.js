@@ -61,31 +61,26 @@ class GameCoordinator {
             const nextBtn = document.getElementById('next-question-btn');
             console.log('🔍 Procurando botão PRÓXIMA...', !!nextBtn);
             
-            if (nextBtn) {
-                console.log('📍 Botão encontrado! Style:', nextBtn.style.display);
+            if (nextBtn && nextBtn.style.display !== 'none') {
+                console.log('📍 Botão encontrado e VISÍVEL! Style:', nextBtn.style.display);
                 console.log('📍 Já configurado?', nextBtn.dataset.coordinatorConfigured);
                 
-                if (!nextBtn.dataset.coordinatorConfigured) {
-                    console.log('⚙️ Configurando botão PRÓXIMA...');
-                    
-                    // Marcar como configurado
-                    nextBtn.dataset.coordinatorConfigured = 'true';
-                    
-                    // Remover listeners antigos
-                    const newNextBtn = nextBtn.cloneNode(true);
-                    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-                    newNextBtn.dataset.coordinatorConfigured = 'true';
+                // SEMPRE reconfigurar quando fica visível
+                console.log('⚙️ Configurando botão PRÓXIMA...');
+                
+                // Remover listeners antigos clonando
+                const newNextBtn = nextBtn.cloneNode(true);
+                nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
 
-                    // Adicionar NOVO listener
-                    newNextBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🎯 Botão PRÓXIMA clicado (GameCoordinator)');
-                        this.handleNextQuestion();
-                    });
+                // Adicionar NOVO listener
+                newNextBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🎯 Botão PRÓXIMA clicado (GameCoordinator)');
+                    this.handleNextQuestion();
+                });
 
-                    console.log('✅ Botão PRÓXIMA configurado (SEM duplicação)');
-                }
+                console.log('✅ Botão PRÓXIMA configurado (listener ativo)');
             }
         };
 
