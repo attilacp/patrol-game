@@ -5,7 +5,7 @@ function handleCorrectAnswer() {
     
     var team = window.teams[window.currentTeamIndex];
     team.questionsAnswered = (team.questionsAnswered || 0) + 1;
-    team.score += 1; // APENAS 1 PONTO
+    // REMOVIDO: team.score += 1; (handleAnswerResult já incrementa)
     window.consecutiveCorrect++;
     
     console.log(team.name + ' acertou! Score: ' + team.score + ', Consecutivos: ' + window.consecutiveCorrect);

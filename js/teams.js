@@ -110,6 +110,11 @@ function createTeamCard(team, isActive) {
     card.className = `team-card ${team.colorClass || ''} ${isActive ? 'active' : ''}`;
     card.setAttribute('data-team-id', team.id || 0);
     
+    console.log(`🎨 Criando card para ${team.name}:`, {
+        assignedPlayers: team.assignedPlayers,
+        players: team.players
+    });
+    
     // CORREÇÃO ERRO 2: Buscar jogadores e extrair nome do email
     let playersHtml = '<div class="no-players">Carregando...</div>';
     
@@ -117,6 +122,7 @@ function createTeamCard(team, isActive) {
         if (team.assignedPlayers && Array.isArray(team.assignedPlayers) && team.assignedPlayers.length > 0) {
             playersHtml = team.assignedPlayers.map(playerEmail => {
                 const playerName = extractNameFromEmail(playerEmail);
+                console.log(`  👤 ${playerEmail} → ${playerName}`);
                 return `<div class="player-name">👤 ${playerName}</div>`;
             }).join('');
         } else if (team.players && Array.isArray(team.players) && team.players.length > 0) {

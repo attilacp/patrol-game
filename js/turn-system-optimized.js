@@ -45,7 +45,7 @@ class TurnSystem {
         
         console.log(`📤 Resposta: ${playerAnswer} | Gabarito: ${gabarito} | Acertou: ${isCorrect}`);
 
-        // Processar acerto/erro
+        // Processar acerto/erro LOCALMENTE
         if (isCorrect) {
             if (typeof handleCorrectAnswer === 'function') {
                 handleCorrectAnswer();
@@ -56,10 +56,8 @@ class TurnSystem {
             }
         }
 
-        // APENAS MESTRE TRANSMITE RESULTADO
-        if (this.roomSystem.isMaster) {
-            await this.broadcastAnswerResult(isCorrect, question);
-        }
+        // TRANSMITIR RESULTADO (mestre E jogador)
+        await this.broadcastAnswerResult(isCorrect, question);
     }
 
     async broadcastAnswerResult(isCorrect, question) {
