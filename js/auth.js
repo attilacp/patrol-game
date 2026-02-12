@@ -5,19 +5,33 @@ console.log('🔐 auth.js CARREGADO');
     class AuthSystem {
         constructor() {
             this.currentUser = null;
-            // NÃO inicializar ainda, esperar Firebase
+            this.initAttempts = 0;
+            this.maxAttempts = 20; // 20 tentativas = 10 segundos
         }
         
         init() {
-            if (!firebase?.auth) {
-                console.warn('⏳ Aguardando Firebase...');
+            // Verificar se Firebase está pronto
+            if (!firebase?.auth || !firebase?.apps || firebase.apps.length === 0) {
+                this.initAttempts++;
+                
+                if (this.initAttempts >= this.maxAttempts) {
+                    console.error('❌ Firebase não inicializou após 10 segundos');
+                    alert('Erro ao conectar ao Firebase. Recarregue a página.');
+                    return;
+                }
+                
+                console.warn(`⏳ Aguardando Firebase... (tentativa ${this.initAttempts}/${this.maxAttempts})`);
                 setTimeout(() => this.init(), 500);
                 return;
             }
             
+            console.log('✅ Firebase pronto, inicializando Auth...');
+            this.initAttempts = 0;
+            
             firebase.auth().onAuthStateChanged((user) => {
                 this.handleAuthStateChange(user);
             });
+            
             this.setupEventListeners();
         }
         
@@ -214,14 +228,23 @@ console.log('🔐 auth.js CARREGADO');
     
     window.authSystem = new AuthSystem();
     
-    // Inicializar quando Firebase estiver pronto
-    if (window.firebase?.auth) {
-        window.authSystem.init();
-    } else {
-        document.addEventListener('firebaseReady', () => {
+    // Estratégia de inicialização em múltiplas camadas
+    // 1. Tentar imediatamente (caso Firebase já esteja pronto)
+    window.authSystem.init();
+    
+    // 2. Escutar evento firebaseReady
+    document.addEventListener('firebaseReady', () => {
+        console.log('📡 Evento firebaseReady recebido');
+        if (window.authSystem.initAttempts > 0) {
             window.authSystem.init();
+        }
+    });
+    
+    // 3. Tentar após DOMContentLoaded (fallback)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => window.authSystem.init(), 1000);
         });
-        setTimeout(() => window.authSystem.init(), 1000);
     }
     
     window.showLoginScreen = () => window.authSystem.showLoginScreen();

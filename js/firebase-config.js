@@ -14,22 +14,31 @@ const FIREBASE_CONFIG = {
 function initializeFirebase() {
     console.log('🔥 Inicializando Firebase...');
     
-    // Verificar se Firebase já foi carregado
     if (typeof firebase === 'undefined') {
         console.error('❌ Firebase SDK não carregado');
         return false;
     }
     
+    // Verificar se já foi inicializado
+    if (firebase.apps && firebase.apps.length > 0) {
+        console.log('✅ Firebase já estava inicializado');
+        window.firebaseApp = firebase.apps[0];
+        window.auth = firebase.auth();
+        window.db = firebase.database();
+        return true;
+    }
+    
     try {
-        // Inicializar Firebase
         const app = firebase.initializeApp(FIREBASE_CONFIG);
-        
-        // Tornar disponível globalmente
         window.firebaseApp = app;
         window.auth = firebase.auth();
         window.db = firebase.database();
         
         console.log('✅ Firebase configurado!');
+        
+        // Disparar evento para avisar que está pronto
+        document.dispatchEvent(new Event('firebaseReady'));
+        
         return true;
     } catch (error) {
         console.error('❌ Erro ao configurar Firebase:', error);
@@ -40,5 +49,25 @@ function initializeFirebase() {
 // Exportar
 window.FIREBASE_CONFIG = FIREBASE_CONFIG;
 window.initializeFirebase = initializeFirebase;
+
+// AUTO-INICIALIZAR quando o script carregar
+// Esperar um pouco para garantir que Firebase SDK foi carregado
+setTimeout(() => {
+    if (typeof firebase !== 'undefined') {
+        initializeFirebase();
+    } else {
+        console.warn('⏳ Aguardando Firebase SDK...');
+        // Tentar novamente
+        const checkInterval = setInterval(() => {
+            if (typeof firebase !== 'undefined') {
+                clearInterval(checkInterval);
+                initializeFirebase();
+            }
+        }, 100);
+        
+        // Timeout de segurança (5 segundos)
+        setTimeout(() => clearInterval(checkInterval), 5000);
+    }
+}, 100);
 
 console.log('✅ firebase-config.js carregado');
