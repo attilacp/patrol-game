@@ -1,4 +1,4 @@
-// js/turn-system-optimized.js - VERSÃO FINAL SEM DUPLICAÇÕES
+// js/turn-system-optimized.js - VERSÃO FINAL CORRIGIDA
 console.log('🔄 Sistema de turnos otimizado carregando...');
 
 class TurnSystem {
@@ -10,21 +10,43 @@ class TurnSystem {
         this.teamAssigned = false;
     }
 
-    async submitAnswer(isCorrect) {
+    async submitAnswer(answer) {
         if (!this.roomSystem.isMaster) {
             console.warn('⚠️ Apenas o mestre pode submeter respostas');
             return;
         }
 
         const question = window.questions?.[window.currentQuestionIndex];
-        if (!question) return;
+        if (!question) {
+            console.error('❌ Pergunta não encontrada');
+            return;
+        }
 
-        console.log(`📤 Submetendo resposta: ${isCorrect ? 'CORRETA' : 'ERRADA'}`);
+        // Normalizar resposta (aceita 'CERTO'/'ERRADO' ou true/false)
+        let playerAnswer = answer;
+        if (typeof answer === 'string') {
+            playerAnswer = answer.toUpperCase();
+        } else if (typeof answer === 'boolean') {
+            playerAnswer = answer ? 'CERTO' : 'ERRADO';
+        }
 
-        if (isCorrect && typeof handleCorrectAnswer === 'function') {
-            handleCorrectAnswer();
-        } else if (!isCorrect && typeof handleWrongAnswer === 'function') {
-            handleWrongAnswer();
+        // Normalizar gabarito
+        let gabarito = (question.gabarito || '').toString().toUpperCase().trim();
+        
+        // Verificar se acertou
+        const isCorrect = (playerAnswer === gabarito);
+        
+        console.log(`📤 Resposta: ${playerAnswer} | Gabarito: ${gabarito} | Acertou: ${isCorrect}`);
+
+        // Processar acerto/erro
+        if (isCorrect) {
+            if (typeof handleCorrectAnswer === 'function') {
+                handleCorrectAnswer();
+            }
+        } else {
+            if (typeof handleWrongAnswer === 'function') {
+                handleWrongAnswer();
+            }
         }
 
         await this.broadcastAnswerResult(isCorrect, question);
@@ -38,16 +60,20 @@ class TurnSystem {
         if (question.comentario2) allComments += (allComments ? '<br><br>' : '') + question.comentario2;
         if (question.comentario3) allComments += (allComments ? '<br><br>' : '') + question.comentario3;
 
+        const resultData = {
+            isCorrect: isCorrect,
+            correctAnswer: question.gabarito || 'Não informado',
+            comments: allComments,
+            questionIndex: window.currentQuestionIndex,
+            teamName: window.teams?.[window.currentTeamIndex]?.name,
+            timestamp: Date.now()
+        };
+
         await firebase.database()
             .ref(`rooms/${this.roomSystem.currentRoom}/answerResult`)
-            .set({
-                isCorrect: isCorrect,
-                correctAnswer: question.gabarito || 'Não informado',
-                comments: allComments,
-                questionIndex: window.currentQuestionIndex,
-                teamName: window.teams?.[window.currentTeamIndex]?.name,
-                timestamp: Date.now()
-            });
+            .set(resultData);
+
+        console.log('📤 Resultado transmitido:', resultData);
     }
 
     setupTurnListeners() {
@@ -140,29 +166,21 @@ class TurnSystem {
             if (btn) {
                 btn.disabled = !canAnswer && !this.roomSystem.isMaster;
                 btn.style.opacity = (canAnswer || this.roomSystem.isMaster) ? '1' : '0.5';
+                btn.style.cursor = (canAnswer || this.roomSystem.isMaster) ? 'pointer' : 'not-allowed';
             }
         });
     }
 
     handleQuestionChange(questionData) {
         console.log('📚 Nova pergunta:', questionData.index + 1);
-        console.log('🔍 DEBUG questionData:', questionData);
         
         window.currentQuestionIndex = questionData.index || 0;
         window.currentQuestionProcessed = false;
         
-        console.log('🔍 DEBUG window.questions existe?', !!window.questions);
-        console.log('🔍 DEBUG window.questions.length?', window.questions?.length);
-        console.log('🔍 DEBUG showQuestion existe?', typeof showQuestion);
-        
         if (typeof showQuestion === 'function') {
-            console.log('✅ Chamando showQuestion()...');
             showQuestion();
         } else if (typeof displayQuestionWithSubject === 'function') {
-            console.log('✅ Chamando displayQuestionWithSubject()...');
             displayQuestionWithSubject();
-        } else {
-            console.error('❌ Nenhuma função de exibição encontrada!');
         }
         
         if (typeof enableQuestionControls === 'function') {
@@ -171,6 +189,21 @@ class TurnSystem {
     }
 
     handleAnswerResult(resultData) {
+        console.log('📊 Processando resultado:', resultData);
+        
+        // Atualizar pontuação da equipe
+        if (resultData.isCorrect) {
+            const team = window.teams?.[window.currentTeamIndex];
+            if (team) {
+                team.score = (team.score || 0) + 1;
+                console.log(`✅ ${team.name} agora tem ${team.score} pontos`);
+                
+                if (typeof updateTeamsDisplay === 'function') {
+                    updateTeamsDisplay();
+                }
+            }
+        }
+
         const correctAnswer = document.getElementById('correct-answer');
         if (correctAnswer) {
             correctAnswer.textContent = resultData.isCorrect ? '✅ ACERTOU' : '❌ ERROU';
@@ -188,15 +221,14 @@ class TurnSystem {
 
         ['certo-btn', 'errado-btn'].forEach(id => {
             const btn = document.getElementById(id);
-            if (btn) btn.disabled = true;
+            if (btn) {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            }
         });
 
         const nextBtn = document.getElementById('next-question-btn');
         if (nextBtn) nextBtn.style.display = 'inline-block';
-
-        if (resultData.isCorrect && typeof updateTeamsDisplay === 'function') {
-            updateTeamsDisplay();
-        }
     }
 
     async advanceToNextQuestion() {
