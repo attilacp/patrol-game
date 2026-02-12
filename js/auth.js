@@ -185,13 +185,8 @@ console.log('🔐 auth.js CARREGADO');
             this.hideAllScreens();
             document.getElementById('config-screen')?.classList.add('active');
             
-            // CORREÇÃO ERRO 5: Mostrar código da sala
-            if (window.roomSystem && window.roomSystem.currentRoom) {
-                const codeDisplay = document.getElementById('room-code-display');
-                if (codeDisplay) {
-                    codeDisplay.textContent = window.roomSystem.currentRoom;
-                }
-            }
+            // Atualizar código da sala
+            this.updateRoomCodeDisplay();
             
             // Mostrar botão de logout
             const logoutBtn = document.getElementById('logout-btn');
@@ -204,21 +199,38 @@ console.log('🔐 auth.js CARREGADO');
             this.hideAllScreens();
             document.getElementById('game-screen')?.classList.add('active');
             
-            // CORREÇÃO ERRO 5: Mostrar código da sala
-            if (window.roomSystem && window.roomSystem.currentRoom) {
-                const codeDisplay = document.getElementById('room-code-display');
-                if (codeDisplay) {
-                    codeDisplay.textContent = window.roomSystem.currentRoom;
+            // Atualizar código da sala e nome
+            this.updateRoomCodeDisplay();
+            this.updateUserDisplay();
+        }
+        
+        updateRoomCodeDisplay() {
+            const attempts = [0, 100, 300, 500]; // Tentar várias vezes
+            attempts.forEach(delay => {
+                setTimeout(() => {
+                    if (window.roomSystem && window.roomSystem.currentRoom) {
+                        const codeDisplays = document.querySelectorAll('#room-code-display');
+                        codeDisplays.forEach(el => {
+                            if (el) {
+                                el.textContent = window.roomSystem.currentRoom;
+                            }
+                        });
+                        console.log('✅ Código da sala exibido:', window.roomSystem.currentRoom);
+                    }
+                }, delay);
+            });
+        }
+        
+        updateUserDisplay() {
+            setTimeout(() => {
+                const userDisplay = document.getElementById('user-name-display');
+                if (userDisplay && firebase.auth().currentUser) {
+                    const email = firebase.auth().currentUser.email;
+                    const name = email.split('@')[0];
+                    userDisplay.textContent = name;
+                    console.log('✅ Nome do usuário exibido:', name);
                 }
-            }
-            
-            // CORREÇÃO ERRO 10: Mostrar nome do usuário
-            const userDisplay = document.getElementById('user-name-display');
-            if (userDisplay && firebase.auth().currentUser) {
-                const email = firebase.auth().currentUser.email;
-                const name = email.split('@')[0];
-                userDisplay.textContent = name;
-            }
+            }, 200);
         }
         
         // TELA DE PÓDIO

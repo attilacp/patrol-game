@@ -318,8 +318,10 @@ class TurnSystem {
             return;
         }
 
-        const nextTeamIndex = this.rotateTeam();
-        await this.setCurrentTurn(nextTeamIndex);
+        // CORREÇÃO: NÃO rodar equipe aqui, deixar o controlButtons decidir
+        // A rotação é controlada por window.nextTeamRotation
+        
+        await this.setCurrentTurn(window.currentTeamIndex); // Manter mesma equipe
         await this.broadcastQuestionChange();
     }
 

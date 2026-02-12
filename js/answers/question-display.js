@@ -1,7 +1,7 @@
-// js/answers/question-display.js - CORRIGIDO
+// js/answers/question-display.js - Exibição de perguntas
 console.log('📝 question-display.js carregando...');
 
-function showQuestion() {
+function displayQuestionWithSubject() {
     if (window.currentQuestionIndex >= window.questions.length) {
         endGame();
         return;
@@ -12,6 +12,7 @@ function showQuestion() {
     
     if (!questionText) return;
     
+    // Criar HTML da pergunta com assunto
     let questionHTML = '';
     if (question.assuntoInfo) {
         questionHTML = '<div class="assunto-container">' +
@@ -29,16 +30,19 @@ function showQuestion() {
     
     questionText.innerHTML = questionHTML;
     
+    // Limpar elementos anteriores
     clearPreviousAnswer();
+    
+    // Atualizar contadores
     updateQuestionCounters();
+    
+    // Atualizar equipe de plantão
     updateCurrentTeamDisplay();
+    
+    // Habilitar controles
     enableQuestionControls();
     
     console.log('✅ Pergunta ' + (window.currentQuestionIndex + 1) + ' exibida');
-}
-
-function displayQuestionWithSubject() {
-    showQuestion();
 }
 
 function clearPreviousAnswer() {
@@ -86,25 +90,36 @@ function updateCurrentTeamDisplay() {
 }
 
 function enableQuestionControls() {
+    // Habilitar botões de resposta
     const certoBtn = document.getElementById('certo-btn');
     const erradoBtn = document.getElementById('errado-btn');
     const skipBtn = document.getElementById('skip-btn');
     
-    if (certoBtn) certoBtn.disabled = false;
-    if (erradoBtn) erradoBtn.disabled = false;
-    if (skipBtn && window.roomSystem?.isMaster) skipBtn.disabled = false;
+    if (certoBtn) {
+        certoBtn.disabled = false;
+        certoBtn.style.opacity = '1'; // FORÇAR OPACITY
+    }
+    if (erradoBtn) {
+        erradoBtn.disabled = false;
+        erradoBtn.style.opacity = '1'; // FORÇAR OPACITY
+    }
+    if (skipBtn && window.roomSystem?.isMaster) {
+        skipBtn.disabled = false;
+        skipBtn.style.opacity = '1'; // FORÇAR OPACITY
+    }
     
+    // Ocultar botões de continuação
     const nextBtn = document.getElementById('next-question-btn');
     const podiumBtn = document.getElementById('podium-btn');
     
     if (nextBtn) nextBtn.style.display = 'none';
     if (podiumBtn) podiumBtn.style.display = 'none';
     
+    // Habilitar teclado
     window.keyboardEnabled = true;
-    console.log('⌨️ Teclado habilitado');
+    console.log('⌨️ Teclado habilitado para nova pergunta');
 }
 
-window.showQuestion = showQuestion;
 window.displayQuestionWithSubject = displayQuestionWithSubject;
 window.clearPreviousAnswer = clearPreviousAnswer;
 window.updateQuestionCounters = updateQuestionCounters;
