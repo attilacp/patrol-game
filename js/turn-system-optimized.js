@@ -146,13 +146,23 @@ class TurnSystem {
 
     handleQuestionChange(questionData) {
         console.log('📚 Nova pergunta:', questionData.index + 1);
+        console.log('🔍 DEBUG questionData:', questionData);
+        
         window.currentQuestionIndex = questionData.index || 0;
-        window.currentQuestionProcessed = false; // Reset flag
+        window.currentQuestionProcessed = false;
+        
+        console.log('🔍 DEBUG window.questions existe?', !!window.questions);
+        console.log('🔍 DEBUG window.questions.length?', window.questions?.length);
+        console.log('🔍 DEBUG showQuestion existe?', typeof showQuestion);
         
         if (typeof showQuestion === 'function') {
+            console.log('✅ Chamando showQuestion()...');
             showQuestion();
         } else if (typeof displayQuestionWithSubject === 'function') {
+            console.log('✅ Chamando displayQuestionWithSubject()...');
             displayQuestionWithSubject();
+        } else {
+            console.error('❌ Nenhuma função de exibição encontrada!');
         }
         
         if (typeof enableQuestionControls === 'function') {

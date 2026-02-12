@@ -1,18 +1,21 @@
-// js/answers/question-display.js - Exibição de perguntas
+// js/answers/question-display.js - VERSÃO FINAL CORRIGIDA
 console.log('📝 question-display.js carregando...');
 
-function displayQuestionWithSubject() {
+function showQuestion() {
     if (window.currentQuestionIndex >= window.questions.length) {
-        endGame();
+        if (typeof endGame === 'function') endGame();
         return;
     }
     
     const question = window.questions[window.currentQuestionIndex];
     const questionText = document.getElementById('question-text');
     
-    if (!questionText) return;
+    if (!questionText) {
+        console.error('❌ Elemento question-text não encontrado');
+        return;
+    }
     
-    // Criar HTML da pergunta com assunto
+    // Construir HTML da pergunta
     let questionHTML = '';
     if (question.assuntoInfo) {
         questionHTML = '<div class="assunto-container">' +
@@ -30,19 +33,16 @@ function displayQuestionWithSubject() {
     
     questionText.innerHTML = questionHTML;
     
-    // Limpar elementos anteriores
     clearPreviousAnswer();
-    
-    // Atualizar contadores
     updateQuestionCounters();
-    
-    // Atualizar equipe de plantão
     updateCurrentTeamDisplay();
-    
-    // Habilitar controles
     enableQuestionControls();
     
     console.log('✅ Pergunta ' + (window.currentQuestionIndex + 1) + ' exibida');
+}
+
+function displayQuestionWithSubject() {
+    showQuestion();
 }
 
 function clearPreviousAnswer() {
@@ -82,7 +82,7 @@ function updateCurrentTeamDisplay() {
         
         if (teamTurn) {
             teamTurn.textContent = '🎯 ' + team.name + ' - DE PLANTÃO';
-            teamTurn.className = 'team-turn ' + team.turnColorClass;
+            teamTurn.className = 'team-turn ' + (team.turnColorClass || 'team-color-1');
         }
         
         console.log('👥 Equipe atual: ' + team.name);
@@ -90,36 +90,35 @@ function updateCurrentTeamDisplay() {
 }
 
 function enableQuestionControls() {
-    // Habilitar botões de resposta
     const certoBtn = document.getElementById('certo-btn');
     const erradoBtn = document.getElementById('errado-btn');
     const skipBtn = document.getElementById('skip-btn');
     
     if (certoBtn) {
         certoBtn.disabled = false;
-        certoBtn.style.opacity = '1'; // FORÇAR OPACITY
+        certoBtn.style.opacity = '1';
     }
     if (erradoBtn) {
         erradoBtn.disabled = false;
-        erradoBtn.style.opacity = '1'; // FORÇAR OPACITY
+        erradoBtn.style.opacity = '1';
     }
     if (skipBtn && window.roomSystem?.isMaster) {
         skipBtn.disabled = false;
-        skipBtn.style.opacity = '1'; // FORÇAR OPACITY
+        skipBtn.style.opacity = '1';
     }
     
-    // Ocultar botões de continuação
     const nextBtn = document.getElementById('next-question-btn');
     const podiumBtn = document.getElementById('podium-btn');
     
     if (nextBtn) nextBtn.style.display = 'none';
     if (podiumBtn) podiumBtn.style.display = 'none';
     
-    // Habilitar teclado
     window.keyboardEnabled = true;
-    console.log('⌨️ Teclado habilitado para nova pergunta');
+    console.log('⌨️ Teclado habilitado');
 }
 
+// EXPORTAR FUNÇÕES GLOBALMENTE
+window.showQuestion = showQuestion;
 window.displayQuestionWithSubject = displayQuestionWithSubject;
 window.clearPreviousAnswer = clearPreviousAnswer;
 window.updateQuestionCounters = updateQuestionCounters;
