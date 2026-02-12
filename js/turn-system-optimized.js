@@ -8,6 +8,7 @@ class TurnSystem {
         this.playerTeam = null;
         this.playerTeamId = null;
         this.teamAssigned = false;
+        this.listenersConfigured = false; // Prevenir configuração duplicada
     }
 
     async submitAnswer(answer) {
@@ -86,12 +87,27 @@ class TurnSystem {
     }
 
     setupTurnListeners() {
-        if (!this.roomSystem.currentRoom) return;
+        if (!this.roomSystem.currentRoom) {
+            console.log('⏳ Sala ainda não disponível, aguardando...');
+            // Tentar novamente após 500ms
+            setTimeout(() => this.setupTurnListeners(), 500);
+            return;
+        }
+
+        // Prevenir configuração duplicada
+        if (this.listenersConfigured) {
+            console.log('✅ Listeners já configurados');
+            return;
+        }
 
         const room = this.roomSystem.currentRoom;
+        console.log('🔄 Configurando listeners para sala:', room);
         
         firebase.database().ref(`rooms/${room}/currentTurn`).on('value', snap => {
-            if (snap.val()) this.handleTurnChange(snap.val());
+            if (snap.val()) {
+                console.log('📡 currentTurn recebido:', snap.val());
+                this.handleTurnChange(snap.val());
+            }
         });
 
         firebase.database().ref(`rooms/${room}/players/${this.roomSystem.playerId}`).on('value', snap => {
@@ -112,6 +128,9 @@ class TurnSystem {
         if (this.roomSystem.isMaster) {
             setTimeout(() => this.assignMasterToTeam(), 500);
         }
+        
+        this.listenersConfigured = true;
+        console.log('✅ Listeners do TurnSystem configurados');
     }
 
     updatePlayerTeam(teamId) {
@@ -336,11 +355,21 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (window.roomSystem && !window.turnSystem) {
             window.turnSystem = new TurnSystem(window.roomSystem);
-            console.log('🔄 TurnSystem criado, configurando listeners...');
+            console.log('🔄 TurnSystem criado');
+            
+            // Tentar configurar listeners (com retry automático)
             window.turnSystem.setupTurnListeners();
         }
     }, 1000);
 });
+
+// Permitir configuração manual também
+window.initializeTurnListeners = function() {
+    if (window.turnSystem) {
+        console.log('📡 Inicializando listeners manualmente...');
+        window.turnSystem.setupTurnListeners();
+    }
+};
 
 window.TurnSystem = TurnSystem;
 console.log('✅ turn-system-optimized.js carregado');
