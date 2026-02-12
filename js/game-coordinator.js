@@ -52,15 +52,18 @@ class GameCoordinator {
             }
             
             // APENAS MESTRE executa daqui pra frente
-            // Buscar flag de rodízio do Firebase
+            // SEMPRE buscar flag de rodízio do Firebase ANTES de avançar
             if (window.roomSystem && window.roomSystem.currentRoom) {
                 const rotationSnapshot = await firebase.database()
                     .ref(`rooms/${window.roomSystem.currentRoom}/nextTeamRotation`)
                     .once('value');
                 
-                if (rotationSnapshot.val() === true) {
+                const firebaseRotation = rotationSnapshot.val();
+                if (firebaseRotation === true) {
                     window.nextTeamRotation = true;
-                    console.log('🔄 Flag de rodízio detectada no Firebase');
+                    console.log('🔄 Flag de rodízio LIDA do Firebase: true');
+                } else {
+                    console.log('✅ Flag de rodízio no Firebase: false ou undefined');
                 }
             }
             
@@ -178,36 +181,6 @@ class GameCoordinator {
             console.log('🔁 Tentando novamente...');
             observeNextButton();
         }, 1000);
-        
-        // MESTRE: escutar sinal de avanço do jogador
-        if (window.roomSystem?.isMaster && window.roomSystem?.currentRoom) {
-            console.log('🎧 Mestre configurando listener de sinal de avanço...');
-            firebase.database()
-                .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
-                .on('value', (snapshot) => {
-                    const signal = snapshot.val();
-                    console.log('📨 Sinal recebido:', signal);
-                    
-                    if (signal && signal.timestamp) {
-                        const timeSinceSignal = Date.now() - signal.timestamp;
-                        console.log(`⏱️ Tempo desde sinal: ${timeSinceSignal}ms`);
-                        
-                        // Apenas processar sinais recentes (últimos 2 segundos)
-                        if (timeSinceSignal < 2000) {
-                            console.log('📥 Mestre recebeu sinal de avanço do jogador:', signal.fromPlayer);
-                            this.handleNextQuestion();
-                            
-                            // Limpar sinal
-                            firebase.database()
-                                .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
-                                .remove();
-                        } else {
-                            console.log('⏰ Sinal muito antigo, ignorando');
-                        }
-                    }
-                });
-            console.log('✅ Listener de sinal de avanço configurado (mestre)');
-        }
 
         // Botão PÓDIO
         const podiumBtn = document.getElementById('podium-btn');

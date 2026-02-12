@@ -124,6 +124,40 @@ if (typeof window.startGame !== 'function') {
                     window.showQuestion();
                 }
                 
+                // MESTRE: configurar listener de sinal de avanço do jogador
+                if (window.roomSystem && window.roomSystem.isMaster && window.roomSystem.currentRoom) {
+                    console.log('🎧 Mestre configurando listener de sinal de avanço...');
+                    firebase.database()
+                        .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
+                        .on('value', (snapshot) => {
+                            const signal = snapshot.val();
+                            console.log('📨 Sinal recebido:', signal);
+                            
+                            if (signal && signal.timestamp) {
+                                const timeSinceSignal = Date.now() - signal.timestamp;
+                                console.log(`⏱️ Tempo desde sinal: ${timeSinceSignal}ms`);
+                                
+                                // Apenas processar sinais recentes (últimos 2 segundos)
+                                if (timeSinceSignal < 2000) {
+                                    console.log('📥 Mestre recebeu sinal de avanço do jogador:', signal.fromPlayer);
+                                    
+                                    // Chamar handleNextQuestion do GameCoordinator
+                                    if (window.gameCoordinator?.handleNextQuestion) {
+                                        window.gameCoordinator.handleNextQuestion();
+                                    }
+                                    
+                                    // Limpar sinal
+                                    firebase.database()
+                                        .ref(`rooms/${window.roomSystem.currentRoom}/nextQuestionSignal`)
+                                        .remove();
+                                } else {
+                                    console.log('⏰ Sinal muito antigo, ignorando');
+                                }
+                            }
+                        });
+                    console.log('✅ Listener de sinal de avanço configurado (mestre)');
+                }
+                
                 console.log('✅ JOGO INICIADO');
                 console.log('- Perguntas (com recorrência):', window.questions.length);
                 console.log('- Equipes:', window.teams.length);
