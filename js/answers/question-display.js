@@ -104,7 +104,12 @@ function enableQuestionControls() {
         erradoBtn.style.opacity = '1';
         erradoBtn.style.cursor = 'pointer';
     }
-    if (skipBtn && window.roomSystem?.isMaster) {
+    
+    // Permitir mestre OU jogador de plantão pular
+    const canSkip = window.roomSystem?.isMaster || 
+                    (window.turnSystem && window.turnSystem.canPlayerAnswer());
+    
+    if (skipBtn && canSkip) {
         skipBtn.disabled = false;
         skipBtn.style.opacity = '1';
         skipBtn.style.cursor = 'pointer';

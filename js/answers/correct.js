@@ -1,4 +1,10 @@
 // file name: answers/correct.js - VERSÃO ATUALIZADA
+
+// Inicializar contador de acertos consecutivos
+if (typeof window.consecutiveCorrect === 'undefined') {
+    window.consecutiveCorrect = 0;
+}
+
 function handleCorrectAnswer() {
     if (window.currentQuestionProcessed || window.winnerTeam) return;
     window.currentQuestionProcessed = true;
@@ -6,7 +12,7 @@ function handleCorrectAnswer() {
     var team = window.teams[window.currentTeamIndex];
     team.questionsAnswered = (team.questionsAnswered || 0) + 1;
     // REMOVIDO: team.score += 1; (handleAnswerResult já incrementa)
-    window.consecutiveCorrect++;
+    window.consecutiveCorrect = (window.consecutiveCorrect || 0) + 1;
     
     console.log(team.name + ' acertou! Score: ' + team.score + ', Consecutivos: ' + window.consecutiveCorrect);
     

@@ -12,6 +12,8 @@ RoomSystem.prototype.syncGameDataFromFirebase = function(gameData) {
     
     // Equipes
     if (gameData.teams && Array.isArray(gameData.teams)) {
+        console.log('📦 Dados brutos das equipes do Firebase:', JSON.stringify(gameData.teams, null, 2));
+        
         window.teams = gameData.teams.map((team, index) => ({
             id: team.id || index + 1,
             name: team.name || `Equipe ${index + 1}`,
@@ -22,7 +24,7 @@ RoomSystem.prototype.syncGameDataFromFirebase = function(gameData) {
             turnColorClass: team.turnColorClass || `team-color-${(index % 10) + 1}`
         }));
         console.log('✅ Equipes sincronizadas:', window.teams.length);
-        console.log('📋 assignedPlayers:', window.teams.map(t => ({name: t.name, players: t.assignedPlayers})));
+        console.log('📋 assignedPlayers após map:', window.teams.map(t => ({name: t.name, players: t.assignedPlayers})));
     }
     
     // Aplicar ordem do Firebase

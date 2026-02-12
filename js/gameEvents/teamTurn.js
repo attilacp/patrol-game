@@ -13,8 +13,12 @@ function setupTeamTurnClickEvent() {
         newElement.addEventListener('click', function() {
             console.log('🔄 Retângulo da equipe de plantão clicado');
             
-            // Apenas mestre pode rodar equipe
-            if (window.roomSystem && window.roomSystem.isMaster) {
+            // Permitir mestre OU jogador de plantão
+            const canRotate = window.roomSystem && 
+                            (window.roomSystem.isMaster || 
+                             (window.turnSystem && window.turnSystem.canPlayerAnswer()));
+            
+            if (canRotate) {
                 if (confirm('Deseja rotacionar para a próxima equipe?')) {
                     console.log('✅ Confirmado mudança de equipe');
                     
@@ -40,7 +44,7 @@ function setupTeamTurnClickEvent() {
                     }
                 }
             } else {
-                console.log('⏳ Apenas o mestre pode rodar equipes');
+                console.log('⏳ Apenas mestre ou equipe de plantão pode rodar');
             }
         });
         

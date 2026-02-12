@@ -13,9 +13,16 @@ if (!window.NotesSystem) {
         }
 
         init() {
+            console.log('📝 NotesSystem inicializando...');
+            console.log('📝 Modal existe?', !!document.getElementById('notes-modal'));
+            console.log('📝 Tabs container existe?', !!document.getElementById('notes-tabs'));
+            console.log('📝 Content container existe?', !!document.getElementById('notes-content'));
+            
             this.setupEventListeners();
             this.createTabs();
             this.loadNotes();
+            
+            console.log('✅ NotesSystem inicializado');
         }
 
         setupEventListeners() {
@@ -81,7 +88,15 @@ if (!window.NotesSystem) {
             const tabsContainer = document.getElementById('notes-tabs');
             const contentContainer = document.getElementById('notes-content');
             
-            if (!tabsContainer || !contentContainer) return;
+            console.log('📝 createTabs - Containers:', {
+                tabsContainer: !!tabsContainer,
+                contentContainer: !!contentContainer
+            });
+            
+            if (!tabsContainer || !contentContainer) {
+                console.error('❌ Containers do modal não encontrados!');
+                return;
+            }
 
             tabsContainer.innerHTML = '';
             contentContainer.innerHTML = '';
@@ -98,6 +113,8 @@ if (!window.NotesSystem) {
 
             this.tabCounter = 4;
             this.switchTab('assunto1');
+            
+            console.log('✅ Tabs criadas:', document.querySelectorAll('.notes-tab').length);
         }
 
         createTabElement(id, name) {

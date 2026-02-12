@@ -20,8 +20,12 @@ class GameCoordinator {
             return;
         }
 
-        if (!window.roomSystem?.isMaster) {
-            console.log('⏭️ Apenas mestre pode avançar');
+        // Permitir mestre OU jogador da equipe de plantão
+        const canAdvance = window.roomSystem?.isMaster || 
+                          (window.turnSystem && window.turnSystem.canPlayerAnswer());
+        
+        if (!canAdvance) {
+            console.log('⏭️ Apenas mestre ou equipe de plantão pode avançar');
             return;
         }
 
