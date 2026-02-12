@@ -11,8 +11,11 @@ class TurnSystem {
     }
 
     async submitAnswer(answer) {
-        if (!this.roomSystem.isMaster) {
-            console.warn('⚠️ Apenas o mestre pode submeter respostas');
+        // Verificar se é o mestre OU se é jogador da equipe de plantão
+        const canAnswer = this.roomSystem.isMaster || this.canPlayerAnswer();
+        
+        if (!canAnswer) {
+            console.warn('⚠️ Não é sua vez de responder');
             return;
         }
 
@@ -52,7 +55,10 @@ class TurnSystem {
             }
         }
 
-        await this.broadcastAnswerResult(isCorrect, question);
+        // APENAS MESTRE TRANSMITE RESULTADO
+        if (this.roomSystem.isMaster) {
+            await this.broadcastAnswerResult(isCorrect, question);
+        }
     }
 
     async broadcastAnswerResult(isCorrect, question) {
@@ -93,7 +99,10 @@ class TurnSystem {
         });
 
         firebase.database().ref(`rooms/${room}/answerResult`).on('value', snap => {
-            if (snap.val()) this.handleAnswerResult(snap.val());
+            if (snap.val()) {
+                console.log('📡 answerResult recebido do Firebase:', snap.val());
+                this.handleAnswerResult(snap.val());
+            }
         });
 
         firebase.database().ref(`rooms/${room}/currentQuestion`).on('value', snap => {
@@ -194,48 +203,45 @@ class TurnSystem {
     handleAnswerResult(resultData) {
         console.log('📊 ===== PROCESSANDO RESULTADO =====');
         console.log('📊 Dados:', resultData);
+        console.log('📊 Equipe no resultado:', resultData.teamName);
         console.log('📊 Equipe atual (index):', window.currentTeamIndex);
         console.log('📊 Equipes disponíveis:', window.teams?.map(t => t.name));
         
+        // ENCONTRAR EQUIPE PELO NOME (mais confiável que índice)
+        const team = window.teams?.find(t => t.name === resultData.teamName);
+        
+        if (!team) {
+            console.error('❌ Equipe não encontrada:', resultData.teamName);
+            return;
+        }
+        
         // Atualizar pontuação da equipe SE ACERTOU
         if (resultData.isCorrect) {
-            const team = window.teams?.[window.currentTeamIndex];
-            console.log('✅ Acertou! Equipe:', team?.name);
+            const oldScore = team.score || 0;
+            team.score = oldScore + 1;
+            team.questionsAnswered = (team.questionsAnswered || 0) + 1;
+            team.questionsCorrect = (team.questionsCorrect || 0) + 1;
             
-            if (team) {
-                const oldScore = team.score || 0;
-                // Incrementar pontuação
-                team.score = oldScore + 1;
-                team.questionsAnswered = (team.questionsAnswered || 0) + 1;
-                team.questionsCorrect = (team.questionsCorrect || 0) + 1;
-                
-                console.log(`✅ ${team.name}: ${oldScore} → ${team.score} pontos`);
-                
-                // Forçar atualização visual MÚLTIPLAS vezes
-                if (typeof updateTeamsDisplay === 'function') {
-                    updateTeamsDisplay();
-                    setTimeout(() => updateTeamsDisplay(), 100);
-                    setTimeout(() => updateTeamsDisplay(), 500);
-                } else {
-                    console.error('❌ updateTeamsDisplay não existe!');
-                }
+            console.log(`✅ ${team.name}: ${oldScore} → ${team.score} pontos`);
+            
+            // Forçar atualização visual MÚLTIPLAS vezes
+            if (typeof updateTeamsDisplay === 'function') {
+                updateTeamsDisplay();
+                setTimeout(() => updateTeamsDisplay(), 100);
+                setTimeout(() => updateTeamsDisplay(), 500);
             } else {
-                console.error('❌ Equipe não encontrada!');
+                console.error('❌ updateTeamsDisplay não existe!');
             }
         } else {
-            // Incrementar contador de erros
-            const team = window.teams?.[window.currentTeamIndex];
-            console.log('❌ Errou! Equipe:', team?.name);
+            team.questionsAnswered = (team.questionsAnswered || 0) + 1;
+            team.questionsWrong = (team.questionsWrong || 0) + 1;
             
-            if (team) {
-                team.questionsAnswered = (team.questionsAnswered || 0) + 1;
-                team.questionsWrong = (team.questionsWrong || 0) + 1;
-                
-                // Forçar atualização visual
-                if (typeof updateTeamsDisplay === 'function') {
-                    updateTeamsDisplay();
-                    setTimeout(() => updateTeamsDisplay(), 100);
-                }
+            console.log(`❌ ${team.name} errou`);
+            
+            // Forçar atualização visual
+            if (typeof updateTeamsDisplay === 'function') {
+                updateTeamsDisplay();
+                setTimeout(() => updateTeamsDisplay(), 100);
             }
         }
 

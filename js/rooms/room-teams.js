@@ -68,6 +68,21 @@ RoomSystem.prototype.assignPlayerToTeam = function() {
             team.assignedPlayers.push(playerEmail);
             console.log(`✅ ${playerEmail} adicionado à equipe ${team.name}`);
             
+            // SALVAR NO FIREBASE
+            if (this.currentRoom) {
+                const teamRef = firebase.database().ref(`rooms/${this.currentRoom}/gameData/teams`);
+                teamRef.once('value', snapshot => {
+                    const teams = snapshot.val() || [];
+                    const teamIndex = teams.findIndex(t => t.id === targetTeamId);
+                    if (teamIndex >= 0) {
+                        teams[teamIndex].assignedPlayers = team.assignedPlayers;
+                        teamRef.set(teams).then(() => {
+                            console.log('💾 assignedPlayers salvo no Firebase');
+                        });
+                    }
+                });
+            }
+            
             // Atualizar display
             if (typeof updateTeamsDisplay === 'function') {
                 updateTeamsDisplay();
