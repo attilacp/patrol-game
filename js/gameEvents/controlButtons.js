@@ -7,6 +7,13 @@ function setupControlButtonEvents() {
     // Botão Próxima Pergunta
     const nextQuestionBtn = document.getElementById('next-question-btn');
     if (nextQuestionBtn) {
+        // VERIFICAR SE GAME COORDINATOR JÁ ESTÁ ATIVO
+        if (window.gameCoordinator) {
+            console.log('🎯 GameCoordinator ativo - pulando configuração');
+            console.log('✅ Event listener do botão Próxima Pergunta configurado');
+            return;
+        }
+        
         nextQuestionBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();

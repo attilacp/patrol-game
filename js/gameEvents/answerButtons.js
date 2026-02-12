@@ -154,6 +154,13 @@ function setupSkipButton() {
 function setupNextButton() {
     console.log('➡️ Configurando botão PRÓXIMA...');
     
+    // VERIFICAR SE GAME COORDINATOR JÁ ESTÁ ATIVO
+    if (window.gameCoordinator) {
+        console.log('🎯 GameCoordinator ativo - pulando configuração');
+        console.log('✅ Botão PRÓXIMA configurado');
+        return;
+    }
+    
     const nextBtn = document.getElementById('next-question-btn');
     if (nextBtn) {
         nextBtn.replaceWith(nextBtn.cloneNode(true));
