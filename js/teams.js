@@ -76,6 +76,9 @@ function updateTeamsDisplay() {
     }
     
     console.log('🔄 Atualizando display de equipes:', window.teams.length);
+    console.log('🔍 window.teams[0].assignedPlayers:', window.teams[0]?.assignedPlayers);
+    console.log('🔍 window.teams[1]?.assignedPlayers:', window.teams[1]?.assignedPlayers);
+    console.log('🔍 currentTeamIndex:', window.currentTeamIndex);
     
     const teamsDisplay = document.getElementById('teams-display');
     const activeTeamDisplay = document.getElementById('active-team-display');
@@ -91,6 +94,8 @@ function updateTeamsDisplay() {
     const activeTeam = window.teams[window.currentTeamIndex || 0];
     const inactiveTeams = window.teams.filter((team, index) => index !== (window.currentTeamIndex || 0));
     
+    console.log('👑 Equipe ativa:', activeTeam?.name, 'assignedPlayers:', activeTeam?.assignedPlayers);
+    
     if (activeTeam) {
         activeTeamDisplay.appendChild(createTeamCard(activeTeam, true));
     }
@@ -99,6 +104,7 @@ function updateTeamsDisplay() {
     inactiveContainer.className = 'folga-teams-container';
     
     inactiveTeams.forEach(team => {
+        console.log('😴 Equipe inativa:', team.name, 'assignedPlayers:', team.assignedPlayers);
         inactiveContainer.appendChild(createTeamCard(team, false));
     });
     

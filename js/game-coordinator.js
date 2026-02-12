@@ -33,15 +33,43 @@ class GameCoordinator {
         console.log('⏭️ Avançando para próxima pergunta...');
 
         try {
+            // Buscar flag de rodízio do Firebase
+            if (window.roomSystem && window.roomSystem.currentRoom) {
+                const rotationSnapshot = await firebase.database()
+                    .ref(`rooms/${window.roomSystem.currentRoom}/nextTeamRotation`)
+                    .once('value');
+                
+                if (rotationSnapshot.val() === true) {
+                    window.nextTeamRotation = true;
+                    console.log('🔄 Flag de rodízio detectada no Firebase');
+                }
+            }
+            
             // Verificar se deve rodar equipe
             if (window.nextTeamRotation === true) {
                 console.log('🔄 Rodízio ativado, rodando equipe...');
                 if (window.turnSystem) {
-                    window.turnSystem.rotateTeam();
+                    const newIndex = window.turnSystem.rotateTeam();
+                    console.log(`🔄 Nova equipe: ${window.teams[newIndex]?.name} (index ${newIndex})`);
+                    
+                    // Salvar novo turno no Firebase
+                    await window.turnSystem.setCurrentTurn(newIndex);
                 }
                 window.nextTeamRotation = false;
+                
+                // Limpar flag do Firebase
+                if (window.roomSystem && window.roomSystem.currentRoom) {
+                    await firebase.database()
+                        .ref(`rooms/${window.roomSystem.currentRoom}/nextTeamRotation`)
+                        .set(false);
+                }
             } else {
                 console.log('✅ Sem rodízio, mantendo equipe atual');
+                
+                // Salvar turno atual no Firebase (sem mudança)
+                if (window.turnSystem) {
+                    await window.turnSystem.setCurrentTurn(window.currentTeamIndex);
+                }
             }
 
             // Avançar pergunta UMA VEZ
@@ -60,12 +88,25 @@ class GameCoordinator {
         console.log('🎯 Configurando listeners centralizados...');
         console.log('🔍 DOM atual:', document.readyState);
 
+        let lastConfigTime = 0;
+        const DEBOUNCE_MS = 2000; // 2 segundos entre reconfigurações
+        
         // Usar MutationObserver para detectar quando botão "Próxima" aparece
         const observeNextButton = () => {
             const nextBtn = document.getElementById('next-question-btn');
             console.log('🔍 Procurando botão PRÓXIMA...', !!nextBtn);
             
             if (nextBtn && nextBtn.style.display !== 'none') {
+                const now = Date.now();
+                
+                // Debounce: só reconfigurar se passou tempo suficiente
+                if (now - lastConfigTime < DEBOUNCE_MS) {
+                    console.log('⏭️ Debounce ativo, pulando reconfiguração');
+                    return;
+                }
+                
+                lastConfigTime = now;
+                
                 console.log('📍 Botão encontrado e VISÍVEL! Style:', nextBtn.style.display);
                 console.log('📍 Já configurado?', nextBtn.dataset.coordinatorConfigured);
                 

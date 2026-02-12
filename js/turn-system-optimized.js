@@ -246,6 +246,9 @@ class TurnSystem {
             return;
         }
         
+        // PRESERVAR assignedPlayers (não perder ao atualizar)
+        const preservedAssignedPlayers = team.assignedPlayers;
+        
         // Atualizar pontuação da equipe SE ACERTOU
         if (resultData.isCorrect) {
             const oldScore = team.score || 0;
@@ -255,11 +258,21 @@ class TurnSystem {
             
             console.log(`✅ ${team.name}: ${oldScore} → ${team.score} pontos`);
             
+            // RESTAURAR assignedPlayers antes de atualizar display
+            team.assignedPlayers = preservedAssignedPlayers;
+            
             // Forçar atualização visual MÚLTIPLAS vezes
             if (typeof updateTeamsDisplay === 'function') {
                 updateTeamsDisplay();
-                setTimeout(() => updateTeamsDisplay(), 100);
-                setTimeout(() => updateTeamsDisplay(), 500);
+                setTimeout(() => {
+                    // Garantir que não foi perdido
+                    team.assignedPlayers = preservedAssignedPlayers;
+                    updateTeamsDisplay();
+                }, 100);
+                setTimeout(() => {
+                    team.assignedPlayers = preservedAssignedPlayers;
+                    updateTeamsDisplay();
+                }, 500);
             } else {
                 console.error('❌ updateTeamsDisplay não existe!');
             }
@@ -269,10 +282,16 @@ class TurnSystem {
             
             console.log(`❌ ${team.name} errou`);
             
+            // RESTAURAR assignedPlayers
+            team.assignedPlayers = preservedAssignedPlayers;
+            
             // Forçar atualização visual
             if (typeof updateTeamsDisplay === 'function') {
                 updateTeamsDisplay();
-                setTimeout(() => updateTeamsDisplay(), 100);
+                setTimeout(() => {
+                    team.assignedPlayers = preservedAssignedPlayers;
+                    updateTeamsDisplay();
+                }, 100);
             }
         }
 
@@ -315,9 +334,11 @@ class TurnSystem {
             return;
         }
 
-        // NÃO rodar equipe aqui - deixar GameCoordinator fazer isso
-        // Apenas manter a equipe atual
-        await this.setCurrentTurn(window.currentTeamIndex);
+        // IMPORTANTE: Não chamar setCurrentTurn aqui!
+        // O GameCoordinator já fez o rodízio (se necessário) ANTES de chamar esta função
+        // Se chamarmos setCurrentTurn aqui, vamos SOBRESCREVER o rodízio
+        
+        // Apenas transmitir a pergunta
         await this.broadcastQuestionChange();
     }
 

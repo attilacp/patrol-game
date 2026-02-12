@@ -358,9 +358,31 @@ if (!window.NotesSystem) {
     };
 }
 
-// Inicializar sistema
+// Inicializar sistema APÓS DOM carregar
 if (!window.notesSystem && window.NotesSystem) {
-    window.notesSystem = new window.NotesSystem();
+    // Aguardar DOM estar pronto
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20;
+    
+    const initNotes = () => {
+        attempts++;
+        const modal = document.getElementById('notes-modal');
+        const tabs = document.getElementById('notes-tabs');
+        const content = document.getElementById('notes-content');
+        
+        if (modal && tabs && content) {
+            console.log('✅ DOM pronto, inicializando notes...');
+            window.notesSystem = new window.NotesSystem();
+        } else if (attempts < MAX_ATTEMPTS) {
+            console.log(`⏳ Aguardando DOM do modal... (tentativa ${attempts}/${MAX_ATTEMPTS})`);
+            setTimeout(initNotes, 500);
+        } else {
+            console.error('❌ Modal de notas não encontrado após 20 tentativas');
+        }
+    };
+    
+    // Aguardar 2 segundos antes da primeira tentativa
+    setTimeout(initNotes, 2000);
 }
 
 if (!window.notesInitialized) {
