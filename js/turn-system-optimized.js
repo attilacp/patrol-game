@@ -131,9 +131,23 @@ class TurnSystem {
     }
 
     canPlayerAnswer() {
+        console.log('🔍 Verificando se pode responder:');
+        console.log('  - É mestre?', this.roomSystem.isMaster);
+        console.log('  - currentTurn:', this.currentTurn);
+        console.log('  - playerTeamId:', this.playerTeamId);
+        
         if (this.roomSystem.isMaster) return true;
-        if (!this.currentTurn || !this.playerTeamId) return false;
-        return this.currentTurn.teamId === this.playerTeamId;
+        if (!this.currentTurn || !this.playerTeamId) {
+            console.log('  ❌ Faltam dados (currentTurn ou playerTeamId)');
+            return false;
+        }
+        
+        const canAnswer = this.currentTurn.teamId === this.playerTeamId;
+        console.log('  - Turn teamId:', this.currentTurn.teamId);
+        console.log('  - Player teamId:', this.playerTeamId);
+        console.log('  → Resultado:', canAnswer);
+        
+        return canAnswer;
     }
 
     async setCurrentTurn(teamIndex) {
@@ -322,6 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (window.roomSystem && !window.turnSystem) {
             window.turnSystem = new TurnSystem(window.roomSystem);
+            console.log('🔄 TurnSystem criado, configurando listeners...');
+            window.turnSystem.setupTurnListeners();
         }
     }, 1000);
 });

@@ -16,11 +16,13 @@ RoomSystem.prototype.syncGameDataFromFirebase = function(gameData) {
             id: team.id || index + 1,
             name: team.name || `Equipe ${index + 1}`,
             players: Array.isArray(team.players) ? team.players : [],
+            assignedPlayers: Array.isArray(team.assignedPlayers) ? team.assignedPlayers : [], // SINCRONIZAR
             score: team.score || 0,
             colorClass: team.colorClass || `team-bg-${(index % 10) + 1}`,
             turnColorClass: team.turnColorClass || `team-color-${(index % 10) + 1}`
         }));
         console.log('✅ Equipes sincronizadas:', window.teams.length);
+        console.log('📋 assignedPlayers:', window.teams.map(t => ({name: t.name, players: t.assignedPlayers})));
     }
     
     // Aplicar ordem do Firebase
@@ -38,10 +40,6 @@ RoomSystem.prototype.syncGameDataFromFirebase = function(gameData) {
 };
 
 RoomSystem.prototype.applyFirebaseOrder = function(orderData) {
-    if (!orderData) {
-        console.log('⏭️ Sem dados de ordem, usando ordem padrão');
-        return;
-    }
     console.log('🔄 Aplicando ordem do Firebase:', orderData.isRandom ? 'ALEATÓRIA' : 'NORMAL');
     
     if (orderData.isRandom && window.questions) {
