@@ -44,10 +44,95 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
     console.log('📥 Resposta de jogador recebida:', answerData.playerName, answerData.answer);
     
     if (this.isMaster) {
-        this.showNotification(`${answerData.playerName} respondeu: ${answerData.answer}`, 'info');
+        console.log('👑 Mestre processando resposta do jogador automaticamente...');
         
-        // Mestre pode processar resposta do jogador se quiser
-        // (implementação futura: mestre confirma resposta do jogador)
+        // PROCESSAR RESPOSTA AUTOMATICAMENTE
+        if (!window.questions || !window.questions[window.currentQuestionIndex]) {
+            console.error('❌ Nenhuma pergunta disponível');
+            return;
+        }
+        
+        const question = window.questions[window.currentQuestionIndex];
+        const gabarito = question?.gabarito ? question.gabarito.trim().toUpperCase() : '';
+        const normalizedGabarito = this.normalizeAnswer(gabarito);
+        const normalizedUserAnswer = this.normalizeAnswer(answerData.answer);
+        
+        const isCorrect = normalizedUserAnswer === normalizedGabarito;
+        let points = isCorrect ? 1 : 0;
+        
+        // Atualizar pontuação da equipe
+        if (window.teams && answerData.teamId >= 0 && window.teams[answerData.teamId]) {
+            const team = window.teams[answerData.teamId];
+            team.score += points;
+            
+            console.log(`📊 ${team.name}: ${team.score} pontos (+${points})`);
+            
+            // VERIFICAR SE ATINGIU 15 PONTOS
+            if (team.score >= 15) {
+                console.log(`🏆 ${team.name} atingiu 15 pontos - FIM DE JOGO!`);
+                window.winnerTeam = team;
+                
+                if (window.updateTeamsDisplay) {
+                    window.updateTeamsDisplay();
+                }
+                
+                // Atualizar no Firebase
+                this.updateTeamScore(answerData.teamId, team.score);
+                
+                // Mostrar mensagem de vitória
+                if (typeof showWinnerMessage === 'function') {
+                    showWinnerMessage();
+                }
+                
+                return;
+            }
+            
+            // REGRA DO RODÍZIO
+            if (!isCorrect) {
+                console.log(`❌ ${team.name} errou - RODANDO EQUIPE!`);
+                window.consecutiveCorrect = 0;
+                window.nextTeamRotation = true;
+                
+                // Salvar flag no Firebase
+                if (this.currentRoom) {
+                    firebase.database()
+                        .ref(`rooms/${this.currentRoom}/nextTeamRotation`)
+                        .set(true)
+                        .then(() => console.log('💾 Flag de rodízio salva'))
+                        .catch(err => console.error('❌ Erro ao salvar flag:', err));
+                }
+            } else {
+                window.consecutiveCorrect = (window.consecutiveCorrect || 0) + 1;
+                console.log(`✅ ${team.name} acertou! Consecutivos: ${window.consecutiveCorrect}`);
+                
+                if (window.consecutiveCorrect >= 5) {
+                    console.log(`🏆 ${team.name} com 5 acertos consecutivos - RODANDO EQUIPE!`);
+                    window.nextTeamRotation = true;
+                    window.consecutiveCorrect = 0;
+                    
+                    // Salvar flag no Firebase
+                    if (this.currentRoom) {
+                        firebase.database()
+                            .ref(`rooms/${this.currentRoom}/nextTeamRotation`)
+                            .set(true)
+                            .then(() => console.log('💾 Flag de rodízio salva (5 consecutivas)'))
+                            .catch(err => console.error('❌ Erro ao salvar flag:', err));
+                    }
+                }
+            }
+            
+            if (window.updateTeamsDisplay) {
+                window.updateTeamsDisplay();
+            }
+            
+            // Atualizar no Firebase
+            this.updateTeamScore(answerData.teamId, team.score);
+        }
+        
+        // Transmitir resultado para todos
+        this.broadcastAnswerResult(isCorrect, points, question, answerData);
+        
+        this.showNotification(`${answerData.playerName} ${isCorrect ? 'acertou' : 'errou'}!`, isCorrect ? 'success' : 'error');
     }
 };
 
