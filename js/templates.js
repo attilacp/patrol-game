@@ -1,4 +1,4 @@
-// js/templates.js - VERSÃO CORRIGIDA
+// js/templates.js - VERSÃO FINAL CORRIGIDA
 console.log('📄 templates.js carregando...');
 
 const TEMPLATES = {
@@ -15,7 +15,7 @@ const TEMPLATES = {
                     <input type="password" id="login-password" placeholder="Sua senha" class="login-input">
                     <button id="login-btn" class="login-btn">🎮 Entrar</button>
                     <button id="signup-btn" class="signup-btn">📝 Criar Conta</button>
-                    <button id="reset-btn" class="reset-btn">🔑 Esqueci a senha</button>
+                    <button id="reset-btn" class="reset-btn">🔓 Esqueci a senha</button>
                 </div>
                 
                 <div class="login-options">
@@ -34,7 +34,8 @@ const TEMPLATES = {
     // TELA DE LOBBY
     lobby: `
         <div id="lobby-screen" class="screen">
-            <button id="back-to-lobby-login" class="back-to-lobby">← Voltar</button>
+            <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>
+            <button id="back-to-lobby-login" class="logout-btn-discrete">Logout</button>
             
             <h1>PATROL</h1>
             
@@ -42,9 +43,8 @@ const TEMPLATES = {
                 <h2>🎮 Sala de Jogo</h2>
                 
                 <div class="lobby-options">
-                    <!-- Criar Nova Sala -->
                     <div class="lobby-option">
-                        <h3>🏠 Criar Nova Partida</h3>
+                        <h3>🏁 Criar Nova Partida</h3>
                         <button id="create-room-btn" class="lobby-btn">
                             Criar como Mestre 👑
                         </button>
@@ -53,7 +53,6 @@ const TEMPLATES = {
                         </p>
                     </div>
                     
-                    <!-- Entrar em Sala Existente -->
                     <div class="lobby-option">
                         <h3>🔑 Entrar na Partida</h3>
                         <input type="text" id="room-code" placeholder="Digite o código" class="lobby-input" maxlength="6">
@@ -66,10 +65,9 @@ const TEMPLATES = {
                     </div>
                 </div>
                 
-                <!-- Código da Sala (quando mestre) -->
                 <div id="room-info" style="display: none;">
                     <h3>📋 Código da Sala: <span id="current-room-code">ABC123</span></h3>
-                    <p class="room-success">✓ Compartilhe este código com os jogadores</p>
+                    <p class="room-success">✔ Compartilhe este código com os jogadores</p>
                     <div id="players-list"></div>
                     <button id="start-game-btn-lobby" class="lobby-btn start-btn">
                         🚀 Ir para Configuração
@@ -82,10 +80,10 @@ const TEMPLATES = {
     // TELA DE CONFIGURAÇÃO
     config: `
         <div id="config-screen" class="screen">
-            <button id="back-to-lobby-config" class="back-to-lobby">← Voltar ao Lobby</button>
-            <button id="logout-btn" class="logout-btn">🚪 Sair</button>
+            <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>
+            <button id="logout-btn" class="logout-btn-discrete">Logout</button>
             
-            <h1>PATROL - Configuração do Mestre</h1>
+            <h1>PATROL</h1>
             
             <div class="config-main-area">
                 <div class="team-config">
@@ -104,7 +102,7 @@ const TEMPLATES = {
                     <div class="file-upload">
                         <h3>Perguntas</h3>
                         <input type="file" id="excel-file" accept=".xlsx, .xls">
-                        <div id="file-status">📄 Nenhum arquivo selecionado</div>
+                        <div id="file-status">📁 Nenhum arquivo selecionado</div>
                         <div id="file-error" class="error-message">⚠️ Carregue um arquivo de perguntas</div>
                         
                         <div class="checkbox-container">
@@ -159,9 +157,10 @@ const TEMPLATES = {
     // TELA DO JOGO
     game: `
         <div id="game-screen" class="screen">
-            <button id="back-to-lobby-game" class="back-to-lobby">← Sair da Partida</button>
+            <div class="room-code-header">Sala: <span id="room-code-display">------</span></div>
+            <button id="logout-btn-game" class="logout-btn-discrete">Logout</button>
             
-            <h1>PATROL <span id="game-status" class="game-status">● Conectado</span></h1>
+            <h1>PATROL</h1>
             
             <div class="question-main-area">
                 <div class="question-area">
@@ -172,6 +171,7 @@ const TEMPLATES = {
                         <div id="team-turn" class="team-turn">🎯 Aguardando início...</div>
                         <div class="question-header-buttons">
                             <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
+                            <button id="back-to-config-btn" class="config-btn">⚙️ Config</button>
                             <div id="master-controls" class="master-controls" style="display: none;">
                                 <button id="master-next-btn" class="config-btn">⏭️ Avançar</button>
                             </div>
@@ -271,7 +271,6 @@ function loadAllTemplates() {
         return;
     }
     
-    // CARREGAR TODAS AS TELAS DE UMA VEZ
     container.innerHTML = 
         TEMPLATES.login + 
         TEMPLATES.lobby + 
@@ -281,23 +280,20 @@ function loadAllTemplates() {
     
     console.log('✅ Todas as telas carregadas no DOM');
     
-    // Carregar modal de notas
     const modalContainer = document.getElementById('notes-modal-container');
     if (modalContainer) {
         modalContainer.innerHTML = TEMPLATES.notesModal;
         console.log('✅ Modal de notas carregado');
     }
     
-    // Verificar se as telas foram criadas
     const screens = document.querySelectorAll('.screen');
     console.log(`✅ ${screens.length} telas encontradas no DOM:`, 
         Array.from(screens).map(s => s.id));
     
-    // Disparar evento de templates carregados
+    // Disparar evento
     document.dispatchEvent(new CustomEvent('allTemplatesLoaded'));
 }
 
-// Exportar
 window.TEMPLATES = TEMPLATES;
 window.loadTemplate = loadTemplate;
 window.loadAllTemplates = loadAllTemplates;
