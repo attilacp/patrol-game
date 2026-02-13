@@ -266,12 +266,22 @@ class TurnSystem {
         if (resultData.isCorrect) {
             const oldScore = team.score || 0;
             
-            // MODO MULTIPLAYER: score já foi incrementado em room-master-answers.js
-            // Apenas atualizar contadores
+            // VERIFICAR SE PRECISA INCREMENTAR SCORE
+            // - MESTRE respondendo: SIM (não foi incrementado antes)
+            // - JOGADOR respondendo: NÃO (já foi incrementado em room-answer-sync.js)
+            const isMasterAnswer = !resultData.playerName || resultData.playerName === 'Mestre';
+            
+            if (this.roomSystem.isMaster && isMasterAnswer) {
+                // MESTRE respondendo: incrementar aqui
+                team.score = oldScore + 1;
+                console.log(`✅ ${team.name}: ${oldScore} → ${team.score} pontos (mestre respondeu)`);
+            } else {
+                // JOGADOR respondendo: já incrementado em room-answer-sync.js
+                console.log(`✅ ${team.name}: ${team.score} pontos (jogador respondeu - já incrementado)`);
+            }
+            
             team.questionsAnswered = (team.questionsAnswered || 0) + 1;
             team.questionsCorrect = (team.questionsCorrect || 0) + 1;
-            
-            console.log(`✅ ${team.name}: ${team.score} pontos (já atualizado pelo mestre)`);
             
             // VERIFICAR SE ATINGIU 15 PONTOS (FIM DE JOGO)
             if (team.score >= 15) {
