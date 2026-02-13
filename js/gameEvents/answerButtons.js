@@ -128,11 +128,19 @@ function setupSkipButton() {
             e.stopPropagation();
             console.log('⏭️ Botão PULAR clicado');
             
-            // TODOS podem pular
-            if (window.skipQuestion) {
-                window.skipQuestion();
-            } else if (window.nextQuestion) {
-                window.nextQuestion();
+            // Verificar se pode responder (equipe de plantão)
+            const canSkip = window.turnSystem ? window.turnSystem.canRespond() : true;
+            
+            if (canSkip || (window.roomSystem && window.roomSystem.isMaster)) {
+                // Equipe de plantão OU mestre podem pular
+                if (window.skipQuestion) {
+                    window.skipQuestion();
+                } else if (window.nextQuestion) {
+                    window.nextQuestion();
+                }
+            } else {
+                console.log('⏭️ Apenas a equipe de plantão pode pular');
+                alert('⏳ Apenas a equipe de plantão pode pular perguntas');
             }
         });
         
@@ -155,16 +163,13 @@ function setupNextButton() {
             e.stopPropagation();
             console.log('⏭️ Botão Próxima Pergunta clicado');
             
-            if (window.roomSystem && window.roomSystem.isMaster) {
-                if (window.nextQuestion) {
-                    window.nextQuestion();
-                }
-                
-                if (window.turnSystem) {
-                    window.turnSystem.advanceToNextQuestion();
-                }
-            } else {
-                console.log('⏭️ Jogador não pode avançar - apenas mestre');
+            // TODOS podem clicar em PRÓXIMA
+            if (window.nextQuestion) {
+                window.nextQuestion();
+            }
+            
+            if (window.turnSystem) {
+                window.turnSystem.advanceToNextQuestion();
             }
         });
         

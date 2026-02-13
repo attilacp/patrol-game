@@ -24,6 +24,26 @@ RoomSystem.prototype.processMasterAnswer = function(answer) {
         const team = window.teams[window.currentTeamIndex];
         team.score += points;
         
+        // VERIFICAR SE ATINGIU 15 PONTOS (FIM DE JOGO)
+        if (team.score >= 15) {
+            console.log(`🏆 ${team.name} atingiu 15 pontos - FIM DE JOGO!`);
+            window.winnerTeam = team;
+            
+            if (window.updateTeamsDisplay) {
+                window.updateTeamsDisplay();
+            }
+            
+            // Atualizar no Firebase ANTES de mostrar vitória
+            this.updateTeamScore(window.currentTeamIndex, team.score);
+            
+            // Mostrar mensagem de vitória
+            if (typeof showWinnerMessage === 'function') {
+                showWinnerMessage();
+            }
+            
+            return; // Parar processamento
+        }
+        
         // REGRA DO RODÍZIO: SE ERROU, RODAR EQUIPE
         if (!isCorrect) {
             console.log(`❌ ${team.name} errou - RODANDO EQUIPE!`);
