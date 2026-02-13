@@ -24,6 +24,25 @@ async function initializeApp() {
             loadAllTemplates();
         }
         
+        // 2.5. Aguardar templates estarem no DOM
+        console.log('⏳ Aguardando templates...');
+        await new Promise(resolve => {
+            if (document.getElementById('login-screen')) {
+                console.log('✅ Templates já carregados');
+                resolve();
+            } else {
+                document.addEventListener('allTemplatesLoaded', () => {
+                    console.log('✅ Templates carregados via evento');
+                    resolve();
+                });
+                // Timeout de segurança
+                setTimeout(() => {
+                    console.log('⚠️ Timeout de templates atingido');
+                    resolve();
+                }, 2000);
+            }
+        });
+        
         // 3. Esperar CSS carregar antes de scripts
         await new Promise(resolve => {
             if (document.readyState === 'complete') {

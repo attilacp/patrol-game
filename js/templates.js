@@ -283,8 +283,20 @@ function loadTemplate(templateName, containerId = 'main-container') {
 function loadAllTemplates() {
     console.log('📄 Carregando todas as telas...');
     
-    // Carregar tela de login inicialmente
-    loadTemplate('login');
+    const mainContainer = document.getElementById('main-container');
+    if (!mainContainer) {
+        console.error('❌ Container principal não encontrado');
+        return;
+    }
+    
+    // Carregar TODAS as telas de uma vez
+    mainContainer.innerHTML = TEMPLATES.login + 
+                              TEMPLATES.lobby + 
+                              TEMPLATES.config + 
+                              TEMPLATES.game + 
+                              TEMPLATES.podium;
+    
+    console.log('✅ Todas as telas carregadas no DOM');
     
     // Carregar modal de notas em container separado
     const modalContainer = document.getElementById('notes-modal-container');
@@ -292,6 +304,9 @@ function loadAllTemplates() {
         modalContainer.innerHTML = TEMPLATES.notesModal;
         console.log('✅ Modal de notas carregado');
     }
+    
+    // Disparar evento de templates carregados
+    document.dispatchEvent(new CustomEvent('allTemplatesLoaded'));
 }
 
 // Exportar
