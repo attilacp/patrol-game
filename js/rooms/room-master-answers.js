@@ -16,13 +16,19 @@ RoomSystem.prototype.processMasterAnswer = function(answer) {
     
     const isCorrect = normalizedUserAnswer === normalizedGabarito;
     
+    console.log(`🎯 MESTRE - Resposta: ${answer} | Gabarito: ${gabarito} | ${isCorrect ? 'CORRETO ✅' : 'ERRADO ❌'}`);
+    
     // PONTUAÇÃO FIXA: 1 ponto por acerto, 0 por erro
     let points = isCorrect ? 1 : 0;
     
     // Atualizar pontuação da equipe atual
     if (window.teams && window.teams[window.currentTeamIndex]) {
         const team = window.teams[window.currentTeamIndex];
+        const oldScore = team.score || 0;
         team.score += points;
+        
+        console.log(`📊 MESTRE - ${team.name}: ${oldScore} → ${team.score} pontos (+${points})`);
+        console.log(`📈 MESTRE - Consecutivos ANTES: ${window.consecutiveCorrect || 0}`);
         
         // VERIFICAR SE ATINGIU 15 PONTOS (FIM DE JOGO)
         if (team.score >= 15) {
@@ -63,13 +69,23 @@ RoomSystem.prototype.processMasterAnswer = function(answer) {
         } else {
             // Se acertou, incrementar consecutivos
             window.consecutiveCorrect = (window.consecutiveCorrect || 0) + 1;
-            console.log(`✅ ${team.name} acertou! Consecutivos: ${window.consecutiveCorrect}`);
+            console.log(`✅ MESTRE - ${team.name} acertou! Consecutivos DEPOIS: ${window.consecutiveCorrect}`);
             
             // Verificar se atingiu 5 acertos consecutivos para rodar equipe
             if (window.consecutiveCorrect >= 5) {
-                console.log(`🏆 ${team.name} com 5 acertos consecutivos - RODANDO EQUIPE!`);
+                console.log(`🏆 MESTRE - ${team.name} com 5 acertos consecutivos - RODANDO EQUIPE!`);
                 window.nextTeamRotation = true;
                 window.consecutiveCorrect = 0;
+                
+                // Salvar flag no Firebase
+                if (this.currentRoom) {
+                    firebase.database()
+                        .ref(`rooms/${this.currentRoom}/nextTeamRotation`)
+                        .set(true)
+                        .then(() => console.log('💾 MESTRE - Flag de rodízio salva (5 consecutivas)'))
+                        .catch(err => console.error('❌ Erro ao salvar flag:', err));
+                }
+                
                 this.showNotification(`🏆 ${team.name} com 5 acertos - Próxima equipe na próxima pergunta!`, 'success');
             }
         }
