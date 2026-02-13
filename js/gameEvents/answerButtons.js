@@ -128,20 +128,11 @@ function setupSkipButton() {
             e.stopPropagation();
             console.log('⏭️ Botão PULAR clicado');
             
-            if (window.roomSystem && window.roomSystem.isMaster) {
-                if (window.skipQuestion) {
-                    window.skipQuestion();
-                } else if (window.nextQuestion) {
-                    window.nextQuestion();
-                }
-            } else {
-                console.log('⏭️ Jogador não pode pular - apenas mestre');
-                if (window.roomSystem) {
-                    window.roomSystem.sendAction('skip_request', {
-                        playerName: window.roomSystem.playerName
-                    });
-                    alert('📨 Pedido de pular enviado ao mestre');
-                }
+            // TODOS podem pular
+            if (window.skipQuestion) {
+                window.skipQuestion();
+            } else if (window.nextQuestion) {
+                window.nextQuestion();
             }
         });
         
@@ -153,13 +144,6 @@ function setupSkipButton() {
 
 function setupNextButton() {
     console.log('➡️ Configurando botão PRÓXIMA...');
-    
-    // VERIFICAR SE GAME COORDINATOR JÁ ESTÁ ATIVO
-    if (window.gameCoordinator) {
-        console.log('🎯 GameCoordinator ativo - pulando configuração');
-        console.log('✅ Botão PRÓXIMA configurado');
-        return;
-    }
     
     const nextBtn = document.getElementById('next-question-btn');
     if (nextBtn) {

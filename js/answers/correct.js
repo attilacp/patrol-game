@@ -1,18 +1,12 @@
 // file name: answers/correct.js - VERSÃO ATUALIZADA
-
-// Inicializar contador de acertos consecutivos
-if (typeof window.consecutiveCorrect === 'undefined') {
-    window.consecutiveCorrect = 0;
-}
-
 function handleCorrectAnswer() {
     if (window.currentQuestionProcessed || window.winnerTeam) return;
     window.currentQuestionProcessed = true;
     
     var team = window.teams[window.currentTeamIndex];
     team.questionsAnswered = (team.questionsAnswered || 0) + 1;
-    // REMOVIDO: team.score += 1; (handleAnswerResult já incrementa)
-    window.consecutiveCorrect = (window.consecutiveCorrect || 0) + 1;
+    team.score += 1; // APENAS 1 PONTO
+    window.consecutiveCorrect++;
     
     console.log(team.name + ' acertou! Score: ' + team.score + ', Consecutivos: ' + window.consecutiveCorrect);
     
@@ -29,6 +23,15 @@ function handleCorrectAnswer() {
         console.log('🏆 5 acertos consecutivos - RODANDO EQUIPE');
         window.nextTeamRotation = true; // Marcar para rodar na próxima pergunta
         window.consecutiveCorrect = 0; // Zerar contador
+        
+        // SALVAR FLAG NO FIREBASE
+        if (window.roomSystem && window.roomSystem.currentRoom) {
+            firebase.database()
+                .ref(`rooms/${window.roomSystem.currentRoom}/nextTeamRotation`)
+                .set(true)
+                .then(() => console.log('💾 Flag de rodízio salva no Firebase'))
+                .catch(err => console.error('❌ Erro ao salvar flag:', err));
+        }
     }
     
     // VERIFICAR SE DEVE ATIVAR PB (3 acertos) - MAS SÓ SE HOUVER PB DISPONÍVEL
