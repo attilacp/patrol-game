@@ -45,6 +45,12 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
     
     if (this.isMaster) {
         console.log('👑 Mestre processando resposta do jogador automaticamente...');
+        console.log('📊 Dados da resposta:', {
+            teamId: answerData.teamId,
+            teamName: answerData.teamName,
+            playerName: answerData.playerName,
+            answer: answerData.answer
+        });
         
         // PROCESSAR RESPOSTA AUTOMATICAMENTE
         if (!window.questions || !window.questions[window.currentQuestionIndex]) {
@@ -60,12 +66,16 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
         const isCorrect = normalizedUserAnswer === normalizedGabarito;
         let points = isCorrect ? 1 : 0;
         
+        console.log(`🎯 Resposta: ${answerData.answer} | Gabarito: ${gabarito} | ${isCorrect ? 'CORRETO ✅' : 'ERRADO ❌'}`);
+        
         // Atualizar pontuação da equipe
         if (window.teams && answerData.teamId >= 0 && window.teams[answerData.teamId]) {
             const team = window.teams[answerData.teamId];
+            const oldScore = team.score || 0;
             team.score += points;
             
-            console.log(`📊 ${team.name}: ${team.score} pontos (+${points})`);
+            console.log(`📊 ${team.name}: ${oldScore} → ${team.score} pontos (+${points})`);
+            console.log(`📈 Consecutivos ANTES: ${window.consecutiveCorrect || 0}`);
             
             // VERIFICAR SE ATINGIU 15 PONTOS
             if (team.score >= 15) {
@@ -103,7 +113,7 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
                 }
             } else {
                 window.consecutiveCorrect = (window.consecutiveCorrect || 0) + 1;
-                console.log(`✅ ${team.name} acertou! Consecutivos: ${window.consecutiveCorrect}`);
+                console.log(`✅ ${team.name} acertou! Consecutivos DEPOIS: ${window.consecutiveCorrect}`);
                 
                 if (window.consecutiveCorrect >= 5) {
                     console.log(`🏆 ${team.name} com 5 acertos consecutivos - RODANDO EQUIPE!`);
@@ -127,6 +137,12 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
             
             // Atualizar no Firebase
             this.updateTeamScore(answerData.teamId, team.score);
+        } else {
+            console.error('❌ Equipe não encontrada!', {
+                teamId: answerData.teamId,
+                teamsLength: window.teams?.length,
+                teams: window.teams?.map(t => ({ id: t.id, name: t.name }))
+            });
         }
         
         // Transmitir resultado para todos

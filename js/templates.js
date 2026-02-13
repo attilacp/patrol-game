@@ -1,4 +1,4 @@
-// js/templates.js
+// js/templates.js - VERSÃO CORRIGIDA
 console.log('📄 templates.js carregando...');
 
 const TEMPLATES = {
@@ -15,7 +15,7 @@ const TEMPLATES = {
                     <input type="password" id="login-password" placeholder="Sua senha" class="login-input">
                     <button id="login-btn" class="login-btn">🎮 Entrar</button>
                     <button id="signup-btn" class="signup-btn">📝 Criar Conta</button>
-                    <button id="reset-btn" class="reset-btn">🔓 Esqueci a senha</button>
+                    <button id="reset-btn" class="reset-btn">🔑 Esqueci a senha</button>
                 </div>
                 
                 <div class="login-options">
@@ -44,7 +44,7 @@ const TEMPLATES = {
                 <div class="lobby-options">
                     <!-- Criar Nova Sala -->
                     <div class="lobby-option">
-                        <h3>🏁 Criar Nova Partida</h3>
+                        <h3>🏠 Criar Nova Partida</h3>
                         <button id="create-room-btn" class="lobby-btn">
                             Criar como Mestre 👑
                         </button>
@@ -69,7 +69,7 @@ const TEMPLATES = {
                 <!-- Código da Sala (quando mestre) -->
                 <div id="room-info" style="display: none;">
                     <h3>📋 Código da Sala: <span id="current-room-code">ABC123</span></h3>
-                    <p class="room-success">✔ Compartilhe este código com os jogadores</p>
+                    <p class="room-success">✓ Compartilhe este código com os jogadores</p>
                     <div id="players-list"></div>
                     <button id="start-game-btn-lobby" class="lobby-btn start-btn">
                         🚀 Ir para Configuração
@@ -104,7 +104,7 @@ const TEMPLATES = {
                     <div class="file-upload">
                         <h3>Perguntas</h3>
                         <input type="file" id="excel-file" accept=".xlsx, .xls">
-                        <div id="file-status">📁 Nenhum arquivo selecionado</div>
+                        <div id="file-status">📄 Nenhum arquivo selecionado</div>
                         <div id="file-error" class="error-message">⚠️ Carregue um arquivo de perguntas</div>
                         
                         <div class="checkbox-container">
@@ -194,28 +194,11 @@ const TEMPLATES = {
 
                 <div class="active-team-sidebar">
                     <div id="active-team-display"></div>
-                    <!-- Placar em tempo real -->
-                    <div id="live-scoreboard" class="live-scoreboard">
-                        <h4>🏆 Placar ao Vivo</h4>
-                        <div id="scoreboard-content"></div>
-                    </div>
                 </div>
             </div>
 
             <div class="teams-area">
                 <div id="teams-display"></div>
-            </div>
-            
-            <!-- Chat multiplayer -->
-            <div id="game-chat" class="game-chat" style="display: none;">
-                <div class="chat-container">
-                    <h4>💬 Chat da Partida</h4>
-                    <div id="chat-messages" class="chat-messages"></div>
-                    <div class="chat-input-container">
-                        <input type="text" id="chat-input" placeholder="Digite uma mensagem...">
-                        <button id="send-chat-btn">Enviar</button>
-                    </div>
-                </div>
             </div>
         </div>
     `,
@@ -272,7 +255,6 @@ function loadTemplate(templateName, containerId = 'main-container') {
     container.innerHTML = TEMPLATES[templateName];
     console.log(`✅ Template carregado: ${templateName}`);
     
-    // Disparar evento para notificar que o template foi carregado
     document.dispatchEvent(new CustomEvent('templateLoaded', {
         detail: { templateName }
     }));
@@ -283,27 +265,33 @@ function loadTemplate(templateName, containerId = 'main-container') {
 function loadAllTemplates() {
     console.log('📄 Carregando todas as telas...');
     
-    const mainContainer = document.getElementById('main-container');
-    if (!mainContainer) {
-        console.error('❌ Container principal não encontrado');
+    const container = document.getElementById('main-container');
+    if (!container) {
+        console.error('❌ main-container não encontrado!');
         return;
     }
     
-    // Carregar TODAS as telas de uma vez
-    mainContainer.innerHTML = TEMPLATES.login + 
-                              TEMPLATES.lobby + 
-                              TEMPLATES.config + 
-                              TEMPLATES.game + 
-                              TEMPLATES.podium;
+    // CARREGAR TODAS AS TELAS DE UMA VEZ
+    container.innerHTML = 
+        TEMPLATES.login + 
+        TEMPLATES.lobby + 
+        TEMPLATES.config + 
+        TEMPLATES.game + 
+        TEMPLATES.podium;
     
     console.log('✅ Todas as telas carregadas no DOM');
     
-    // Carregar modal de notas em container separado
+    // Carregar modal de notas
     const modalContainer = document.getElementById('notes-modal-container');
     if (modalContainer) {
         modalContainer.innerHTML = TEMPLATES.notesModal;
         console.log('✅ Modal de notas carregado');
     }
+    
+    // Verificar se as telas foram criadas
+    const screens = document.querySelectorAll('.screen');
+    console.log(`✅ ${screens.length} telas encontradas no DOM:`, 
+        Array.from(screens).map(s => s.id));
     
     // Disparar evento de templates carregados
     document.dispatchEvent(new CustomEvent('allTemplatesLoaded'));
