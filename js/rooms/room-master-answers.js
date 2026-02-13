@@ -50,6 +50,15 @@ RoomSystem.prototype.processMasterAnswer = function(answer) {
             window.consecutiveCorrect = 0;
             window.nextTeamRotation = true;
             
+            // SALVAR FLAG NO FIREBASE
+            if (this.currentRoom) {
+                firebase.database()
+                    .ref(`rooms/${this.currentRoom}/nextTeamRotation`)
+                    .set(true)
+                    .then(() => console.log('💾 Flag de rodízio salva no Firebase (erro)'))
+                    .catch(err => console.error('❌ Erro ao salvar flag:', err));
+            }
+            
             this.showNotification(`❌ ${team.name} errou - Próxima equipe na próxima pergunta!`, 'warning');
         } else {
             // Se acertou, incrementar consecutivos

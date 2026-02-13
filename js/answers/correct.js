@@ -5,7 +5,15 @@ function handleCorrectAnswer() {
     
     var team = window.teams[window.currentTeamIndex];
     team.questionsAnswered = (team.questionsAnswered || 0) + 1;
-    team.score += 1; // APENAS 1 PONTO
+    
+    // MODO MULTIPLAYER: não incrementar score aqui (já incrementa em room-master-answers.js)
+    if (window.roomSystem && window.roomSystem.currentRoom) {
+        console.log('🎮 Modo multiplayer - score gerenciado pelo sistema de salas');
+    } else {
+        // MODO SINGLE PLAYER: incrementar score normalmente
+        team.score += 1; // APENAS 1 PONTO
+    }
+    
     window.consecutiveCorrect++;
     
     console.log(team.name + ' acertou! Score: ' + team.score + ', Consecutivos: ' + window.consecutiveCorrect);
@@ -23,15 +31,6 @@ function handleCorrectAnswer() {
         console.log('🏆 5 acertos consecutivos - RODANDO EQUIPE');
         window.nextTeamRotation = true; // Marcar para rodar na próxima pergunta
         window.consecutiveCorrect = 0; // Zerar contador
-        
-        // SALVAR FLAG NO FIREBASE
-        if (window.roomSystem && window.roomSystem.currentRoom) {
-            firebase.database()
-                .ref(`rooms/${window.roomSystem.currentRoom}/nextTeamRotation`)
-                .set(true)
-                .then(() => console.log('💾 Flag de rodízio salva no Firebase'))
-                .catch(err => console.error('❌ Erro ao salvar flag:', err));
-        }
     }
     
     // VERIFICAR SE DEVE ATIVAR PB (3 acertos) - MAS SÓ SE HOUVER PB DISPONÍVEL

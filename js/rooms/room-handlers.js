@@ -4,6 +4,32 @@ console.log('🏠 rooms/room-handlers.js carregando...');
 RoomSystem.prototype.handleStatusChange = function(status) {
     console.log('📊 Status mudou:', status);
     
+    if (status === 'lobby' && !this.isMaster) {
+        // Jogador entrou e jogo ainda não começou
+        console.log('⏳ Jogador no lobby - aguardando mestre iniciar...');
+        
+        // Mostrar mensagem de espera
+        const questionText = document.getElementById('question-text');
+        if (questionText) {
+            questionText.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2>⏳ Aguardando o Mestre</h2>
+                    <p style="font-size: 18px; margin: 20px 0;">
+                        O jogo ainda não foi iniciado pelo mestre.
+                    </p>
+                    <p style="color: #666;">
+                        Aguarde enquanto o mestre configura a partida...
+                    </p>
+                    <div style="margin-top: 30px; font-size: 40px; animation: pulse 1.5s ease-in-out infinite;">
+                        🎮
+                    </div>
+                </div>
+            `;
+        }
+        
+        this.showNotification('⏳ Aguardando o mestre iniciar a partida...', 'info');
+    }
+    
     if (status === 'playing' && !this.isMaster) {
         console.log('🎮 MESTRE iniciou o jogo! Sincronizando automaticamente...');
         this.jogoIniciadoParaJogador = true;

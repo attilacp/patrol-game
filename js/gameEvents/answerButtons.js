@@ -129,7 +129,7 @@ function setupSkipButton() {
             console.log('⏭️ Botão PULAR clicado');
             
             // Verificar se pode responder (equipe de plantão)
-            const canSkip = window.turnSystem ? window.turnSystem.canRespond() : true;
+            const canSkip = window.turnSystem ? window.turnSystem.canPlayerAnswer() : true;
             
             if (canSkip || (window.roomSystem && window.roomSystem.isMaster)) {
                 // Equipe de plantão OU mestre podem pular
