@@ -6,7 +6,12 @@ function setupTeamTurnClickEvent() {
     
     const teamTurnElement = document.getElementById('team-turn');
     if (teamTurnElement) {
-        teamTurnElement.addEventListener('click', function() {
+        // REMOVER LISTENERS ANTIGOS para evitar duplicação
+        const newElement = teamTurnElement.cloneNode(true);
+        teamTurnElement.parentNode.replaceChild(newElement, teamTurnElement);
+        
+        const freshElement = document.getElementById('team-turn');
+        freshElement.addEventListener('click', function() {
             console.log('🔄 Retângulo da equipe de plantão clicado');
             
             // TODOS podem rodar equipe

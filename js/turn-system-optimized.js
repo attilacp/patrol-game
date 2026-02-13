@@ -188,6 +188,12 @@ class TurnSystem {
         if (!window.teams) return;
         window.currentTeamIndex = (window.currentTeamIndex + 1) % window.teams.length;
         console.log(`🔄 Rodando equipe: ${window.teams[window.currentTeamIndex].name}`);
+        
+        // SINCRONIZAR novo turno com Firebase
+        if (this.roomSystem?.isMaster && this.roomSystem?.currentRoom) {
+            this.setCurrentTurn(window.currentTeamIndex);
+        }
+        
         return window.currentTeamIndex;
     }
 
@@ -259,11 +265,31 @@ class TurnSystem {
         // Atualizar pontuação da equipe SE ACERTOU
         if (resultData.isCorrect) {
             const oldScore = team.score || 0;
-            team.score = oldScore + 1;
+            
+            // MODO MULTIPLAYER: score já foi incrementado em room-master-answers.js
+            // Apenas atualizar contadores
             team.questionsAnswered = (team.questionsAnswered || 0) + 1;
             team.questionsCorrect = (team.questionsCorrect || 0) + 1;
             
-            console.log(`✅ ${team.name}: ${oldScore} → ${team.score} pontos`);
+            console.log(`✅ ${team.name}: ${team.score} pontos (já atualizado pelo mestre)`);
+            
+            // VERIFICAR SE ATINGIU 15 PONTOS (FIM DE JOGO)
+            if (team.score >= 15) {
+                console.log(`🏆 ${team.name} atingiu ${team.score} pontos - FIM DE JOGO!`);
+                window.winnerTeam = team;
+                
+                // Atualizar display
+                if (typeof updateTeamsDisplay === 'function') {
+                    updateTeamsDisplay();
+                }
+                
+                // Mostrar mensagem de vitória
+                if (typeof showWinnerMessage === 'function') {
+                    showWinnerMessage();
+                }
+                
+                return; // Parar processamento
+            }
             
             // RESTAURAR assignedPlayers (que pode ter sido perdido)
             if (!team.assignedPlayers || team.assignedPlayers.length === 0) {
