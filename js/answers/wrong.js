@@ -21,6 +21,15 @@ function handleWrongAnswer() {
     window.pendingBombQuestion = false; // Cancelar qualquer PB pendente
     window.resetPendingBombButton?.(); // Resetar botão de PB
     
+    // SALVAR FLAG NO FIREBASE (modo multiplayer)
+    if (window.roomSystem && window.roomSystem.currentRoom) {
+        firebase.database()
+            .ref(`rooms/${window.roomSystem.currentRoom}/nextTeamRotation`)
+            .set(true)
+            .then(() => console.log('💾 FLAG de rodízio salva (erro)'))
+            .catch(err => console.error('❌ Erro ao salvar flag:', err));
+    }
+    
     // Chamar função de marcação de erro
     if (typeof markWrongAnswer === 'function') {
         markWrongAnswer();

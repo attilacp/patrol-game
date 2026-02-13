@@ -4,32 +4,6 @@ console.log('🏠 rooms/room-handlers.js carregando...');
 RoomSystem.prototype.handleStatusChange = function(status) {
     console.log('📊 Status mudou:', status);
     
-    if (status === 'lobby' && !this.isMaster) {
-        // Jogador entrou e jogo ainda não começou
-        console.log('⏳ Jogador no lobby - aguardando mestre iniciar...');
-        
-        // Mostrar mensagem de espera
-        const questionText = document.getElementById('question-text');
-        if (questionText) {
-            questionText.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <h2>⏳ Aguardando o Mestre</h2>
-                    <p style="font-size: 18px; margin: 20px 0;">
-                        O jogo ainda não foi iniciado pelo mestre.
-                    </p>
-                    <p style="color: #666;">
-                        Aguarde enquanto o mestre configura a partida...
-                    </p>
-                    <div style="margin-top: 30px; font-size: 40px; animation: pulse 1.5s ease-in-out infinite;">
-                        🎮
-                    </div>
-                </div>
-            `;
-        }
-        
-        this.showNotification('⏳ Aguardando o mestre iniciar a partida...', 'info');
-    }
-    
     if (status === 'playing' && !this.isMaster) {
         console.log('🎮 MESTRE iniciou o jogo! Sincronizando automaticamente...');
         this.jogoIniciadoParaJogador = true;
@@ -276,6 +250,59 @@ RoomSystem.prototype.setupRoomListeners = function() {
             }
         });
         this.roomListeners.push({ ref: roomRef.child('gameSync'), listener: gameSyncListener });
+        
+        // SINCRONIZAÇÃO DE SCORES DAS EQUIPES (todos os participantes)
+        const teamsListener = roomRef.child('teams').on('value', (snapshot) => {
+            const teamsData = snapshot.val();
+            if (teamsData && Array.isArray(teamsData) && window.teams) {
+                console.log('📊 Sincronizando scores das equipes...');
+                teamsData.forEach((teamData, index) => {
+                    if (window.teams[index] && teamData) {
+                        const oldScore = window.teams[index].score || 0;
+                        const newScore = teamData.score || 0;
+                        
+                        if (oldScore !== newScore) {
+                            console.log(`📊 ${teamData.name}: ${oldScore} → ${newScore} pontos`);
+                            window.teams[index].score = newScore;
+                        }
+                        
+                        // Sincronizar outros dados também
+                        if (teamData.questionsAnswered !== undefined) {
+                            window.teams[index].questionsAnswered = teamData.questionsAnswered;
+                        }
+                        if (teamData.questionsCorrect !== undefined) {
+                            window.teams[index].questionsCorrect = teamData.questionsCorrect;
+                        }
+                    }
+                });
+                
+                // Atualizar display
+                if (typeof updateTeamsDisplay === 'function') {
+                    updateTeamsDisplay();
+                }
+            }
+        });
+        this.roomListeners.push({ ref: roomRef.child('teams'), listener: teamsListener });
+        
+        // LISTENER PARA VITÓRIA (detectar quando alguma equipe vence)
+        const winnerListener = roomRef.child('winner').on('value', (snapshot) => {
+            const winnerData = snapshot.val();
+            if (winnerData && winnerData.teamName) {
+                console.log(`🏆 Equipe vencedora detectada: ${winnerData.teamName}`);
+                
+                // Encontrar equipe vencedora
+                const winnerTeam = window.teams?.find(t => t.name === winnerData.teamName);
+                if (winnerTeam) {
+                    window.winnerTeam = winnerTeam;
+                    
+                    // Mostrar mensagem de vitória
+                    if (typeof showWinnerMessage === 'function') {
+                        showWinnerMessage();
+                    }
+                }
+            }
+        });
+        this.roomListeners.push({ ref: roomRef.child('winner'), listener: winnerListener });
         
         // Respostas dos jogadores (apenas para mestre)
         if (this.isMaster) {

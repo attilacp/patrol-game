@@ -293,6 +293,20 @@ class TurnSystem {
                     updateTeamsDisplay();
                 }
                 
+                // SALVAR VENCEDOR NO FIREBASE
+                if (this.roomSystem && this.roomSystem.currentRoom) {
+                    firebase.database()
+                        .ref(`rooms/${this.roomSystem.currentRoom}/winner`)
+                        .set({
+                            teamName: team.name,
+                            teamId: team.id,
+                            score: team.score,
+                            timestamp: Date.now()
+                        })
+                        .then(() => console.log('🏆 Vencedor salvo no Firebase'))
+                        .catch(err => console.error('❌ Erro ao salvar vencedor:', err));
+                }
+                
                 // Mostrar mensagem de vitória
                 if (typeof showWinnerMessage === 'function') {
                     showWinnerMessage();

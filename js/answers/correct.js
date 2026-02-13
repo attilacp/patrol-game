@@ -31,6 +31,15 @@ function handleCorrectAnswer() {
         console.log('🏆 5 acertos consecutivos - RODANDO EQUIPE');
         window.nextTeamRotation = true; // Marcar para rodar na próxima pergunta
         window.consecutiveCorrect = 0; // Zerar contador
+        
+        // SALVAR FLAG NO FIREBASE (modo multiplayer)
+        if (window.roomSystem && window.roomSystem.currentRoom) {
+            firebase.database()
+                .ref(`rooms/${window.roomSystem.currentRoom}/nextTeamRotation`)
+                .set(true)
+                .then(() => console.log('💾 FLAG de rodízio salva (5 consecutivas)'))
+                .catch(err => console.error('❌ Erro ao salvar flag:', err));
+        }
     }
     
     // VERIFICAR SE DEVE ATIVAR PB (3 acertos) - MAS SÓ SE HOUVER PB DISPONÍVEL
