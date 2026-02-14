@@ -148,21 +148,21 @@ class TurnSystem {
     }
 
     canPlayerAnswer() {
-        console.log('🔍 Verificando se pode responder:');
-        console.log('  - É mestre?', this.roomSystem.isMaster);
-        console.log('  - currentTurn:', this.currentTurn);
-        console.log('  - playerTeamId:', this.playerTeamId);
+        // console.log('🔍 Verificando se pode responder:');
+        // console.log('  - É mestre?', this.roomSystem.isMaster);
+        // console.log('  - currentTurn:', this.currentTurn);
+        // console.log('  - playerTeamId:', this.playerTeamId);
         
         if (this.roomSystem.isMaster) return true;
         if (!this.currentTurn || !this.playerTeamId) {
-            console.log('  ❌ Faltam dados (currentTurn ou playerTeamId)');
+            // console.log('  ❌ Faltam dados (currentTurn ou playerTeamId)');
             return false;
         }
         
         const canAnswer = this.currentTurn.teamId === this.playerTeamId;
-        console.log('  - Turn teamId:', this.currentTurn.teamId);
-        console.log('  - Player teamId:', this.playerTeamId);
-        console.log('  → Resultado:', canAnswer);
+        // console.log('  - Turn teamId:', this.currentTurn.teamId);
+        // console.log('  - Player teamId:', this.playerTeamId);
+        // console.log('  → Resultado:', canAnswer);
         
         return canAnswer;
     }

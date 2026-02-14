@@ -69,7 +69,7 @@ function updateTeamsDisplay() {
         return;
     }
     
-    console.log('🔄 Atualizando display de equipes:', window.teams.length);
+    // console.log('🔄 Atualizando display de equipes:', window.teams.length);
     
     const teamsDisplay = document.getElementById('teams-display');
     const activeTeamDisplay = document.getElementById('active-team-display');
@@ -109,18 +109,6 @@ function createTeamCard(team, isActive) {
     
     // Verificar se há sistema de salas e buscar jogadores do Firebase
     if (window.roomSystem && window.roomSystem.currentRoom) {
-        // POPULAR assignedPlayers a partir do Firebase
-        if (!team.assignedPlayers || team.assignedPlayers.length === 0) {
-            team.assignedPlayers = [];
-            
-            // Buscar jogadores da sala
-            if (window.roomSystem.roomPlayers) {
-                const teamPlayers = Object.values(window.roomSystem.roomPlayers).filter(p => p.teamId === team.id);
-                team.assignedPlayers = teamPlayers.map(p => p.name);
-                console.log(`👥 Equipe ${team.name} tem ${team.assignedPlayers.length} jogadores:`, team.assignedPlayers);
-            }
-        }
-        
         // Usar dados locais se disponíveis
         if (team.assignedPlayers && Array.isArray(team.assignedPlayers) && team.assignedPlayers.length > 0) {
             playersHtml = team.assignedPlayers.map(playerName => {

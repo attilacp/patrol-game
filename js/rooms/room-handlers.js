@@ -255,13 +255,13 @@ RoomSystem.prototype.setupRoomListeners = function() {
         const teamsListener = roomRef.child('gameData/teams').on('value', (snapshot) => {
             const teamsData = snapshot.val();
             if (teamsData && Array.isArray(teamsData) && window.teams) {
-                console.log('📊 Sincronizando scores das equipes...');
                 teamsData.forEach((teamData, index) => {
                     if (window.teams[index] && teamData) {
                         const oldScore = window.teams[index].score || 0;
                         const newScore = teamData.score || 0;
                         
-                        if (oldScore !== newScore) {
+                        // NÃO sobrescrever se score local for MAIOR (evita race condition)
+                        if (newScore > oldScore) {
                             console.log(`📊 ${teamData.name}: ${oldScore} → ${newScore} pontos`);
                             window.teams[index].score = newScore;
                         }

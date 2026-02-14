@@ -85,7 +85,7 @@ function updateCurrentTeamDisplay() {
             teamTurn.className = 'team-turn ' + (team.turnColorClass || 'team-color-1');
         }
         
-        console.log('👥 Equipe atual: ' + team.name);
+        // console.log('👥 Equipe atual: ' + team.name);
     }
 }
 
@@ -122,7 +122,7 @@ function enableQuestionControls() {
     if (podiumBtn) podiumBtn.style.display = 'none';
     
     window.keyboardEnabled = true;
-    console.log('⌨️ Teclado habilitado');
+    // console.log('⌨️ Teclado habilitado');
 }
 
 // EXPORTAR FUNÇÕES GLOBALMENTE
