@@ -244,12 +244,12 @@ class TurnSystem {
         }
     }
 
-    handleAnswerResult(resultData) {
-        console.log('📊 ===== PROCESSANDO RESULTADO =====');
-        console.log('📊 Dados:', resultData);
-        console.log('📊 Equipe no resultado:', resultData.teamName);
-        console.log('📊 Equipe atual (index):', window.currentTeamIndex);
-        console.log('📊 Equipes disponíveis:', window.teams?.map(t => t.name));
+    async handleAnswerResult(resultData) {
+        // console.log('📊 ===== PROCESSANDO RESULTADO =====');
+        // console.log('📊 Dados:', resultData);
+        // console.log('📊 Equipe no resultado:', resultData.teamName);
+        // console.log('📊 Equipe atual (index):', window.currentTeamIndex);
+        // console.log('📊 Equipes disponíveis:', window.teams?.map(t => t.name));
         
         // ENCONTRAR EQUIPE PELO NOME (mais confiável que índice)
         const teamIndex = window.teams?.findIndex(t => t.name === resultData.teamName);
@@ -284,9 +284,9 @@ class TurnSystem {
             team.questionsAnswered = (team.questionsAnswered || 0) + 1;
             team.questionsCorrect = (team.questionsCorrect || 0) + 1;
             
-            // SALVAR EQUIPE NO FIREBASE (para sincronizar scores)
+            // SALVAR EQUIPE NO FIREBASE (para sincronizar scores) - AGUARDAR SALVAMENTO
             if (this.roomSystem && this.roomSystem.currentRoom && isMasterAnswer) {
-                firebase.database()
+                await firebase.database()
                     .ref(`rooms/${this.roomSystem.currentRoom}/gameData/teams/${teamIndex}`)
                     .set({
                         id: team.id,
@@ -389,7 +389,7 @@ class TurnSystem {
         const nextBtn = document.getElementById('next-question-btn');
         if (nextBtn) nextBtn.style.display = 'inline-block';
         
-        console.log('📊 ===== FIM PROCESSAMENTO =====');
+        // console.log('📊 ===== FIM PROCESSAMENTO =====');
     }
 
     async advanceToNextQuestion() {

@@ -62,7 +62,7 @@ RoomSystem.prototype.updateTurnUI = function(turnData) {
 };
 
 RoomSystem.prototype.handleQuestionFromFirebase = function(questionData) {
-    console.log('📚 Processando pergunta do Firebase:', questionData);
+    // console.log('📚 Processando pergunta do Firebase:', questionData);
     
     if (questionData.index !== undefined) {
         window.currentQuestionIndex = questionData.index;
@@ -145,7 +145,7 @@ RoomSystem.prototype.applyFirebaseOrder = async function() {
                 
                 if (reorderedQuestions.length === window.questions.length) {
                     window.questions = reorderedQuestions;
-                    console.log('✅ Perguntas reordenadas');
+                    // console.log('✅ Perguntas reordenadas');
                 }
             }
         }
@@ -221,7 +221,7 @@ RoomSystem.prototype.setupRoomListeners = function() {
         const questionListener = roomRef.child('currentQuestion').on('value', (snapshot) => {
             const questionData = snapshot.val();
             if (questionData) {
-                console.log('📚 Pergunta recebida:', questionData.index + 1);
+                // console.log('📚 Pergunta recebida:', questionData.index + 1);
                 this.handleQuestionFromFirebase(questionData);
             }
         });
@@ -260,8 +260,8 @@ RoomSystem.prototype.setupRoomListeners = function() {
                         const oldScore = window.teams[index].score || 0;
                         const newScore = teamData.score || 0;
                         
-                        // NÃO sobrescrever se score local for MAIOR (evita race condition)
-                        if (newScore > oldScore) {
+                        // SEMPRE sincronizar se scores forem diferentes (Firebase é fonte de verdade)
+                        if (newScore !== oldScore) {
                             console.log(`📊 ${teamData.name}: ${oldScore} → ${newScore} pontos`);
                             window.teams[index].score = newScore;
                         }
@@ -273,10 +273,10 @@ RoomSystem.prototype.setupRoomListeners = function() {
                         if (teamData.questionsCorrect !== undefined) {
                             window.teams[index].questionsCorrect = teamData.questionsCorrect;
                         }
-                        // SINCRONIZAR JOGADORES ATRIBUÍDOS (ERRO 3)
+                        // SINCRONIZAR JOGADORES ATRIBUÍDOS
                         if (teamData.assignedPlayers && Array.isArray(teamData.assignedPlayers)) {
                             window.teams[index].assignedPlayers = teamData.assignedPlayers;
-                            console.log(`👥 ${teamData.name}: ${teamData.assignedPlayers.length} jogadores sincronizados`);
+                            // console.log(`👥 ${teamData.name}: ${teamData.assignedPlayers.length} jogadores sincronizados`);
                         }
                     }
                 });
