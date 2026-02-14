@@ -252,9 +252,10 @@ class TurnSystem {
         console.log('📊 Equipes disponíveis:', window.teams?.map(t => t.name));
         
         // ENCONTRAR EQUIPE PELO NOME (mais confiável que índice)
-        const team = window.teams?.find(t => t.name === resultData.teamName);
+        const teamIndex = window.teams?.findIndex(t => t.name === resultData.teamName);
+        const team = window.teams[teamIndex];
         
-        if (!team) {
+        if (!team || teamIndex === -1) {
             console.error('❌ Equipe não encontrada:', resultData.teamName);
             return;
         }
@@ -286,7 +287,7 @@ class TurnSystem {
             // SALVAR EQUIPE NO FIREBASE (para sincronizar scores)
             if (this.roomSystem && this.roomSystem.currentRoom && isMasterAnswer) {
                 firebase.database()
-                    .ref(`rooms/${this.roomSystem.currentRoom}/teams/${team.id}`)
+                    .ref(`rooms/${this.roomSystem.currentRoom}/gameData/teams/${teamIndex}`)
                     .set({
                         id: team.id,
                         name: team.name,

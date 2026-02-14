@@ -242,7 +242,7 @@ RoomSystem.prototype.updateTeamScore = function(teamId, newScore) {
     
     // Salvar equipe completa no Firebase
     firebase.database()
-        .ref(`rooms/${this.currentRoom}/teams/${teamId}`)
+        .ref(`rooms/${this.currentRoom}/gameData/teams/${teamId}`)
         .set({
             id: team.id,
             name: team.name,

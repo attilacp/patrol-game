@@ -252,7 +252,7 @@ RoomSystem.prototype.setupRoomListeners = function() {
         this.roomListeners.push({ ref: roomRef.child('gameSync'), listener: gameSyncListener });
         
         // SINCRONIZAÇÃO DE SCORES DAS EQUIPES (todos os participantes)
-        const teamsListener = roomRef.child('teams').on('value', (snapshot) => {
+        const teamsListener = roomRef.child('gameData/teams').on('value', (snapshot) => {
             const teamsData = snapshot.val();
             if (teamsData && Array.isArray(teamsData) && window.teams) {
                 console.log('📊 Sincronizando scores das equipes...');
@@ -287,7 +287,7 @@ RoomSystem.prototype.setupRoomListeners = function() {
                 }
             }
         });
-        this.roomListeners.push({ ref: roomRef.child('teams'), listener: teamsListener });
+        this.roomListeners.push({ ref: roomRef.child('gameData/teams'), listener: teamsListener });
         
         // LISTENER PARA VITÓRIA (detectar quando alguma equipe vence)
         const winnerListener = roomRef.child('winner').on('value', (snapshot) => {
