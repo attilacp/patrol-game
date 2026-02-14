@@ -283,6 +283,25 @@ class TurnSystem {
             team.questionsAnswered = (team.questionsAnswered || 0) + 1;
             team.questionsCorrect = (team.questionsCorrect || 0) + 1;
             
+            // SALVAR EQUIPE NO FIREBASE (para sincronizar scores)
+            if (this.roomSystem && this.roomSystem.currentRoom && isMasterAnswer) {
+                firebase.database()
+                    .ref(`rooms/${this.roomSystem.currentRoom}/teams/${team.id}`)
+                    .set({
+                        id: team.id,
+                        name: team.name,
+                        score: team.score,
+                        questionsAnswered: team.questionsAnswered,
+                        questionsCorrect: team.questionsCorrect,
+                        questionsWrong: team.questionsWrong || 0,
+                        colorClass: team.colorClass || '',
+                        turnColorClass: team.turnColorClass || '',
+                        assignedPlayers: team.assignedPlayers || []
+                    })
+                    .then(() => console.log(`💾 ${team.name} sincronizada no Firebase`))
+                    .catch(err => console.error('❌ Erro ao sincronizar equipe:', err));
+            }
+            
             // VERIFICAR SE ATINGIU 15 PONTOS (FIM DE JOGO)
             if (team.score >= 15) {
                 console.log(`🏆 ${team.name} atingiu ${team.score} pontos - FIM DE JOGO!`);

@@ -89,6 +89,20 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
                 // Atualizar no Firebase
                 this.updateTeamScore(answerData.teamId, team.score);
                 
+                // SALVAR VENCEDOR NO FIREBASE
+                if (this.currentRoom) {
+                    firebase.database()
+                        .ref(`rooms/${this.currentRoom}/winner`)
+                        .set({
+                            teamName: team.name,
+                            teamId: answerData.teamId,
+                            score: team.score,
+                            timestamp: Date.now()
+                        })
+                        .then(() => console.log('🏆 Vencedor salvo no Firebase'))
+                        .catch(err => console.error('❌ Erro ao salvar vencedor:', err));
+                }
+                
                 // Mostrar mensagem de vitória
                 if (typeof showWinnerMessage === 'function') {
                     showWinnerMessage();
@@ -215,6 +229,33 @@ RoomSystem.prototype.syncAnswerResult = function(resultData) {
     if (resultData.teamName && resultData.playerName) {
         console.log(`📊 ${resultData.playerName} (${resultData.teamName}) ${resultData.isCorrect ? 'acertou' : 'errou'}`);
     }
+};
+
+// SALVAR EQUIPES NO FIREBASE
+RoomSystem.prototype.updateTeamScore = function(teamId, newScore) {
+    if (!this.currentRoom || !window.teams) return;
+    
+    const team = window.teams[teamId];
+    if (!team) return;
+    
+    console.log(`💾 Salvando equipe ${team.name} no Firebase...`);
+    
+    // Salvar equipe completa no Firebase
+    firebase.database()
+        .ref(`rooms/${this.currentRoom}/teams/${teamId}`)
+        .set({
+            id: team.id,
+            name: team.name,
+            score: newScore,
+            questionsAnswered: team.questionsAnswered || 0,
+            questionsCorrect: team.questionsCorrect || 0,
+            questionsWrong: team.questionsWrong || 0,
+            colorClass: team.colorClass || '',
+            turnColorClass: team.turnColorClass || '',
+            assignedPlayers: team.assignedPlayers || []
+        })
+        .then(() => console.log(`✅ Equipe ${team.name} salva no Firebase`))
+        .catch(err => console.error('❌ Erro ao salvar equipe:', err));
 };
 
 console.log('✅ room-answer-sync.js carregado');

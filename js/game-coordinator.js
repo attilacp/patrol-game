@@ -31,6 +31,13 @@ class GameCoordinator {
 
         this.processing = true;
         console.log('⏭️ Avançando para próxima pergunta...');
+        
+        // VERIFICAR SE HÁ VENCEDOR - BLOQUEAR AVANÇO
+        if (window.winnerTeam) {
+            console.log('🏆 Jogo já acabou! Não pode avançar.');
+            this.processing = false;
+            return;
+        }
 
         try {
             // SE É JOGADOR, transmitir sinal ao Firebase para mestre avançar

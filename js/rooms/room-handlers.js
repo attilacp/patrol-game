@@ -273,6 +273,11 @@ RoomSystem.prototype.setupRoomListeners = function() {
                         if (teamData.questionsCorrect !== undefined) {
                             window.teams[index].questionsCorrect = teamData.questionsCorrect;
                         }
+                        // SINCRONIZAR JOGADORES ATRIBUÍDOS (ERRO 3)
+                        if (teamData.assignedPlayers && Array.isArray(teamData.assignedPlayers)) {
+                            window.teams[index].assignedPlayers = teamData.assignedPlayers;
+                            console.log(`👥 ${teamData.name}: ${teamData.assignedPlayers.length} jogadores sincronizados`);
+                        }
                     }
                 });
                 
