@@ -68,19 +68,20 @@ RoomSystem.prototype.assignPlayerToTeam = function() {
             team.assignedPlayers.push(playerEmail);
             console.log(`✅ ${playerEmail} adicionado à equipe ${team.name}`);
             
-            // SALVAR NO FIREBASE
+            // SALVAR NO FIREBASE (apenas assignedPlayers, sem sobrescrever scores!)
             if (this.currentRoom) {
-                const teamRef = firebase.database().ref(`rooms/${this.currentRoom}/gameData/teams`);
-                teamRef.once('value', snapshot => {
-                    const teams = snapshot.val() || [];
-                    const teamIndex = teams.findIndex(t => t.id === targetTeamId);
-                    if (teamIndex >= 0) {
-                        teams[teamIndex].assignedPlayers = team.assignedPlayers;
-                        teamRef.set(teams).then(() => {
+                // Encontrar índice da equipe
+                const teamIndex = window.teams?.findIndex(t => t.id === targetTeamId);
+                if (teamIndex >= 0) {
+                    // Atualizar APENAS o campo assignedPlayers, não todo o objeto
+                    firebase.database()
+                        .ref(`rooms/${this.currentRoom}/gameData/teams/${teamIndex}/assignedPlayers`)
+                        .set(team.assignedPlayers)
+                        .then(() => {
                             console.log('💾 assignedPlayers salvo no Firebase');
-                        });
-                    }
-                });
+                        })
+                        .catch(err => console.error('❌ Erro ao salvar assignedPlayers:', err));
+                }
             }
             
             // Atualizar display

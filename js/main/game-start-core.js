@@ -67,16 +67,29 @@ if (typeof window.startGame !== 'function') {
         
         console.log('👥 Equipes coletadas:', window.teams.length);
         
-        // 3. SALVAR NO FIREBASE (PERGUNTAS COM RECORRÊNCIA)
+        // 3. COLETAR CONFIGURAÇÕES E SALVAR NO FIREBASE
+        const randomOrderCheckbox = document.getElementById('random-order');
+        const questionOrder = randomOrderCheckbox?.checked ? 'ALEATÓRIA' : 'SEQUENCIAL';
+        window.randomOrder = randomOrderCheckbox?.checked || false;
+        
         if (window.roomSystem && window.roomSystem.isMaster && window.roomSystem.currentRoom) {
-            await saveGameToFirebase();
+            // Preparar dados para o Firebase
+            const gameData = {
+                roomCode: window.roomSystem.currentRoom,
+                questions: window.questions,
+                teams: window.teams,
+                hasRecurrence: window.subjects ? Object.values(window.subjects).some(s => s.recurrence > 1) : false,
+                originalCount: window.subjects ? Object.values(window.subjects).reduce((sum, s) => sum + (s.enabled ? s.questions.length : 0), 0) : 0,
+                questionSourceMap: window.questions.map(q => q.uniqueId || ''),
+                questionOrder: questionOrder
+            };
+            
+            await saveGameToFirebase(gameData);
         } else {
             console.log('⚠️ Mestre sem sala ativa - iniciando localmente');
         }
         
         // 4. CONFIGURAÇÕES LOCAIS
-        const randomOrderCheckbox = document.getElementById('random-order');
-        window.randomOrder = randomOrderCheckbox?.checked || false;
         
         window.currentQuestionIndex = 0;
         window.currentTeamIndex = 0;
