@@ -1,111 +1,94 @@
-// js/main/game-start-firebase.js - SALVAR NO FIREBASE
+// js/main/game-start-firebase.js - Salvamento no Firebase
 console.log('🚀 game-start-firebase.js carregando...');
 
-async function saveGameToFirebase() {
-    try {
-        const roomCode = window.roomSystem.currentRoom;
-        console.log('💾 SALVANDO NO FIREBASE - Sala:', roomCode);
-        
-        const roomRef = firebase.database().ref('rooms/' + roomCode);
-        
-        // Status
-        await roomRef.child('status').set('playing');
-        console.log('✅ Status: playing');
-        
-        // SALVAR PERGUNTAS COM RECORRÊNCIA
-        console.log('💾 Salvando perguntas (com recorrência):', window.questions.length);
-        await roomRef.child('gameData/questions').set(window.questions);
-        
-        // SALVAR EQUIPES
-        console.log('💾 Salvando equipes:', window.teams.length);
-        await roomRef.child('gameData/teams').set(window.teams);
-        
-        // SALVAR METADADOS DE RECORRÊNCIA
-        const recurrenceInfo = {};
-        if (window.subjects) {
-            Object.values(window.subjects).forEach(subject => {
-                if (subject.enabled) {
-                    recurrenceInfo[subject.name] = {
-                        recurrence: subject.recurrence,
-                        originalCount: subject.questions.length,
-                        finalCount: subject.recurrence === 'baixa' ? subject.questions.length :
-                                   subject.recurrence === 'media' ? subject.questions.length * 2 :
-                                   subject.questions.length * 3
-                    };
-                }
-            });
-        }
-        
-        await roomRef.child('gameData/recurrenceInfo').set(recurrenceInfo);
+async function saveGameToFirebase(gameData) {
+    console.log('💾 SALVANDO NO FIREBASE - Sala:', gameData.roomCode);
+    
+    const roomRef = firebase.database().ref('rooms/' + gameData.roomCode);
+    
+    // 1. Status
+    await roomRef.child('status').set('playing');
+    console.log('✅ Status: playing');
+    
+    // 2. Perguntas
+    console.log('💾 Salvando perguntas (com recorrência):', gameData.questions.length);
+    await roomRef.child('gameData/questions').set(gameData.questions);
+    
+    // 3. Equipes
+    console.log('💾 Salvando equipes:', gameData.teams.length);
+    await roomRef.child('gameData/teams').set(gameData.teams);
+    
+    // 4. Dados de recorrência
+    if (gameData.hasRecurrence) {
+        const recurrenceData = {
+            enabled: true,
+            originalCount: gameData.originalCount,
+            totalWithRecurrence: gameData.questions.length,
+            questionSourceMap: gameData.questionSourceMap
+        };
+        await roomRef.child('gameData/recurrence').set(recurrenceData);
         console.log('✅ Metadados de recorrência salvos');
-        
-        // ORDEM
-        const randomOrderCheckbox = document.getElementById('random-order');
-        const isRandomOrder = randomOrderCheckbox?.checked || false;
-        
-        const orderData = {
-            teams: window.teams.map(t => t.id),
-            questions: window.questions.map((q, i) => i),
-            isRandom: isRandomOrder,
-            timestamp: Date.now()
-        };
-        
-        if (isRandomOrder && typeof shuffleArray === 'function') {
-            const shuffledQuestions = [...window.questions];
-            shuffleArray(shuffledQuestions);
-            orderData.questions = shuffledQuestions.map((q, i) => i);
-            window.questions = shuffledQuestions;
-            
-            const shuffledTeams = [...window.teams];
-            shuffleArray(shuffledTeams);
-            orderData.teams = shuffledTeams.map(t => t.id);
-            window.teams = shuffledTeams;
-            
-            console.log('✅ Ordem aleatória aplicada');
-        }
-        
-        await roomRef.child('gameData/order').set(orderData);
-        console.log('✅ Ordem salva no Firebase');
-        
-        // ESTADO DO JOGO
-        const gameState = {
-            startedAt: Date.now(),
-            currentQuestionIndex: 0,
-            currentTeamIndex: 0,
-            mestre: window.roomSystem.playerName,
-            roomCode: roomCode,
-            totalQuestions: window.questions.length,
-            totalTeams: window.teams.length,
-            recurrenceApplied: true
-        };
-        await roomRef.child('gameState').set(gameState);
-        console.log('✅ Estado do jogo salvo');
-        
-        // VERIFICAÇÃO
-        setTimeout(async () => {
-            try {
-                const verifyQuestions = await roomRef.child('gameData/questions').once('value');
-                const verifyTeams = await roomRef.child('gameData/teams').once('value');
-                
-                console.log('🔍 VERIFICAÇÃO FINAL:');
-                console.log('- Perguntas no Firebase:', verifyQuestions.exists() ? verifyQuestions.val().length : 'NÃO');
-                console.log('- Equipes no Firebase:', verifyTeams.exists() ? verifyTeams.val().length : 'NÃO');
-                
-                if (verifyQuestions.exists()) {
-                    const firebaseQuestions = verifyQuestions.val();
-                    console.log('- Primeira pergunta no Firebase:', firebaseQuestions[0]?.enunciado?.substring(0, 50) + '...');
-                }
-            } catch (verifyError) {
-                console.error('❌ Erro na verificação:', verifyError);
-            }
-        }, 1000);
-        
-    } catch (error) {
-        console.error('❌ ERRO Firebase:', error);
-        alert('❌ Erro ao salvar: ' + error.message);
-        throw error;
     }
+    
+    // 5. Ordem das perguntas
+    let orderData = {
+        type: gameData.questionOrder,
+        timestamp: Date.now()
+    };
+    
+    if (gameData.questionOrder === 'ALEATÓRIA') {
+        const randomizedIndices = gameData.questions.map((_, index) => index);
+        for (let i = randomizedIndices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [randomizedIndices[i], randomizedIndices[j]] = [randomizedIndices[j], randomizedIndices[i]];
+        }
+        orderData.indices = randomizedIndices;
+        
+        const reorderedQuestions = randomizedIndices.map(i => gameData.questions[i]);
+        await roomRef.child('gameData/questions').set(reorderedQuestions);
+        console.log('✅ Ordem aleatória aplicada');
+    }
+    
+    await roomRef.child('gameData/questionOrder').set(orderData);
+    console.log('✅ Ordem salva no Firebase');
+    
+    // 6. Estado inicial do jogo
+    const gameState = {
+        currentQuestionIndex: 0,
+        gameStarted: true,
+        timestamp: Date.now()
+    };
+    
+    await roomRef.child('gameState').set(gameState);
+    console.log('✅ Estado do jogo salvo');
+    
+    // 7. Verificação final
+    try {
+        console.log('🔍 VERIFICAÇÃO FINAL:');
+        const firebaseQuestions = (await roomRef.child('gameData/questions').once('value')).val();
+        const firebaseTeams = (await roomRef.child('gameData/teams').once('value')).val();
+        
+        console.log('- Perguntas no Firebase:', firebaseQuestions?.length || 0);
+        console.log('- Equipes no Firebase:', firebaseTeams?.length || 0);
+        
+        // Verificação segura da primeira pergunta
+        if (firebaseQuestions && firebaseQuestions[0]) {
+            try {
+                const firstQ = firebaseQuestions[0].enunciado || firebaseQuestions[0].pergunta || '';
+                const preview = typeof firstQ === 'string' ? firstQ.substring(0, 50) + '...' : 'Pergunta sem texto';
+                console.log('- Primeira pergunta no Firebase:', preview);
+            } catch (e) {
+                console.log('- Primeira pergunta salva com sucesso');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro na verificação:', error);
+    }
+    
+    return true;
 }
 
+// Exportar
 window.saveGameToFirebase = saveGameToFirebase;
+
 console.log('✅ game-start-firebase.js carregado');

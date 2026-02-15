@@ -68,9 +68,12 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
         
         console.log(`🎯 Resposta: ${answerData.answer} | Gabarito: ${gabarito} | ${isCorrect ? 'CORRETO ✅' : 'ERRADO ❌'}`);
         
+        // ENCONTRAR ÍNDICE DA EQUIPE PELO ID (teamId != teamIndex!)
+        const teamIndex = window.teams?.findIndex(t => t.id === answerData.teamId);
+        
         // Atualizar pontuação da equipe
-        if (window.teams && answerData.teamId >= 0 && window.teams[answerData.teamId]) {
-            const team = window.teams[answerData.teamId];
+        if (window.teams && teamIndex >= 0 && window.teams[teamIndex]) {
+            const team = window.teams[teamIndex];
             const oldScore = team.score || 0;
             team.score += points;
             
@@ -86,8 +89,8 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
                     window.updateTeamsDisplay();
                 }
                 
-                // Atualizar no Firebase
-                this.updateTeamScore(answerData.teamId, team.score);
+                // Atualizar no Firebase (passar teamINDEX, não teamID)
+                this.updateTeamScore(teamIndex, team.score);
                 
                 // SALVAR VENCEDOR NO FIREBASE
                 if (this.currentRoom) {
@@ -149,8 +152,8 @@ RoomSystem.prototype.handlePlayerAnswer = function(answerData) {
                 window.updateTeamsDisplay();
             }
             
-            // Atualizar no Firebase
-            this.updateTeamScore(answerData.teamId, team.score);
+            // Atualizar no Firebase (passar teamINDEX, não teamID)
+            this.updateTeamScore(teamIndex, team.score);
         } else {
             console.error('❌ Equipe não encontrada!', {
                 teamId: answerData.teamId,
@@ -232,17 +235,22 @@ RoomSystem.prototype.syncAnswerResult = function(resultData) {
 };
 
 // SALVAR EQUIPES NO FIREBASE
-RoomSystem.prototype.updateTeamScore = function(teamId, newScore) {
+// Atualizar score da equipe no Firebase
+// IMPORTANTE: Recebe teamINDEX (0, 1, 2...), NÃO teamID (1, 2, 3...)!
+RoomSystem.prototype.updateTeamScore = function(teamIndex, newScore) {
     if (!this.currentRoom || !window.teams) return;
     
-    const team = window.teams[teamId];
+    const team = window.teams[teamIndex];
     if (!team) return;
     
     console.log(`💾 Salvando equipe ${team.name} no Firebase...`);
     
+    // Marcar timestamp para proteção do listener
+    window._lastScoreSave = Date.now();
+    
     // Salvar equipe completa no Firebase
     firebase.database()
-        .ref(`rooms/${this.currentRoom}/gameData/teams/${teamId}`)
+        .ref(`rooms/${this.currentRoom}/gameData/teams/${teamIndex}`)
         .set({
             id: team.id,
             name: team.name,

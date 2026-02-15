@@ -255,6 +255,12 @@ RoomSystem.prototype.setupRoomListeners = function() {
         const teamsListener = roomRef.child('gameData/teams').on('value', (snapshot) => {
             const teamsData = snapshot.val();
             if (teamsData && Array.isArray(teamsData) && window.teams) {
+                // PROTEÇÃO: Se mestre acabou de salvar, ignorar listener por 500ms
+                if (this.isMaster && window._lastScoreSave && (Date.now() - window._lastScoreSave) < 500) {
+                    console.log('⏭️ Mestre ignorando listener (salvamento recente)');
+                    return;
+                }
+                
                 teamsData.forEach((teamData, index) => {
                     if (window.teams[index] && teamData) {
                         const oldScore = window.teams[index].score || 0;

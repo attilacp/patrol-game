@@ -286,6 +286,9 @@ class TurnSystem {
             
             // SALVAR EQUIPE NO FIREBASE (para sincronizar scores) - AGUARDAR SALVAMENTO
             if (this.roomSystem && this.roomSystem.currentRoom && isMasterAnswer) {
+                // Marcar timestamp para proteção do listener
+                window._lastScoreSave = Date.now();
+                
                 await firebase.database()
                     .ref(`rooms/${this.roomSystem.currentRoom}/gameData/teams/${teamIndex}`)
                     .set({
