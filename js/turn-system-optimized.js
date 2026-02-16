@@ -243,6 +243,12 @@ class TurnSystem {
     handleQuestionChange(questionData) {
         console.log('📚 Nova pergunta:', questionData.index + 1);
         
+        // LOG DO PLACAR ATUAL
+        if (window.teams && window.teams.length > 0) {
+            const placar = window.teams.map(t => `${t.name}: ${t.score || 0}`).join(' | ');
+            console.log(`📊 PLACAR: ${placar}`);
+        }
+        
         window.currentQuestionIndex = questionData.index || 0;
         window.currentQuestionProcessed = false;
         
@@ -315,7 +321,13 @@ class TurnSystem {
                         turnColorClass: team.turnColorClass || '',
                         assignedPlayers: team.assignedPlayers || []
                     })
-                    .then(() => console.log(`💾 ${team.name} sincronizada no Firebase`))
+                    .then(() => {
+                        console.log(`💾 ${team.name} sincronizada no Firebase`);
+                        // ATUALIZAR DISPLAY LOCALMENTE NO MESTRE
+                        if (typeof updateTeamsDisplay === 'function') {
+                            updateTeamsDisplay();
+                        }
+                    })
                     .catch(err => console.error('❌ Erro ao sincronizar equipe:', err));
             }
             

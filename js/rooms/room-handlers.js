@@ -4,6 +4,12 @@ console.log('🏠 rooms/room-handlers.js carregando...');
 RoomSystem.prototype.handleStatusChange = function(status) {
     console.log('📊 Status mudou:', status);
     
+    // Notificação para jogador que entrou em sala lobby
+    if (status === 'lobby' && !this.isMaster && !this.lobbyNotificationShown) {
+        this.lobbyNotificationShown = true;
+        this.showNotification('⏳ Você entrou na sala! Aguarde o mestre iniciar o jogo.', 'info');
+    }
+    
     if (status === 'playing' && !this.isMaster) {
         console.log('🎮 MESTRE iniciou o jogo! Sincronizando automaticamente...');
         this.jogoIniciadoParaJogador = true;
