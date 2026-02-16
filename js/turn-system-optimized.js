@@ -9,6 +9,7 @@ class TurnSystem {
         this.playerTeamId = null;
         this.teamAssigned = false;
         this.listenersConfigured = false; // Prevenir configuração duplicada
+        this.configuredRoom = null; // Sala para qual listeners foram configurados
     }
 
     async submitAnswer(answer) {
@@ -92,14 +93,26 @@ class TurnSystem {
             return;
         }
 
-        // Prevenir configuração duplicada
-        if (this.listenersConfigured) {
-            console.log('✅ Listeners já configurados');
+        const room = this.roomSystem.currentRoom;
+        
+        // Verificar se sala mudou - se sim, limpar listeners antigos
+        if (this.listenersConfigured && this.configuredRoom !== room) {
+            console.log(`🔄 Sala mudou de ${this.configuredRoom} para ${room}, reconfigurando listeners...`);
+            this.listenersConfigured = false;
+            this.teamAssigned = false;  // Resetar atribuição de equipe
+            this.playerTeamId = null;
+            this.playerTeam = null;
+            // Listeners serão automaticamente substituídos pelo Firebase
+        }
+        
+        // Prevenir configuração duplicada para a MESMA sala
+        if (this.listenersConfigured && this.configuredRoom === room) {
+            console.log('✅ Listeners já configurados para esta sala');
             return;
         }
 
-        const room = this.roomSystem.currentRoom;
         console.log('🔄 Configurando listeners para sala:', room);
+        this.configuredRoom = room;  // Guardar sala configurada
         
         firebase.database().ref(`rooms/${room}/currentTurn`).on('value', snap => {
             if (snap.val()) {
