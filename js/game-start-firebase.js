@@ -1,4 +1,4 @@
-// js/main/game-start-firebase.js - Salvamento no Firebase
+// js/game-start-firebase.js - Salvamento no Firebase
 console.log('🚀 game-start-firebase.js carregando...');
 
 async function saveGameToFirebase(gameData) {

@@ -1,4 +1,4 @@
-// js/main/game-start-core.js - FUNÇÃO PRINCIPAL STARTGAME
+// js/game-start-core.js - FUNÇÃO PRINCIPAL STARTGAME
 console.log('🚀 game-start-core.js carregando...');
 
 if (typeof window.startGame !== 'function') {
