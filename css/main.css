@@ -1,0 +1,509 @@
+ARQUIVO: main.css
+LOCALIZAÇÃO: css/main.css
+===============================================
+
+/* PATROL - CSS Consolidado e Otimizado */
+
+/* ========== VARIÁVEIS ========== */
+:root {
+    --color-primary: #003366;
+    --color-secondary: #FFCC00;
+    --color-success: #28a745;
+    --color-error: #dc3545;
+    --color-warning: #ffc107;
+    --color-info: #007bff;
+    --color-bg: #f5f5f5;
+    --color-text: #333;
+    --border-radius: 8px;
+    --transition: 0.3s ease;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== RESET & BASE ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--color-primary) 0%, #001a33 100%);
+    color: var(--color-text);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: var(--color-secondary);
+    font-size: 3em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 30px;
+}
+
+/* ========== SCREENS ========== */
+.screen {
+    display: none;
+    animation: fadeIn 0.5s;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== BUTTONS ========== */
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========== INPUTS ========== */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="file"],
+textarea {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 1em;
+    transition: var(--transition);
+    width: 100%;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* ========== LOGIN SCREEN ========== */
+.login-container {
+    background: white;
+    padding: 40px;
+    border-radius: var(--border-radius);
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: var(--shadow);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.login-btn, .signup-btn {
+    background: var(--color-primary);
+    color: white;
+}
+
+.google-btn {
+    background: white;
+    color: var(--color-text);
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.google-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.login-error {
+    color: var(--color-error);
+    padding: 10px;
+    background: #ffebee;
+    border-radius: var(--border-radius);
+    display: none;
+}
+
+/* ========== LOBBY SCREEN ========== */
+.lobby-container {
+    background: white;
+    padding: 40px;
+    border-radius: var(--border-radius);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.lobby-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.lobby-option {
+    text-align: center;
+    padding: 30px;
+    background: var(--color-bg);
+    border-radius: var(--border-radius);
+}
+
+.lobby-btn {
+    background: var(--color-secondary);
+    color: var(--color-primary);
+    width: 100%;
+    margin-top: 15px;
+}
+
+/* ========== CONFIG SCREEN ========== */
+.config-main-area {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.team-config, .file-upload-container {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+}
+
+.team-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.remove-team {
+    background: var(--color-error);
+    color: white;
+    padding: 10px 15px;
+}
+
+.subjects-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 2px solid #ddd;
+    border-radius: var(--border-radius);
+    padding: 15px;
+}
+
+.subject-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: var(--color-bg);
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+}
+
+.subject-checkbox {
+    width: 20px;
+    height: 20px;
+}
+
+.start-game-btn {
+    background: var(--color-success);
+    color: white;
+    width: 100%;
+    padding: 20px;
+    font-size: 1.2em;
+    margin-top: 20px;
+}
+
+/* ========== GAME SCREEN ========== */
+.question-main-area {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.question-area {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+}
+
+#question-text {
+    font-size: 1.4em;
+    line-height: 1.8;
+    padding: 30px;
+    background: var(--color-bg);
+    border-radius: var(--border-radius);
+    margin: 20px 0;
+    min-height: 200px;
+}
+
+.assunto-container {
+    background: var(--color-secondary);
+    color: var(--color-primary);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+}
+
+.answer-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+
+.certo-btn {
+    background: var(--color-success);
+    color: white;
+    padding: 20px 40px;
+    font-size: 1.2em;
+}
+
+.errado-btn {
+    background: var(--color-error);
+    color: white;
+    padding: 20px 40px;
+    font-size: 1.2em;
+}
+
+.skip-btn {
+    background: var(--color-warning);
+    color: white;
+}
+
+.team-turn {
+    background: var(--color-primary);
+    color: white;
+    padding: 15px 25px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+    cursor: pointer;
+}
+
+/* ========== TEAMS DISPLAY ========== */
+.teams-area {
+    margin-top: 30px;
+}
+
+#teams-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.team-card {
+    background: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    border: 3px solid transparent;
+}
+
+.team-card.active {
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+}
+
+.team-score {
+    font-size: 3em;
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+/* Cores das Equipes */
+.team-bg-1 { background-color: #ff6b6b !important; }
+.team-bg-2 { background-color: #4ecdc4 !important; }
+.team-bg-3 { background-color: #ffe66d !important; }
+.team-bg-4 { background-color: #4d96ff !important; }
+.team-bg-5 { background-color: #ff6bb5 !important; }
+.team-bg-6 { background-color: #00d9ff !important; }
+.team-bg-7 { background-color: #a64dff !important; }
+.team-bg-8 { background-color: #ff9a4d !important; }
+.team-bg-9 { background-color: #c92a2a !important; }
+.team-bg-10 { background-color: #2f9e44 !important; }
+
+.team-color-1 { background-color: #ff6b6b !important; }
+.team-color-2 { background-color: #4ecdc4 !important; }
+.team-color-3 { background-color: #ffe66d !important; }
+.team-color-4 { background-color: #4d96ff !important; }
+.team-color-5 { background-color: #ff6bb5 !important; }
+.team-color-6 { background-color: #00d9ff !important; }
+.team-color-7 { background-color: #a64dff !important; }
+.team-color-8 { background-color: #ff9a4d !important; }
+.team-color-9 { background-color: #c92a2a !important; }
+.team-color-10 { background-color: #2f9e44 !important; }
+
+/* ========== COMMENTARY ========== */
+#commentary {
+    background: #e3f2fd;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    border-left: 5px solid var(--color-info);
+    margin-top: 20px;
+    display: none;
+}
+
+#commentary.active {
+    display: block;
+}
+
+.correct-answer {
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin: 20px 0;
+}
+
+.wrong-answer {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin: 20px 0;
+}
+
+/* ========== PODIUM ========== */
+.podium-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 30px;
+    margin: 50px 0;
+}
+
+.podium-place {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    position: relative;
+}
+
+.podium-1st {
+    order: 2;
+    transform: scale(1.2);
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+}
+
+.podium-2nd {
+    order: 1;
+    background: linear-gradient(135deg, #C0C0C0, #808080);
+}
+
+.podium-3rd {
+    order: 3;
+    background: linear-gradient(135deg, #CD7F32, #8B4513);
+}
+
+.podium-badge {
+    font-size: 4em;
+    margin-bottom: 20px;
+}
+
+/* ========== MODAL ========== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* ========== UTILITIES ========== */
+.error-message {
+    color: var(--color-error);
+    background: #ffebee;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    margin-top: 10px;
+    display: none;
+}
+
+.room-code-header {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+.logout-btn-discrete {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: var(--color-error);
+    color: white;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .config-main-area,
+    .question-main-area {
+        grid-template-columns: 1fr;
+    }
+    
+    .lobby-options {
+        grid-template-columns: 1fr;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    .answer-buttons {
+        flex-direction: column;
+    }
+}

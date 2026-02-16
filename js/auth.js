@@ -1,257 +1,167 @@
-// js/auth.js - VERSÃO FINAL
-console.log('🔐 auth.js CARREGADO');
+ARQUIVO: auth.js
+LOCALIZAÇÃO: js/auth.js
+===============================================
 
-(function() {
-    class AuthSystem {
-        constructor() {
+// PATROL - Sistema de Autenticação
+console.log('🔐 Auth carregando...');
+
+class AuthSystem {
+    constructor() {
+        this.currentUser = null;
+        this.init();
+    }
+    
+    init() {
+        // Aguardar Firebase estar pronto
+        if (!firebase?.auth) {
+            setTimeout(() => this.init(), 500);
+            return;
+        }
+        
+        firebase.auth().onAuthStateChanged(user => {
+            this.handleAuthStateChange(user);
+        });
+        
+        this.setupEventListeners();
+        console.log('✅ Auth inicializado');
+    }
+    
+    handleAuthStateChange(user) {
+        if (user) {
+            this.currentUser = user;
+            console.log('👤 Usuário logado:', user.email);
+            this.showScreen('lobby-screen');
+            localStorage.setItem('patrol_user', JSON.stringify({
+                uid: user.uid,
+                email: user.email
+            }));
+        } else {
             this.currentUser = null;
-            this.initAttempts = 0;
-            this.maxAttempts = 20; // 20 tentativas = 10 segundos
-        }
-        
-        init() {
-            // Verificar se Firebase está pronto
-            if (!firebase?.auth || !firebase?.apps || firebase.apps.length === 0) {
-                this.initAttempts++;
-                
-                if (this.initAttempts >= this.maxAttempts) {
-                    console.error('❌ Firebase não inicializou após 10 segundos');
-                    alert('Erro ao conectar ao Firebase. Recarregue a página.');
-                    return;
-                }
-                
-                console.warn(`⏳ Aguardando Firebase... (tentativa ${this.initAttempts}/${this.maxAttempts})`);
-                setTimeout(() => this.init(), 500);
-                return;
-            }
-            
-            console.log('✅ Firebase pronto, inicializando Auth...');
-            this.initAttempts = 0;
-            
-            firebase.auth().onAuthStateChanged((user) => {
-                this.handleAuthStateChange(user);
-            });
-            
-            this.setupEventListeners();
-        }
-        
-        handleAuthStateChange(user) {
-            if (user) {
-                this.currentUser = user;
-                this.showLobbyScreen();
-                localStorage.setItem('patrol_user', JSON.stringify({
-                    uid: user.uid,
-                    email: user.email
-                }));
-            } else {
-                this.currentUser = null;
-                localStorage.removeItem('patrol_user');
-                this.showLoginScreen();
-            }
-        }
-        
-        setupEventListeners() {
-            document.getElementById('login-btn')?.addEventListener('click', () => this.loginWithEmail());
-            document.getElementById('signup-btn')?.addEventListener('click', () => this.signupWithEmail());
-            document.getElementById('google-login-btn')?.addEventListener('click', () => this.loginWithGoogle());
-            document.getElementById('reset-btn')?.addEventListener('click', () => this.resetPassword());
-            document.getElementById('logout-btn')?.addEventListener('click', () => this.logout());
-            document.getElementById('logout-btn-game')?.addEventListener('click', () => this.logout());
-            document.getElementById('back-to-lobby-login')?.addEventListener('click', () => this.logout());
-            
-            document.getElementById('back-to-config-btn')?.addEventListener('click', () => {
-                if (window.roomSystem?.isMaster) this.showConfigScreen();
-            });
-        }
-        
-        async loginWithEmail() {
-            const email = document.getElementById('login-email')?.value;
-            const password = document.getElementById('login-password')?.value;
-            
-            if (!email || !password) {
-                this.showError('Preencha email e senha');
-                return;
-            }
-            
-            try {
-                await firebase.auth().signInWithEmailAndPassword(email, password);
-            } catch (error) {
-                this.showError(this.getErrorMessage(error.code));
-            }
-        }
-        
-        async signupWithEmail() {
-            const email = document.getElementById('login-email')?.value;
-            const password = document.getElementById('login-password')?.value;
-            
-            if (!email || !password) {
-                this.showError('Preencha email e senha');
-                return;
-            }
-            
-            if (password.length < 6) {
-                this.showError('Senha deve ter no mínimo 6 caracteres');
-                return;
-            }
-            
-            try {
-                await firebase.auth().createUserWithEmailAndPassword(email, password);
-            } catch (error) {
-                this.showError(this.getErrorMessage(error.code));
-            }
-        }
-        
-        async loginWithGoogle() {
-            try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                await firebase.auth().signInWithPopup(provider);
-            } catch (error) {
-                this.showError(this.getErrorMessage(error.code));
-            }
-        }
-        
-        async resetPassword() {
-            const email = document.getElementById('login-email')?.value;
-            
-            if (!email) {
-                this.showError('Digite seu email primeiro');
-                return;
-            }
-            
-            try {
-                await firebase.auth().sendPasswordResetEmail(email);
-                alert('📧 Email de recuperação enviado!');
-            } catch (error) {
-                this.showError(this.getErrorMessage(error.code));
-            }
-        }
-        
-        logout() {
-            if (confirm('🚪 Deseja realmente sair do PATROL?')) {
-                firebase.auth().signOut();
-            }
-        }
-        
-        showLoginScreen() {
-            this.hideAllScreens();
-            document.getElementById('login-screen')?.classList.add('active');
-        }
-        
-        showLobbyScreen() {
-            this.hideAllScreens();
-            document.getElementById('lobby-screen')?.classList.add('active');
-            this.setupLobbyButtons();
-        }
-        
-        showConfigScreen() {
-            this.hideAllScreens();
-            document.getElementById('config-screen')?.classList.add('active');
-            this.updateRoomCodeDisplay();
-            document.getElementById('logout-btn').style.display = 'block';
-        }
-        
-        showGameScreen() {
-            this.hideAllScreens();
-            document.getElementById('game-screen')?.classList.add('active');
-            this.updateRoomCodeDisplay();
-            this.updateUserDisplay();
-        }
-        
-        updateRoomCodeDisplay() {
-            [0, 100, 300, 500].forEach(delay => {
-                setTimeout(() => {
-                    if (window.roomSystem?.currentRoom) {
-                        document.querySelectorAll('#room-code-display').forEach(el => {
-                            el.textContent = window.roomSystem.currentRoom;
-                        });
-                    }
-                }, delay);
-            });
-        }
-        
-        updateUserDisplay() {
-            setTimeout(() => {
-                const userDisplay = document.getElementById('user-name-display');
-                if (userDisplay && firebase.auth().currentUser) {
-                    userDisplay.textContent = firebase.auth().currentUser.email.split('@')[0];
-                }
-            }, 200);
-        }
-        
-        showPodiumScreen() {
-            this.hideAllScreens();
-            document.getElementById('podium-screen')?.classList.add('active');
-        }
-        
-        hideAllScreens() {
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-        }
-        
-        setupLobbyButtons() {
-            document.getElementById('create-room-btn').onclick = () => {
-                if (window.roomSystem) {
-                    window.roomSystem.createRoom();
-                    this.showConfigScreen();
-                }
-            };
-            
-            document.getElementById('join-room-btn').onclick = () => {
-                const code = document.getElementById('room-code')?.value.trim().toUpperCase();
-                if (code && window.roomSystem) {
-                    window.roomSystem.joinRoom(code);
-                }
-            };
-        }
-        
-        showError(message) {
-            const errorDiv = document.getElementById('login-error');
-            if (errorDiv) {
-                errorDiv.textContent = message;
-                errorDiv.style.display = 'block';
-                setTimeout(() => errorDiv.style.display = 'none', 5000);
-            }
-        }
-        
-        getErrorMessage(code) {
-            const errors = {
-                'auth/email-already-in-use': 'Email já cadastrado',
-                'auth/invalid-email': 'Email inválido',
-                'auth/user-not-found': 'Usuário não encontrado',
-                'auth/wrong-password': 'Senha incorreta',
-                'auth/weak-password': 'Senha muito fraca'
-            };
-            return errors[code] || 'Erro ao autenticar';
+            localStorage.removeItem('patrol_user');
+            this.showScreen('login-screen');
         }
     }
     
-    window.authSystem = new AuthSystem();
-    
-    // Estratégia de inicialização em múltiplas camadas
-    // 1. Tentar imediatamente (caso Firebase já esteja pronto)
-    window.authSystem.init();
-    
-    // 2. Escutar evento firebaseReady
-    document.addEventListener('firebaseReady', () => {
-        console.log('📡 Evento firebaseReady recebido');
-        if (window.authSystem.initAttempts > 0) {
-            window.authSystem.init();
-        }
-    });
-    
-    // 3. Tentar após DOMContentLoaded (fallback)
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => window.authSystem.init(), 1000);
+    setupEventListeners() {
+        // Login
+        document.getElementById('login-btn')?.addEventListener('click', () => {
+            this.loginWithEmail();
+        });
+        
+        // Cadastro
+        document.getElementById('signup-btn')?.addEventListener('click', () => {
+            this.signupWithEmail();
+        });
+        
+        // Google
+        document.getElementById('google-login-btn')?.addEventListener('click', () => {
+            this.loginWithGoogle();
+        });
+        
+        // Reset senha
+        document.getElementById('reset-btn')?.addEventListener('click', () => {
+            this.resetPassword();
+        });
+        
+        // Logout
+        ['logout-btn-lobby', 'logout-btn-config', 'logout-btn-game'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', () => {
+                this.logout();
+            });
         });
     }
     
-    window.showLoginScreen = () => window.authSystem.showLoginScreen();
-    window.showLobbyScreen = () => window.authSystem.showLobbyScreen();
-    window.showConfigScreen = () => window.authSystem.showConfigScreen();
-    window.showGameScreen = () => window.authSystem.showGameScreen();
-    window.showPodiumScreen = () => window.authSystem.showPodiumScreen();
+    async loginWithEmail() {
+        const email = document.getElementById('login-email')?.value;
+        const password = document.getElementById('login-password')?.value;
+        
+        if (!email || !password) {
+            this.showError('Preencha email e senha');
+            return;
+        }
+        
+        try {
+            await firebase.auth().signInWithEmailAndPassword(email, password);
+        } catch (error) {
+            this.showError(Utils.getAuthErrorMessage(error.code));
+        }
+    }
     
-    console.log('✅ auth.js PRONTO');
-})();
+    async signupWithEmail() {
+        const email = document.getElementById('login-email')?.value;
+        const password = document.getElementById('login-password')?.value;
+        
+        if (!email || !password) {
+            this.showError('Preencha email e senha');
+            return;
+        }
+        
+        if (password.length < 6) {
+            this.showError('Senha deve ter no mínimo 6 caracteres');
+            return;
+        }
+        
+        try {
+            await firebase.auth().createUserWithEmailAndPassword(email, password);
+        } catch (error) {
+            this.showError(Utils.getAuthErrorMessage(error.code));
+        }
+    }
+    
+    async loginWithGoogle() {
+        try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            await firebase.auth().signInWithPopup(provider);
+        } catch (error) {
+            this.showError(Utils.getAuthErrorMessage(error.code));
+        }
+    }
+    
+    async resetPassword() {
+        const email = document.getElementById('login-email')?.value;
+        
+        if (!email) {
+            this.showError('Digite seu email primeiro');
+            return;
+        }
+        
+        try {
+            await firebase.auth().sendPasswordResetEmail(email);
+            Utils.notify('📧 Email de recuperação enviado!', 'success');
+        } catch (error) {
+            this.showError(Utils.getAuthErrorMessage(error.code));
+        }
+    }
+    
+    logout() {
+        if (confirm('🚪 Deseja realmente sair do PATROL?')) {
+            firebase.auth().signOut();
+        }
+    }
+    
+    showScreen(screenId) {
+        Utils.hideAllScreens();
+        const screen = document.getElementById(screenId);
+        if (screen) {
+            screen.classList.add('active');
+        }
+    }
+    
+    showError(message) {
+        const errorDiv = document.getElementById('login-error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+    }
+}
+
+// Inicializar
+let authSystem;
+document.addEventListener('firebaseReady', () => {
+    authSystem = new AuthSystem();
+    window.authSystem = authSystem;
+});
+
+console.log('✅ Auth carregado');
