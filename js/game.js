@@ -1,6 +1,6 @@
-ARQUIVO: game.js
-LOCALIZAÇÃO: js/game.js
-===============================================
+//ARQUIVO: game.js
+//LOCALIZAÇÃO: js/game.js
+//===============================================
 
 // PATROL - Sistema de Jogo
 console.log('🎮 Game carregando...');

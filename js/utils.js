@@ -1,6 +1,6 @@
-ARQUIVO: utils.js
-LOCALIZAÇÃO: js/utils.js
-===============================================
+//ARQUIVO: utils.js
+//LOCALIZAÇÃO: js/utils.js
+//===============================================
 
 // PATROL - Utilit ários Consolidados
 console.log('🔧 Utils carregando...');

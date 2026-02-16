@@ -1,6 +1,6 @@
-ARQUIVO: events.js
-LOCALIZAÇÃO: js/events.js
-===============================================
+//ARQUIVO: events.js
+//LOCALIZAÇÃO: js/events.js
+//===============================================
 
 // PATROL - Sistema de Eventos
 console.log('⚡ Events carregando...');

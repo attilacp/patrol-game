@@ -1,6 +1,6 @@
-ARQUIVO: rooms.js
-LOCALIZAÇÃO: js/rooms.js
-===============================================
+//ARQUIVO: rooms.js
+//LOCALIZAÇÃO: js/rooms.js
+//===============================================
 
 // PATROL - Sistema de Salas (Multiplayer)
 console.log('🏠 Rooms carregando...');

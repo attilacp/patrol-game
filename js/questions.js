@@ -1,6 +1,6 @@
-ARQUIVO: questions.js
-LOCALIZAÇÃO: js/questions.js
-===============================================
+//ARQUIVO: questions.js
+//LOCALIZAÇÃO: js/questions.js
+//===============================================
 
 // PATROL - Sistema de Perguntas
 console.log('📚 Questions carregando...');

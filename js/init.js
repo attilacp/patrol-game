@@ -1,6 +1,6 @@
-ARQUIVO: init.js
-LOCALIZAÇÃO: js/init.js
-===============================================
+//ARQUIVO: init.js
+//LOCALIZAÇÃO: js/init.js
+//===============================================
 
 // PATROL - Inicialização
 console.log('🚀 Init carregando...');

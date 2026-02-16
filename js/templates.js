@@ -1,6 +1,6 @@
-ARQUIVO: templates.js
-LOCALIZAÇÃO: js/templates.js
-===============================================
+//ARQUIVO: templates.js
+//LOCALIZAÇÃO: js/templates.js
+//===============================================
 
 // PATROL - Templates HTML
 console.log('📄 Templates carregando...');

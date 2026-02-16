@@ -1,6 +1,6 @@
-ARQUIVO: auth.js
-LOCALIZAÇÃO: js/auth.js
-===============================================
+//ARQUIVO: auth.js
+//LOCALIZAÇÃO: js/auth.js
+///===============================================
 
 // PATROL - Sistema de Autenticação
 console.log('🔐 Auth carregando...');

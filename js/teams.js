@@ -1,6 +1,6 @@
-ARQUIVO: teams.js
-LOCALIZAÇÃO: js/teams.js
-===============================================
+//ARQUIVO: teams.js
+//LOCALIZAÇÃO: js/teams.js
+//===============================================
 
 // PATROL - Sistema de Equipes
 console.log('👥 Teams carregando...');
