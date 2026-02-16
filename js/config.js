@@ -1,6 +1,6 @@
-ARQUIVO: config.js
-LOCALIZAÇÃO: js/config.js
-===============================================
+//ARQUIVO: config.js
+//LOCALIZAÇÃO: js/config.js
+//===============================================
 
 // PATROL - Configuração Firebase
 console.log('🔥 Config carregando...');
