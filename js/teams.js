@@ -1,7 +1,3 @@
-//ARQUIVO: teams.js
-//LOCALIZAÇÃO: js/teams.js
-//===============================================
-
 // PATROL - Sistema de Equipes
 console.log('👥 Teams carregando...');
 
@@ -36,7 +32,7 @@ const TeamSystem = {
         `;
         
         container.appendChild(teamInput);
-        this.checkStartConditions();
+        this.validateTeams();
     },
     
     removeTeam(button) {
@@ -45,7 +41,7 @@ const TeamSystem = {
         
         if (totalTeams > 1) {
             button.parentElement.remove();
-            this.checkStartConditions();
+            this.validateTeams();
             this.reorganizeTeamNames();
         } else {
             Utils.notify('⚠️ É necessário ter pelo menos uma equipe!', 'warning');
@@ -195,7 +191,8 @@ const TeamSystem = {
         return { winner: null };
     },
     
-    checkStartConditions() {
+    // CORRIGIDO: Validar apenas equipes, sem chamar questions
+    validateTeams() {
         const container = document.getElementById('teams-container');
         const teamInputs = container?.querySelectorAll('.team-input') || [];
         let hasValidTeams = false;
@@ -212,12 +209,37 @@ const TeamSystem = {
             teamError.style.display = hasValidTeams ? 'none' : 'block';
         }
         
-        // Verificar se pode iniciar
-        if (window.QuestionSystem) {
-            window.QuestionSystem.checkStartConditions();
-        }
+        // CORRIGIDO: Chamar validação geral apenas se existir
+        this.updateStartButton();
         
         return hasValidTeams;
+    },
+    
+    // NOVO: Atualizar botão de início sem recursão
+    updateStartButton() {
+        const hasTeams = this.validateTeamsOnly();
+        const hasQuestions = window.QuestionSystem ? window.QuestionSystem.validateQuestionsOnly() : false;
+        const canStart = hasTeams && hasQuestions;
+        
+        const startBtn = document.getElementById('start-game-btn');
+        if (startBtn) {
+            startBtn.disabled = !canStart;
+            startBtn.className = canStart ? 'start-game-btn enabled' : 'start-game-btn disabled';
+        }
+    },
+    
+    // NOVO: Validar apenas equipes
+    validateTeamsOnly() {
+        const container = document.getElementById('teams-container');
+        const teamInputs = container?.querySelectorAll('.team-input') || [];
+        
+        for (let input of teamInputs) {
+            const teamInput = input.querySelector('input[type="text"]');
+            if (teamInput && teamInput.value.trim()) {
+                return true;
+            }
+        }
+        return false;
     }
 };
 

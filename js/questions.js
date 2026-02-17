@@ -1,7 +1,3 @@
-//ARQUIVO: questions.js
-//LOCALIZAÇÃO: js/questions.js
-//===============================================
-
 // PATROL - Sistema de Perguntas
 console.log('📚 Questions carregando...');
 
@@ -67,7 +63,7 @@ const QuestionSystem = {
             }
             
             this.updateSubjectsList();
-            this.checkStartConditions();
+            this.validateQuestions();
             
             console.log('✅ Arquivo processado:', totalQuestions, 'perguntas');
             
@@ -150,7 +146,7 @@ const QuestionSystem = {
             checkbox.checked = subject.enabled;
             checkbox.onchange = () => {
                 subject.enabled = checkbox.checked;
-                this.checkStartConditions();
+                this.validateQuestions();
             };
             
             const label = document.createElement('div');
@@ -170,7 +166,7 @@ const QuestionSystem = {
             `;
             recurrenceSelect.onchange = () => {
                 subject.recurrence = recurrenceSelect.value;
-                this.checkStartConditions();
+                this.validateQuestions();
             };
             
             item.appendChild(checkbox);
@@ -185,14 +181,14 @@ const QuestionSystem = {
             subject.enabled = enabled;
         });
         this.updateSubjectsList();
-        this.checkStartConditions();
+        this.validateQuestions();
     },
     
     clearAllSubjects() {
         if (confirm('🗑️ Limpar todos os assuntos?')) {
             this.subjects = {};
             this.updateSubjectsList();
-            this.checkStartConditions();
+            this.validateQuestions();
             
             const fileInput = document.getElementById('excel-file');
             if (fileInput) fileInput.value = '';
@@ -232,7 +228,8 @@ const QuestionSystem = {
         return this.questions;
     },
     
-    checkStartConditions() {
+    // CORRIGIDO: Validar apenas perguntas, sem chamar teams
+    validateQuestions() {
         let hasQuestions = false;
         let totalQuestions = 0;
         
@@ -251,8 +248,16 @@ const QuestionSystem = {
         const totalEl = document.getElementById('total-questions');
         if (totalEl) totalEl.textContent = totalQuestions;
         
-        // Verificar condições gerais
-        const hasTeams = window.TeamSystem?.checkStartConditions();
+        // CORRIGIDO: Atualizar botão sem recursão
+        this.updateStartButton();
+        
+        return hasQuestions;
+    },
+    
+    // NOVO: Atualizar botão de início sem recursão
+    updateStartButton() {
+        const hasQuestions = this.validateQuestionsOnly();
+        const hasTeams = window.TeamSystem ? window.TeamSystem.validateTeamsOnly() : false;
         const canStart = hasTeams && hasQuestions;
         
         const startBtn = document.getElementById('start-game-btn');
@@ -260,8 +265,16 @@ const QuestionSystem = {
             startBtn.disabled = !canStart;
             startBtn.className = canStart ? 'start-game-btn enabled' : 'start-game-btn disabled';
         }
-        
-        return hasQuestions;
+    },
+    
+    // NOVO: Validar apenas perguntas
+    validateQuestionsOnly() {
+        for (let subject of Object.values(this.subjects)) {
+            if (subject.enabled && subject.questions.length > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 };
 
