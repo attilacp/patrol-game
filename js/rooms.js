@@ -6,7 +6,7 @@ class RoomSystem {
         this.currentRoom = null;
         this.isMaster = false;
         this.playerId = this.generatePlayerId();
-        this.playerName = this.getPlayerName();
+        this.playerName = 'Aguardando...';
         this.playerTeamId = null;
         this.players = {};
         this.listeners = [];
@@ -24,7 +24,7 @@ class RoomSystem {
         return 'guest_' + Math.random().toString(36).substr(2, 9);
     }
     
-    getPlayerName() {
+    getCurrentPlayerName() {
         const user = firebase.auth().currentUser;
         if (user) {
             return user.displayName || user.email || 'Jogador';
@@ -64,6 +64,8 @@ class RoomSystem {
             Utils.notify('Você precisa estar logado', 'error');
             return null;
         }
+        
+        this.playerName = this.getCurrentPlayerName();
         
         const roomCode = this.generateRoomCode();
         this.currentRoom = roomCode;
@@ -127,6 +129,7 @@ class RoomSystem {
             return false;
         }
         
+        this.playerName = this.getCurrentPlayerName();
         this.currentRoom = roomCode.toUpperCase();
         this.isMaster = false;
         
@@ -222,6 +225,11 @@ class RoomSystem {
             window.TeamSystem.teams = gameData.teams;
             this.assignPlayerToTeam();
             console.log('👥 Equipes sincronizadas:', gameData.teams.length);
+            
+            // Atualizar display para mostrar jogadores
+            if (window.TeamSystem.updateDisplay) {
+                window.TeamSystem.updateDisplay();
+            }
         }
     }
     
@@ -276,7 +284,21 @@ class RoomSystem {
                 console.log(`   👤 Jogador: ${this.playerName}`);
                 console.log(`   🏁 Equipe: ${smallestTeam.name} (ID: ${smallestTeam.id})`);
                 console.log(`   👥 Total de jogadores na equipe: ${smallestTeam.assignedPlayers.length}`);
+                
+                // Salvar no Firebase para sincronizar com todos
+                this.syncTeamsToFirebase();
             }
+        }
+    }
+    
+    async syncTeamsToFirebase() {
+        if (!this.currentRoom) return;
+        
+        try {
+            await firebase.database().ref('rooms/' + this.currentRoom + '/gameData/teams').set(window.TeamSystem.teams);
+            console.log('🔄 Equipes sincronizadas no Firebase');
+        } catch (error) {
+            console.error('❌ Erro ao sincronizar equipes:', error);
         }
     }
     
@@ -302,6 +324,9 @@ class RoomSystem {
                 return false;
             }
             
+            // IMPORTANTE: Atualizar playerName do mestre antes de iniciar
+            this.playerName = this.getCurrentPlayerName();
+            
             const gameData = {
                 questions: questions,
                 teams: teams
@@ -322,6 +347,11 @@ class RoomSystem {
             });
             
             console.log('✅ Jogo iniciado no Firebase');
+            
+            // ATRIBUIR MESTRE A UMA EQUIPE
+            window.TeamSystem.teams = teams;
+            this.assignPlayerToTeam();
+            
             Utils.notify('🎮 Jogo iniciado!', 'success');
             
             setTimeout(() => {
