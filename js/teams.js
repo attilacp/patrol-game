@@ -11,7 +11,6 @@ const TeamSystem = {
     },
     
     setupEventListeners() {
-        // Adicionar equipe
         document.getElementById('add-team-btn')?.addEventListener('click', () => {
             this.addTeam();
         });
@@ -54,7 +53,6 @@ const TeamSystem = {
             const currentValue = nameInput.value;
             const defaultName = CONFIG.teams.defaultNames[index] || `Equipe ${index + 1}`;
             
-            // Se for nome padrão, atualizar
             if (CONFIG.teams.defaultNames.includes(currentValue) || currentValue.startsWith('Equipe ')) {
                 nameInput.value = defaultName;
             }
@@ -107,17 +105,14 @@ const TeamSystem = {
         const activeTeam = this.teams[this.currentTeamIndex];
         const inactiveTeams = this.teams.filter((_, index) => index !== this.currentTeamIndex);
         
-        // Exibir equipe ativa
         if (activeTeam && activeTeamDisplay) {
             activeTeamDisplay.appendChild(this.createTeamCard(activeTeam, true));
         }
         
-        // Exibir equipes inativas
         inactiveTeams.forEach(team => {
             teamsDisplay.appendChild(this.createTeamCard(team, false));
         });
         
-        // Atualizar turno
         this.updateTurnDisplay();
     },
     
@@ -125,15 +120,18 @@ const TeamSystem = {
         const card = document.createElement('div');
         card.className = `team-card ${team.colorClass} ${isActive ? 'active' : ''}`;
         
-        const playersHtml = team.assignedPlayers && team.assignedPlayers.length > 0
-            ? team.assignedPlayers.map(p => `<div class="player-name">👤 ${p}</div>`).join('')
-            : '<div class="no-players">Aguardando jogadores...</div>';
+        let playersHtml = '';
+        if (team.assignedPlayers && team.assignedPlayers.length > 0) {
+            playersHtml = team.assignedPlayers.map(p => `<div class="player-name">👤 ${p}</div>`).join('');
+        } else {
+            playersHtml = '<div class="player-name" style="color: #999; font-style: italic;">Aguardando jogadores...</div>';
+        }
         
         card.innerHTML = `
             <div class="team-card-header">
                 <div class="team-info-left">
                     <div class="team-name">${team.name}</div>
-                    <div class="team-players">${playersHtml}</div>
+                    ${playersHtml}
                 </div>
                 <div class="team-info-right">
                     <div class="team-score">${team.score || 0}</div>
@@ -183,7 +181,6 @@ const TeamSystem = {
         
         this.updateDisplay();
         
-        // Verificar vencedor
         if (team.score >= CONFIG.game.winningScore) {
             return { winner: team };
         }
@@ -191,7 +188,6 @@ const TeamSystem = {
         return { winner: null };
     },
     
-    // CORRIGIDO: Validar apenas equipes, sem chamar questions
     validateTeams() {
         const container = document.getElementById('teams-container');
         const teamInputs = container?.querySelectorAll('.team-input') || [];
@@ -209,13 +205,11 @@ const TeamSystem = {
             teamError.style.display = hasValidTeams ? 'none' : 'block';
         }
         
-        // CORRIGIDO: Chamar validação geral apenas se existir
         this.updateStartButton();
         
         return hasValidTeams;
     },
     
-    // NOVO: Atualizar botão de início sem recursão
     updateStartButton() {
         const hasTeams = this.validateTeamsOnly();
         const hasQuestions = window.QuestionSystem ? window.QuestionSystem.validateQuestionsOnly() : false;
@@ -228,7 +222,6 @@ const TeamSystem = {
         }
     },
     
-    // NOVO: Validar apenas equipes
     validateTeamsOnly() {
         const container = document.getElementById('teams-container');
         const teamInputs = container?.querySelectorAll('.team-input') || [];
@@ -243,11 +236,9 @@ const TeamSystem = {
     }
 };
 
-// Tornar acessível globalmente
 window.TeamSystem = TeamSystem;
 window.removeTeam = (button) => TeamSystem.removeTeam(button);
 
-// Inicializar quando templates estiverem prontos
 document.addEventListener('templatesLoaded', () => {
     TeamSystem.init();
 });

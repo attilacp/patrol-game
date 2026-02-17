@@ -80,9 +80,37 @@ const GameSystem = {
     },
     
     enableAnswerButtons() {
+        // BOTÕES DE CONTROLE (apenas mestre)
+        const controlButtons = ['next-btn', 'skip-btn', 'podium-btn', 'open-notes-btn', 'back-to-config-btn'];
+        controlButtons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                if (window.roomSystem && !window.roomSystem.isMaster) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.3';
+                    btn.style.cursor = 'not-allowed';
+                } else {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                }
+            }
+        });
+        
+        // RODÍZIO (clique no team-turn) - apenas mestre
+        const teamTurn = document.getElementById('team-turn');
+        if (teamTurn) {
+            if (window.roomSystem && !window.roomSystem.isMaster) {
+                teamTurn.style.cursor = 'default';
+                teamTurn.onclick = null;
+            } else {
+                teamTurn.style.cursor = 'pointer';
+            }
+        }
+        
         // MESTRE: sempre pode responder
         if (window.roomSystem && window.roomSystem.isMaster) {
-            ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
+            ['certo-btn', 'errado-btn'].forEach(id => {
                 const btn = document.getElementById(id);
                 if (btn) {
                     btn.disabled = false;
@@ -95,10 +123,9 @@ const GameSystem = {
             const currentTeam = window.TeamSystem.teams[window.TeamSystem.currentTeamIndex];
             const playerTeamId = window.roomSystem.playerTeamId;
             
-            // Verificar se jogador está na equipe de plantão
             if (currentTeam && playerTeamId === currentTeam.id) {
                 console.log(`✅ Jogador pode responder - equipe de plantão: ${currentTeam.name}`);
-                ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
+                ['certo-btn', 'errado-btn'].forEach(id => {
                     const btn = document.getElementById(id);
                     if (btn) {
                         btn.disabled = false;
@@ -107,7 +134,7 @@ const GameSystem = {
                 });
             } else {
                 console.log(`🚫 Jogador não pode responder - aguardando equipe ${currentTeam?.name}`);
-                ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
+                ['certo-btn', 'errado-btn'].forEach(id => {
                     const btn = document.getElementById(id);
                     if (btn) {
                         btn.disabled = true;
@@ -118,7 +145,7 @@ const GameSystem = {
         }
         // OFFLINE: sempre pode responder
         else {
-            ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
+            ['certo-btn', 'errado-btn'].forEach(id => {
                 const btn = document.getElementById(id);
                 if (btn) {
                     btn.disabled = false;
@@ -129,8 +156,13 @@ const GameSystem = {
         
         const nextBtn = document.getElementById('next-btn');
         const podiumBtn = document.getElementById('podium-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        
         if (nextBtn) nextBtn.style.display = 'none';
         if (podiumBtn) podiumBtn.style.display = 'none';
+        if (skipBtn && window.roomSystem && !window.roomSystem.isMaster) {
+            skipBtn.style.display = 'none';
+        }
     },
     
     disableAnswerButtons() {
@@ -203,8 +235,15 @@ const GameSystem = {
         if (nextBtn) {
             nextBtn.style.display = 'inline-block';
             nextBtn.textContent = '⏭️ Próxima';
-            nextBtn.disabled = false;
-            nextBtn.style.opacity = '1';
+            
+            // Apenas mestre pode usar
+            if (window.roomSystem && !window.roomSystem.isMaster) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.3';
+            } else {
+                nextBtn.disabled = false;
+                nextBtn.style.opacity = '1';
+            }
         }
     },
     
