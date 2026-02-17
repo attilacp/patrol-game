@@ -94,6 +94,7 @@ class RoomSystem {
             await firebase.database().ref('rooms/' + roomCode).set(roomData);
             
             console.log('✅ Sala criada:', roomCode);
+            console.log(`👑 Mestre ${this.playerName} criou a sala ${roomCode}`);
             this.updateRoomCodeDisplay(roomCode);
             
             try {
@@ -151,6 +152,7 @@ class RoomSystem {
             await roomRef.child('players/' + this.playerId).set(playerData);
             
             console.log('✅ Entrou na sala');
+            console.log(`👋 Jogador ${this.playerName} entrou na sala ${this.currentRoom}`);
             this.updateRoomCodeDisplay(this.currentRoom);
             Utils.notify(`Aguarde o mestre...`, 'info');
             
@@ -255,7 +257,9 @@ class RoomSystem {
             const hasPlayer = team.assignedPlayers.some(p => p.includes(this.playerName));
             if (hasPlayer) {
                 this.playerTeamId = team.id;
-                console.log(`👤 Jogador ${this.playerName} já estava na equipe: ${team.name} (ID: ${team.id})`);
+                console.log(`ℹ️ JOGADOR JÁ ESTAVA NA EQUIPE:`);
+                console.log(`   👤 Jogador: ${this.playerName}`);
+                console.log(`   🏁 Equipe: ${team.name} (ID: ${team.id})`);
                 return;
             }
             if (team.assignedPlayers.length < smallestTeam.assignedPlayers.length) {
@@ -268,7 +272,10 @@ class RoomSystem {
             if (!smallestTeam.assignedPlayers.some(p => p.includes(this.playerName))) {
                 smallestTeam.assignedPlayers.push(this.playerName);
                 this.playerTeamId = smallestTeam.id;
-                console.log(`👤 Jogador ${this.playerName} atribuído à equipe: ${smallestTeam.name} (ID: ${smallestTeam.id})`);
+                console.log(`✅ ATRIBUIÇÃO DE EQUIPE:`);
+                console.log(`   👤 Jogador: ${this.playerName}`);
+                console.log(`   🏁 Equipe: ${smallestTeam.name} (ID: ${smallestTeam.id})`);
+                console.log(`   👥 Total de jogadores na equipe: ${smallestTeam.assignedPlayers.length}`);
             }
         }
     }

@@ -80,34 +80,6 @@ const GameSystem = {
     },
     
     enableAnswerButtons() {
-        // BOTÕES DE CONTROLE (apenas mestre)
-        const controlButtons = ['next-btn', 'skip-btn', 'podium-btn', 'open-notes-btn', 'back-to-config-btn'];
-        controlButtons.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) {
-                if (window.roomSystem && !window.roomSystem.isMaster) {
-                    btn.disabled = true;
-                    btn.style.opacity = '0.3';
-                    btn.style.cursor = 'not-allowed';
-                } else {
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                    btn.style.cursor = 'pointer';
-                }
-            }
-        });
-        
-        // RODÍZIO (clique no team-turn) - apenas mestre
-        const teamTurn = document.getElementById('team-turn');
-        if (teamTurn) {
-            if (window.roomSystem && !window.roomSystem.isMaster) {
-                teamTurn.style.cursor = 'default';
-                teamTurn.onclick = null;
-            } else {
-                teamTurn.style.cursor = 'pointer';
-            }
-        }
-        
         // MESTRE: sempre pode responder
         if (window.roomSystem && window.roomSystem.isMaster) {
             ['certo-btn', 'errado-btn'].forEach(id => {
@@ -156,13 +128,9 @@ const GameSystem = {
         
         const nextBtn = document.getElementById('next-btn');
         const podiumBtn = document.getElementById('podium-btn');
-        const skipBtn = document.getElementById('skip-btn');
         
         if (nextBtn) nextBtn.style.display = 'none';
         if (podiumBtn) podiumBtn.style.display = 'none';
-        if (skipBtn && window.roomSystem && !window.roomSystem.isMaster) {
-            skipBtn.style.display = 'none';
-        }
     },
     
     disableAnswerButtons() {
@@ -235,15 +203,8 @@ const GameSystem = {
         if (nextBtn) {
             nextBtn.style.display = 'inline-block';
             nextBtn.textContent = '⏭️ Próxima';
-            
-            // Apenas mestre pode usar
-            if (window.roomSystem && !window.roomSystem.isMaster) {
-                nextBtn.disabled = true;
-                nextBtn.style.opacity = '0.3';
-            } else {
-                nextBtn.disabled = false;
-                nextBtn.style.opacity = '1';
-            }
+            nextBtn.disabled = false;
+            nextBtn.style.opacity = '1';
         }
     },
     
@@ -272,11 +233,6 @@ const GameSystem = {
     },
     
     nextQuestion() {
-        if (window.roomSystem && !window.roomSystem.isMaster) {
-            Utils.notify('Apenas o mestre avança', 'warning');
-            return;
-        }
-        
         console.log('⏭️ Avançando para próxima pergunta...');
         
         if (this.nextTeamRotation) {
@@ -294,11 +250,6 @@ const GameSystem = {
     },
     
     skipQuestion() {
-        if (window.roomSystem && !window.roomSystem.isMaster) {
-            Utils.notify('Apenas o mestre pode pular', 'warning');
-            return;
-        }
-        
         if (!confirm('⚠️ Pular esta questão?\n\nNão contará para pontuação.')) {
             return;
         }
