@@ -1,6 +1,5 @@
-/* PATROL - CSS Consolidado com Efeitos Visuais */
+/* PATROL - CSS Otimizado */
 
-/* ========== VARIÁVEIS ========== */
 :root {
     --color-primary: #003366;
     --color-secondary: #FFCC00;
@@ -16,38 +15,19 @@
     --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.25);
 }
 
-/* ========== ANIMAÇÕES ========== */
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(30px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideIn {
-    from { 
-        transform: translateX(100%); 
-        opacity: 0; 
-    }
-    to { 
-        transform: translateX(0); 
-        opacity: 1; 
-    }
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes slideOut {
-    from { 
-        transform: translateX(0); 
-        opacity: 1; 
-    }
-    to { 
-        transform: translateX(100%); 
-        opacity: 0; 
-    }
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
 }
 
 @keyframes pulse {
@@ -60,7 +40,6 @@
     50% { box-shadow: 0 0 20px rgba(255, 204, 0, 0.8); }
 }
 
-/* ========== RESET & BASE ========== */
 * {
     margin: 0;
     padding: 0;
@@ -82,9 +61,11 @@ h1 {
     font-size: 3.5em;
     text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
     margin-bottom: 30px;
-    animation: pulse 2s infinite;
     font-weight: 900;
     letter-spacing: 3px;
+    border-top: 5px solid var(--color-secondary);
+    border-bottom: 5px solid var(--color-secondary);
+    padding: 20px 0;
 }
 
 h2, h3 {
@@ -92,7 +73,6 @@ h2, h3 {
     margin-bottom: 20px;
 }
 
-/* ========== SCREENS ========== */
 .screen {
     display: none;
     animation: fadeIn 0.6s ease;
@@ -102,7 +82,6 @@ h2, h3 {
     display: block;
 }
 
-/* ========== BUTTONS ========== */
 button {
     padding: 15px 30px;
     border: none;
@@ -149,7 +128,6 @@ button:disabled {
     filter: grayscale(50%);
 }
 
-/* ========== INPUTS ========== */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -174,7 +152,6 @@ select:focus {
     transform: scale(1.01);
 }
 
-/* ========== LOGIN SCREEN ========== */
 .login-container {
     background: white;
     padding: 50px;
@@ -242,7 +219,6 @@ select:focus {
     margin-top: 15px;
 }
 
-/* ========== LOBBY SCREEN ========== */
 .lobby-container {
     background: white;
     padding: 50px;
@@ -304,7 +280,36 @@ select:focus {
     font-weight: bold;
 }
 
-/* ========== CONFIG SCREEN ========== */
+.room-success {
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin: 20px 0;
+    font-weight: bold;
+}
+
+#room-info {
+    margin-top: 30px;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+}
+
+#current-room-code {
+    font-size: 2em;
+    color: var(--color-primary);
+    font-weight: 900;
+    letter-spacing: 5px;
+    cursor: text;
+    user-select: all;
+    background: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    display: inline-block;
+    border: 3px solid var(--color-secondary);
+}
+
 .config-main-area {
     display: grid;
     grid-template-columns: 1fr 2.5fr;
@@ -431,7 +436,6 @@ select:focus {
     padding: 25px;
     font-size: 1.4em;
     margin-top: 25px;
-    animation: glow 2s infinite;
 }
 
 .start-game-btn.enabled {
@@ -443,237 +447,195 @@ select:focus {
     animation: none;
 }
 
-/* ========== GAME SCREEN ========== */
+/* GAME SCREEN - ESTILO ORIGINAL */
 .question-main-area {
     display: grid;
-    grid-template-columns: 3.5fr 1fr;
-    gap: 25px;
-    max-width: 1600px;
+    grid-template-columns: 3fr 1fr;
+    gap: 20px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
 .question-area {
     background: white;
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: var(--shadow);
+    padding: 30px;
+    border-radius: var(--border-radius);
 }
 
 .question-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 10px;
 }
 
 .question-counter {
     background: var(--color-info);
     color: white;
-    padding: 12px 20px;
+    padding: 10px 18px;
     border-radius: 20px;
     font-weight: bold;
-    font-size: 1.1em;
+}
+
+.question-header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.notes-btn, .config-btn {
+    padding: 10px 20px;
+    font-size: 0.95em;
+}
+
+.notes-btn {
+    background: var(--color-warning);
+    color: #333;
+}
+
+.config-btn {
+    background: #6c757d;
+    color: white;
 }
 
 #question-text {
-    font-size: 1.6em;
-    line-height: 1.9;
-    padding: 40px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    font-size: 1.4em;
+    line-height: 1.8;
+    padding: 30px;
+    background: var(--color-bg);
     border-radius: var(--border-radius);
-    margin: 25px 0;
-    min-height: 250px;
-    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
-    border-left: 5px solid var(--color-primary);
+    margin: 20px 0;
+    min-height: 200px;
+}
+
+.pergunta-texto {
+    margin-top: 15px;
 }
 
 .assunto-container {
-    background: linear-gradient(135deg, var(--color-secondary) 0%, #ffdb4d 100%);
+    background: var(--color-secondary);
     color: var(--color-primary);
-    padding: 18px 25px;
+    padding: 12px 18px;
     border-radius: var(--border-radius);
-    margin-bottom: 20px;
-    display: flex;
+    margin-bottom: 15px;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     font-weight: bold;
-    font-size: 1.15em;
-    box-shadow: var(--shadow);
 }
 
 .assunto-icon {
-    font-size: 1.5em;
+    font-size: 1.2em;
 }
 
 .answer-buttons {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     justify-content: center;
-    margin: 35px 0;
+    margin: 30px 0;
     flex-wrap: wrap;
 }
 
 .certo-btn {
-    background: linear-gradient(135deg, var(--color-success) 0%, #1e7e34 100%);
+    background: var(--color-success);
     color: white;
-    padding: 25px 60px;
-    font-size: 1.4em;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    padding: 20px 40px;
+    font-size: 1.2em;
 }
 
 .errado-btn {
-    background: linear-gradient(135deg, var(--color-error) 0%, #bd2130 100%);
+    background: var(--color-error);
     color: white;
-    padding: 25px 60px;
-    font-size: 1.4em;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    padding: 20px 40px;
+    font-size: 1.2em;
 }
 
 .skip-btn {
-    background: linear-gradient(135deg, var(--color-warning) 0%, #e0a800 100%);
-    color: #333;
-    padding: 16px 30px;
-    font-weight: 700;
+    background: var(--color-warning);
+    color: white;
 }
 
 .next-btn, .podium-btn {
-    background: linear-gradient(135deg, var(--color-info) 0%, #0056b3 100%);
+    background: var(--color-info);
     color: white;
-    padding: 16px 40px;
-    font-weight: 700;
 }
 
 .team-turn {
-    background: linear-gradient(135deg, var(--color-primary) 0%, #004080 100%);
+    background: var(--color-primary);
     color: white;
-    padding: 18px 30px;
+    padding: 15px 25px;
     border-radius: var(--border-radius);
     text-align: center;
     font-weight: bold;
-    font-size: 1.2em;
+    font-size: 1.1em;
     cursor: pointer;
-    box-shadow: var(--shadow);
-    transition: all var(--transition);
-    border: 3px solid transparent;
 }
 
-.team-turn:hover {
-    transform: scale(1.02);
-    border-color: var(--color-secondary);
-    animation: glow 1s infinite;
-}
-
-/* ========== TEAMS DISPLAY ========== */
 .teams-area {
-    margin-top: 35px;
+    margin-top: 30px;
 }
 
 #teams-display {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
 }
 
 .team-card {
     background: white;
-    padding: 25px;
+    padding: 20px;
     border-radius: var(--border-radius);
-    border: 4px solid transparent;
-    box-shadow: var(--shadow);
-    transition: all var(--transition);
-    position: relative;
-    overflow: hidden;
-}
-
-.team-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: linear-gradient(90deg, transparent, var(--color-secondary), transparent);
-    opacity: 0;
-    transition: opacity var(--transition);
+    border: 3px solid transparent;
 }
 
 .team-card.active {
     border-color: var(--color-secondary);
-    box-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
-    transform: scale(1.05);
-}
-
-.team-card.active::before {
-    opacity: 1;
-    animation: pulse 1.5s infinite;
-}
-
-.team-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.team-name {
-    font-size: 1.6em;
-    font-weight: 900;
-    color: var(--color-primary);
-    margin-bottom: 10px;
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
 }
 
 .team-score {
-    font-size: 4em;
-    font-weight: 900;
+    font-size: 3em;
+    font-weight: bold;
     color: var(--color-primary);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .active-team-sidebar {
     background: white;
-    padding: 25px;
+    padding: 20px;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
 }
 
-/* Cores das Equipes - Com Gradientes */
-.team-bg-1 { background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%) !important; }
-.team-bg-2 { background: linear-gradient(135deg, #4ecdc4 0%, #44a3a0 100%) !important; }
-.team-bg-3 { background: linear-gradient(135deg, #ffe66d 0%, #ffdb4d 100%) !important; }
-.team-bg-4 { background: linear-gradient(135deg, #4d96ff 0%, #357ae8 100%) !important; }
-.team-bg-5 { background: linear-gradient(135deg, #ff6bb5 0%, #ff4da6 100%) !important; }
-.team-bg-6 { background: linear-gradient(135deg, #00d9ff 0%, #00bfe8 100%) !important; }
-.team-bg-7 { background: linear-gradient(135deg, #a64dff 0%, #9333ea 100%) !important; }
-.team-bg-8 { background: linear-gradient(135deg, #ff9a4d 0%, #ff7f00 100%) !important; }
-.team-bg-9 { background: linear-gradient(135deg, #c92a2a 0%, #b02020 100%) !important; }
-.team-bg-10 { background: linear-gradient(135deg, #2f9e44 0%, #25803b 100%) !important; }
+.team-bg-1 { background-color: #ff6b6b !important; }
+.team-bg-2 { background-color: #4ecdc4 !important; }
+.team-bg-3 { background-color: #ffe66d !important; }
+.team-bg-4 { background-color: #4d96ff !important; }
+.team-bg-5 { background-color: #ff6bb5 !important; }
+.team-bg-6 { background-color: #00d9ff !important; }
+.team-bg-7 { background-color: #a64dff !important; }
+.team-bg-8 { background-color: #ff9a4d !important; }
+.team-bg-9 { background-color: #c92a2a !important; }
+.team-bg-10 { background-color: #2f9e44 !important; }
 
-.team-color-1 { background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%) !important; }
-.team-color-2 { background: linear-gradient(135deg, #4ecdc4 0%, #44a3a0 100%) !important; }
-.team-color-3 { background: linear-gradient(135deg, #ffe66d 0%, #ffdb4d 100%) !important; }
-.team-color-4 { background: linear-gradient(135deg, #4d96ff 0%, #357ae8 100%) !important; }
-.team-color-5 { background: linear-gradient(135deg, #ff6bb5 0%, #ff4da6 100%) !important; }
-.team-color-6 { background: linear-gradient(135deg, #00d9ff 0%, #00bfe8 100%) !important; }
-.team-color-7 { background: linear-gradient(135deg, #a64dff 0%, #9333ea 100%) !important; }
-.team-color-8 { background: linear-gradient(135deg, #ff9a4d 0%, #ff7f00 100%) !important; }
-.team-color-9 { background: linear-gradient(135deg, #c92a2a 0%, #b02020 100%) !important; }
-.team-color-10 { background: linear-gradient(135deg, #2f9e44 0%, #25803b 100%) !important; }
+.team-color-1 { background-color: #ff6b6b !important; }
+.team-color-2 { background-color: #4ecdc4 !important; }
+.team-color-3 { background-color: #ffe66d !important; }
+.team-color-4 { background-color: #4d96ff !important; }
+.team-color-5 { background-color: #ff6bb5 !important; }
+.team-color-6 { background-color: #00d9ff !important; }
+.team-color-7 { background-color: #a64dff !important; }
+.team-color-8 { background-color: #ff9a4d !important; }
+.team-color-9 { background-color: #c92a2a !important; }
+.team-color-10 { background-color: #2f9e44 !important; }
 
-/* ========== COMMENTARY & RESULTS ========== */
 #commentary {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    padding: 25px;
+    background: #e3f2fd;
+    padding: 20px;
     border-radius: var(--border-radius);
-    border-left: 6px solid var(--color-info);
-    margin-top: 25px;
+    border-left: 5px solid var(--color-info);
+    margin-top: 20px;
     display: none;
-    box-shadow: var(--shadow);
-    animation: slideIn 0.4s ease;
 }
 
 #commentary.active {
@@ -685,118 +647,64 @@ select:focus {
 }
 
 .correct-answer {
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    background: #d4edda;
     color: #155724;
-    padding: 20px;
+    padding: 15px;
     border-radius: var(--border-radius);
     text-align: center;
     font-weight: bold;
-    font-size: 1.4em;
-    border: 3px solid var(--color-success);
-    box-shadow: var(--shadow);
-    animation: pulse 0.6s ease;
+    font-size: 1.2em;
+    margin: 20px 0;
 }
 
 .wrong-answer {
-    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    background: #f8d7da;
     color: #721c24;
-    padding: 20px;
+    padding: 15px;
     border-radius: var(--border-radius);
     text-align: center;
     font-weight: bold;
-    font-size: 1.4em;
-    border: 3px solid var(--color-error);
-    box-shadow: var(--shadow);
-    animation: pulse 0.6s ease;
-}
-
-/* ========== PODIUM ========== */
-.podium-screen {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 40px;
-}
-
-.podium-title {
-    text-align: center;
-    font-size: 3em;
-    font-weight: 900;
-    color: var(--color-secondary);
-    margin-bottom: 50px;
-    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+    font-size: 1.2em;
+    margin: 20px 0;
 }
 
 .podium-container {
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    gap: 40px;
-    margin: 60px 0;
+    gap: 30px;
+    margin: 50px 0;
 }
 
 .podium-place {
     background: white;
-    padding: 40px 30px;
-    border-radius: 20px;
+    padding: 30px;
+    border-radius: var(--border-radius);
     text-align: center;
     position: relative;
-    box-shadow: var(--shadow-hover);
-    transition: all var(--transition);
-}
-
-.podium-place:hover {
-    transform: translateY(-10px);
 }
 
 .podium-1st {
     order: 2;
-    transform: scale(1.3);
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-    z-index: 3;
+    transform: scale(1.2);
+    background: linear-gradient(135deg, #FFD700, #FFA500);
 }
 
 .podium-2nd {
     order: 1;
-    transform: scale(1.1);
-    background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
-    z-index: 2;
+    background: linear-gradient(135deg, #C0C0C0, #808080);
 }
 
 .podium-3rd {
     order: 3;
-    transform: scale(1.1);
-    background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
-    z-index: 1;
+    background: linear-gradient(135deg, #CD7F32, #8B4513);
 }
 
 .podium-badge {
-    font-size: 5em;
+    font-size: 4em;
     margin-bottom: 20px;
-    animation: pulse 2s infinite;
 }
 
-.podium-name {
-    font-size: 1.8em;
-    font-weight: 900;
-    color: white;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    margin-bottom: 15px;
-}
-
-.podium-score {
-    font-size: 1.3em;
-    font-weight: bold;
-    color: white;
-}
-
-.podium-buttons {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    margin-top: 40px;
-}
-
-/* ========== MODAL ========== */
 .modal {
     display: none;
     position: fixed;
@@ -804,61 +712,51 @@ select:focus {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
-    backdrop-filter: blur(5px);
 }
 
 .modal.active {
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
     background: white;
-    padding: 40px;
-    border-radius: 20px;
-    max-width: 900px;
-    max-height: 85vh;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    max-width: 800px;
+    max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-    animation: fadeIn 0.5s ease;
 }
 
-/* ========== UTILITIES ========== */
 .error-message {
     color: var(--color-error);
-    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-    padding: 12px 18px;
+    background: #ffebee;
+    padding: 10px;
     border-radius: var(--border-radius);
-    border-left: 4px solid var(--color-error);
-    margin-top: 12px;
+    margin-top: 10px;
     display: none;
-    font-weight: 600;
 }
 
 .room-code-header {
     position: absolute;
-    top: 25px;
-    right: 25px;
+    top: 20px;
+    right: 20px;
     background: white;
-    padding: 12px 25px;
-    border-radius: 20px;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
     font-weight: bold;
     color: var(--color-primary);
-    box-shadow: var(--shadow);
-    font-size: 1.1em;
 }
 
 .logout-btn-discrete {
     position: absolute;
-    top: 25px;
-    left: 25px;
-    background: linear-gradient(135deg, var(--color-error) 0%, #c82333 100%);
+    top: 20px;
+    left: 20px;
+    background: var(--color-error);
     color: white;
-    box-shadow: var(--shadow);
 }
 
 .notification {
@@ -873,7 +771,6 @@ select:focus {
     animation: slideIn 0.4s ease;
 }
 
-/* ========== CHECKBOX E SELECT ESTILIZADOS ========== */
 .checkbox-container {
     display: flex;
     align-items: center;
@@ -892,7 +789,6 @@ select:focus {
     font-weight: 600;
 }
 
-/* ========== RESPONSIVE ========== */
 @media (max-width: 1200px) {
     .config-main-area {
         grid-template-columns: 1fr;
@@ -904,20 +800,12 @@ select:focus {
 }
 
 @media (max-width: 768px) {
-    h1 {
-        font-size: 2.5em;
-    }
-    
     .lobby-options {
         grid-template-columns: 1fr;
     }
     
     .answer-buttons {
         flex-direction: column;
-    }
-    
-    .certo-btn, .errado-btn {
-        width: 100%;
     }
     
     .podium-container {
@@ -930,25 +818,5 @@ select:focus {
         transform: scale(1);
         width: 100%;
         max-width: 350px;
-    }
-}
-
-@media (max-width: 480px) {
-    body {
-        padding: 10px;
-    }
-    
-    h1 {
-        font-size: 2em;
-    }
-    
-    .login-container,
-    .lobby-container {
-        padding: 30px 20px;
-    }
-    
-    #question-text {
-        font-size: 1.3em;
-        padding: 25px;
     }
 }

@@ -1,7 +1,3 @@
-//ARQUIVO: game.js
-//LOCALIZAÇÃO: js/game.js
-//===============================================
-
 // PATROL - Sistema de Jogo
 console.log('🎮 Game carregando...');
 
@@ -37,6 +33,11 @@ const GameSystem = {
         
         const questions = window.QuestionSystem.questions;
         
+        if (!questions || questions.length === 0) {
+            console.log('⏳ Aguardando perguntas...');
+            return;
+        }
+        
         if (this.currentQuestionIndex >= questions.length) {
             this.endGame();
             return;
@@ -47,14 +48,13 @@ const GameSystem = {
         const questionNumber = document.getElementById('question-number');
         const totalQuestions = document.getElementById('total-questions');
         
-        // Mostrar pergunta
         if (questionText) {
             let html = '';
             
-            if (question.assuntoInfo) {
+            if (question.assuntoInfo || question.assunto) {
                 html = `<div class="assunto-container">
                     <div class="assunto-icon">📚</div>
-                    <div class="assunto-text">${question.assuntoInfo}</div>
+                    <div class="assunto-text">${question.assuntoInfo || question.assunto}</div>
                 </div>`;
             }
             
@@ -65,7 +65,6 @@ const GameSystem = {
         if (questionNumber) questionNumber.textContent = this.currentQuestionIndex + 1;
         if (totalQuestions) totalQuestions.textContent = questions.length;
         
-        // Limpar resultado anterior
         const answerResult = document.getElementById('answer-result');
         const commentary = document.getElementById('commentary');
         if (answerResult) answerResult.innerHTML = '';
@@ -74,8 +73,8 @@ const GameSystem = {
             commentary.style.display = 'none';
         }
         
-        // Habilitar botões
         this.enableAnswerButtons();
+        window.TeamSystem.updateDisplay();
         
         console.log(`📚 Pergunta ${this.currentQuestionIndex + 1}/${questions.length}`);
     },
@@ -120,28 +119,23 @@ const GameSystem = {
         
         console.log(`Resposta: ${normalizedAnswer}, Gabarito: ${normalizedGabarito}, Correto: ${isCorrect}`);
         
-        // Atualizar pontuação
         const teamIndex = window.TeamSystem.currentTeamIndex;
         const points = isCorrect ? 1 : 0;
         
         const result = window.TeamSystem.updateScore(teamIndex, points);
         
-        // Mostrar resultado
         this.showResult(isCorrect, question);
         
-        // Verificar vencedor
         if (result.winner) {
             this.winnerTeam = result.winner;
             this.showWinnerMessage();
             return;
         }
         
-        // Atualizar consecutivos
         if (isCorrect) {
             this.consecutiveCorrect++;
             console.log(`✅ Acertos consecutivos: ${this.consecutiveCorrect}`);
             
-            // Verificar rodízio por 5 consecutivos
             if (this.consecutiveCorrect >= CONFIG.game.consecutiveForRotation) {
                 console.log('🏆 5 acertos consecutivos - rodando equipe');
                 this.nextTeamRotation = true;
@@ -153,7 +147,6 @@ const GameSystem = {
             this.nextTeamRotation = true;
         }
         
-        // Mostrar botão de próxima
         const nextBtn = document.getElementById('next-btn');
         if (nextBtn) {
             nextBtn.style.display = 'inline-block';
@@ -171,7 +164,6 @@ const GameSystem = {
             `;
         }
         
-        // Mostrar comentários
         const commentary = document.getElementById('commentary');
         if (commentary) {
             let comments = '';
@@ -189,13 +181,17 @@ const GameSystem = {
     nextQuestion() {
         console.log('⏭️ Avançando para próxima pergunta...');
         
-        // Aplicar rodízio se necessário
         if (this.nextTeamRotation) {
             window.TeamSystem.rotateTeam();
             this.nextTeamRotation = false;
         }
         
         this.currentQuestionIndex++;
+        
+        if (window.roomSystem && window.roomSystem.isMaster) {
+            window.roomSystem.broadcastQuestionIndex(this.currentQuestionIndex);
+        }
+        
         this.showQuestion();
     },
     
@@ -210,7 +206,6 @@ const GameSystem = {
         
         const question = window.QuestionSystem.questions[this.currentQuestionIndex];
         
-        // Mostrar que foi pulada
         const answerResult = document.getElementById('answer-result');
         if (answerResult) {
             answerResult.innerHTML = `
@@ -218,7 +213,6 @@ const GameSystem = {
             `;
         }
         
-        // Mostrar comentários mesmo assim
         const commentary = document.getElementById('commentary');
         if (commentary && question) {
             let comments = '';
@@ -232,7 +226,6 @@ const GameSystem = {
             }
         }
         
-        // Mostrar botão de próxima
         const nextBtn = document.getElementById('next-btn');
         if (nextBtn) {
             nextBtn.style.display = 'inline-block';
@@ -310,7 +303,6 @@ const GameSystem = {
     }
 };
 
-// Tornar acessível globalmente
 window.GameSystem = GameSystem;
 
 console.log('✅ Game carregado');

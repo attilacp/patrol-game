@@ -1,7 +1,3 @@
-//ARQUIVO: templates.js
-//LOCALIZAÇÃO: js/templates.js
-//===============================================
-
 // PATROL - Templates HTML
 console.log('📄 Templates carregando...');
 
@@ -116,6 +112,10 @@ const TEMPLATES = {
                             Pergunta <span id="question-number">1</span>/<span id="total-questions">0</span>
                         </div>
                         <div id="team-turn" class="team-turn">🎯 Aguardando início...</div>
+                        <div class="question-header-buttons">
+                            <button id="open-notes-btn" class="notes-btn">📝 Notas</button>
+                            <button id="back-to-config-btn" class="config-btn">⚙️ Config</button>
+                        </div>
                     </div>
                     <div id="question-text">Aguardando início do jogo...</div>
                     <div class="answer-buttons">
@@ -168,7 +168,6 @@ function loadAllTemplates() {
     document.dispatchEvent(new Event('templatesLoaded'));
 }
 
-// Auto-carregar quando DOM estiver pronto
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', loadAllTemplates);
 } else {

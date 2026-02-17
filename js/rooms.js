@@ -1,7 +1,3 @@
-//ARQUIVO: rooms.js
-//LOCALIZAÇÃO: js/rooms.js
-//===============================================
-
 // PATROL - Sistema de Salas (Multiplayer)
 console.log('🏠 Rooms carregando...');
 
@@ -46,12 +42,10 @@ class RoomSystem {
     }
     
     setupEventListeners() {
-        // Criar sala
         document.getElementById('create-room-btn')?.addEventListener('click', async () => {
             await this.createRoom();
         });
         
-        // Entrar na sala
         document.getElementById('join-room-btn')?.addEventListener('click', async () => {
             const roomCode = document.getElementById('room-code')?.value.toUpperCase();
             if (roomCode && roomCode.length === 6) {
@@ -101,9 +95,15 @@ class RoomSystem {
             
             console.log('✅ Sala criada:', roomCode);
             this.updateRoomCodeDisplay(roomCode);
-            Utils.notify(`🎉 Sala criada: ${roomCode}`, 'success');
             
-            // Ir para tela de configuração
+            // Copiar código automaticamente
+            try {
+                await navigator.clipboard.writeText(roomCode);
+                Utils.notify(`🎉 Sala ${roomCode} criada e copiada!`, 'success');
+            } catch {
+                Utils.notify(`🎉 Sala criada: ${roomCode}`, 'success');
+            }
+            
             setTimeout(() => {
                 Utils.showScreen('config-screen');
             }, 1000);
@@ -153,7 +153,7 @@ class RoomSystem {
             
             console.log('✅ Entrou na sala');
             this.updateRoomCodeDisplay(this.currentRoom);
-            Utils.notify(`✅ Entrou na sala ${this.currentRoom}`, 'success');
+            Utils.notify(`✅ Aguarde o mestre iniciar o jogo...`, 'info');
             
             this.setupRoomListeners();
             
@@ -178,7 +178,6 @@ class RoomSystem {
         
         const roomRef = firebase.database().ref('rooms/' + this.currentRoom);
         
-        // Ouvir mudanças no status
         const statusListener = roomRef.child('status').on('value', (snapshot) => {
             const status = snapshot.val();
             if (status) {
@@ -187,7 +186,6 @@ class RoomSystem {
         });
         this.listeners.push({ ref: roomRef.child('status'), listener: statusListener });
         
-        // Ouvir dados do jogo
         const gameDataListener = roomRef.child('gameData').on('value', (snapshot) => {
             const gameData = snapshot.val();
             if (gameData && !this.isMaster) {
@@ -195,14 +193,28 @@ class RoomSystem {
             }
         });
         this.listeners.push({ ref: roomRef.child('gameData'), listener: gameDataListener });
+        
+        const currentQuestionListener = roomRef.child('currentQuestionIndex').on('value', (snapshot) => {
+            const index = snapshot.val();
+            if (!this.isMaster && index !== null && window.GameSystem) {
+                window.GameSystem.currentQuestionIndex = index;
+                window.GameSystem.showQuestion();
+            }
+        });
+        this.listeners.push({ ref: roomRef.child('currentQuestionIndex'), listener: currentQuestionListener });
     }
     
     handleStatusChange(status) {
         console.log('📊 Status da sala:', status);
         
-        if (status === 'playing' && !this.isMaster) {
-            // Jogador: ir para tela de jogo
+        if (status === 'playing') {
             Utils.showScreen('game-screen');
+            if (!this.isMaster && window.GameSystem) {
+                setTimeout(() => {
+                    window.GameSystem.showQuestion();
+                    window.TeamSystem.updateDisplay();
+                }, 500);
+            }
         }
     }
     
@@ -216,6 +228,14 @@ class RoomSystem {
             window.TeamSystem.teams = gameData.teams;
             console.log('👥 Equipes sincronizadas:', gameData.teams.length);
         }
+        
+        if (typeof gameData.currentQuestionIndex === 'number') {
+            window.GameSystem.currentQuestionIndex = gameData.currentQuestionIndex;
+        }
+        
+        if (typeof gameData.currentTeamIndex === 'number') {
+            window.TeamSystem.currentTeamIndex = gameData.currentTeamIndex;
+        }
     }
     
     async startGameForAll() {
@@ -227,7 +247,6 @@ class RoomSystem {
         console.log('🚀 Mestre iniciando jogo para todos...');
         
         try {
-            // Coletar dados
             const questions = window.QuestionSystem.collectQuestions();
             const teams = window.TeamSystem.collectTeams();
             
@@ -248,7 +267,6 @@ class RoomSystem {
                 currentTeamIndex: 0
             };
             
-            // Salvar no Firebase
             await firebase.database().ref('rooms/' + this.currentRoom).update({
                 status: 'playing',
                 gameData: gameData,
@@ -258,7 +276,6 @@ class RoomSystem {
             console.log('✅ Jogo iniciado no Firebase');
             Utils.notify('🎮 Jogo iniciado!', 'success');
             
-            // Ir para tela de jogo
             setTimeout(() => {
                 Utils.showScreen('game-screen');
                 if (window.GameSystem) {
@@ -274,8 +291,19 @@ class RoomSystem {
         }
     }
     
+    async broadcastQuestionIndex(index) {
+        if (!this.isMaster || !this.currentRoom) return;
+        
+        try {
+            await firebase.database().ref('rooms/' + this.currentRoom).update({
+                currentQuestionIndex: index
+            });
+        } catch (error) {
+            console.error('❌ Erro ao atualizar índice:', error);
+        }
+    }
+    
     cleanup() {
-        // Remover listeners
         this.listeners.forEach(item => {
             if (item.ref && item.listener) {
                 item.ref.off('value', item.listener);
@@ -292,7 +320,6 @@ class RoomSystem {
     }
 }
 
-// Inicializar
 let roomSystem;
 document.addEventListener('firebaseReady', () => {
     roomSystem = new RoomSystem();

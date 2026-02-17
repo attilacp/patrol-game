@@ -1,7 +1,3 @@
-//ARQUIVO: events.js
-//LOCALIZAÇÃO: js/events.js
-//===============================================
-
 // PATROL - Sistema de Eventos
 console.log('⚡ Events carregando...');
 
@@ -10,54 +6,46 @@ const EventSystem = {
         this.setupGameButtons();
         this.setupKeyboardShortcuts();
         this.setupPodiumButtons();
+        this.setupNavigationButtons();
         console.log('✅ Events inicializado');
     },
     
     setupGameButtons() {
-        // Botão Iniciar Jogo
         document.getElementById('start-game-btn')?.addEventListener('click', async () => {
             console.log('🎮 Iniciando jogo...');
             
             if (window.roomSystem && window.roomSystem.isMaster) {
-                // Modo multiplayer - iniciar para todos
                 await window.roomSystem.startGameForAll();
             } else {
-                // Modo offline
                 this.startOfflineGame();
             }
         });
         
-        // Botão CERTO
         document.getElementById('certo-btn')?.addEventListener('click', () => {
             console.log('✅ Botão CERTO clicado');
             window.GameSystem.checkAnswer('CERTO');
         });
         
-        // Botão ERRADO
         document.getElementById('errado-btn')?.addEventListener('click', () => {
             console.log('❌ Botão ERRADO clicado');
             window.GameSystem.checkAnswer('ERRADO');
         });
         
-        // Botão Pular
         document.getElementById('skip-btn')?.addEventListener('click', () => {
             console.log('⏭️ Botão PULAR clicado');
             window.GameSystem.skipQuestion();
         });
         
-        // Botão Próxima
         document.getElementById('next-btn')?.addEventListener('click', () => {
             console.log('⏭️ Botão PRÓXIMA clicado');
             window.GameSystem.nextQuestion();
         });
         
-        // Botão Pódio
         document.getElementById('podium-btn')?.addEventListener('click', () => {
             console.log('🏆 Botão PÓDIO clicado');
             window.GameSystem.showPodium();
         });
         
-        // Clique no turno da equipe para rotacionar
         document.getElementById('team-turn')?.addEventListener('click', () => {
             if (confirm('🔄 Deseja rotacionar para a próxima equipe?')) {
                 window.TeamSystem.rotateTeam();
@@ -65,9 +53,20 @@ const EventSystem = {
         });
     },
     
+    setupNavigationButtons() {
+        document.getElementById('back-to-config-btn')?.addEventListener('click', () => {
+            if (confirm('⚙️ Voltar para configuração?\n\nO jogo atual será pausado.')) {
+                Utils.showScreen('config-screen');
+            }
+        });
+        
+        document.getElementById('open-notes-btn')?.addEventListener('click', () => {
+            Utils.notify('📝 Sistema de notas em desenvolvimento', 'info');
+        });
+    },
+    
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
-            // Ignorar se estiver digitando
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 return;
             }
@@ -108,14 +107,12 @@ const EventSystem = {
     },
     
     setupPodiumButtons() {
-        // Reiniciar
         document.getElementById('restart-btn')?.addEventListener('click', () => {
             if (confirm('🔄 Iniciar nova partida?')) {
                 window.location.reload();
             }
         });
         
-        // Configurações
         document.getElementById('config-btn')?.addEventListener('click', () => {
             Utils.showScreen('config-screen');
         });
@@ -124,7 +121,6 @@ const EventSystem = {
     startOfflineGame() {
         console.log('🎮 Iniciando jogo offline...');
         
-        // Coletar dados
         const questions = window.QuestionSystem.collectQuestions();
         const teams = window.TeamSystem.collectTeams();
         
@@ -138,7 +134,6 @@ const EventSystem = {
             return;
         }
         
-        // Ir para tela de jogo
         Utils.showScreen('game-screen');
         
         setTimeout(() => {
@@ -147,10 +142,8 @@ const EventSystem = {
     }
 };
 
-// Tornar acessível globalmente
 window.EventSystem = EventSystem;
 
-// Inicializar quando templates estiverem prontos
 document.addEventListener('templatesLoaded', () => {
     setTimeout(() => {
         EventSystem.init();
