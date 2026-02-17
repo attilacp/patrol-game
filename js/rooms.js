@@ -255,6 +255,7 @@ class RoomSystem {
             const hasPlayer = team.assignedPlayers.some(p => p.includes(this.playerName));
             if (hasPlayer) {
                 this.playerTeamId = team.id;
+                console.log(`👤 Jogador ${this.playerName} já estava na equipe: ${team.name} (ID: ${team.id})`);
                 return;
             }
             if (team.assignedPlayers.length < smallestTeam.assignedPlayers.length) {
@@ -267,7 +268,7 @@ class RoomSystem {
             if (!smallestTeam.assignedPlayers.some(p => p.includes(this.playerName))) {
                 smallestTeam.assignedPlayers.push(this.playerName);
                 this.playerTeamId = smallestTeam.id;
-                console.log(`👤 Atribuído à equipe: ${smallestTeam.name}`);
+                console.log(`👤 Jogador ${this.playerName} atribuído à equipe: ${smallestTeam.name} (ID: ${smallestTeam.id})`);
             }
         }
     }

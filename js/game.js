@@ -80,24 +80,52 @@ const GameSystem = {
     },
     
     enableAnswerButtons() {
-        if (window.roomSystem && !window.roomSystem.isMaster) {
-            ['certo-btn', 'errado-btn', 'skip-btn', 'next-btn'].forEach(id => {
+        // MESTRE: sempre pode responder
+        if (window.roomSystem && window.roomSystem.isMaster) {
+            ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
                 const btn = document.getElementById(id);
                 if (btn) {
-                    btn.disabled = true;
-                    btn.style.opacity = '0.5';
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
                 }
             });
-            return;
-        }
-        
-        ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) {
-                btn.disabled = false;
-                btn.style.opacity = '1';
+        } 
+        // JOGADOR: pode responder se estiver na equipe de plantão
+        else if (window.roomSystem && !window.roomSystem.isMaster) {
+            const currentTeam = window.TeamSystem.teams[window.TeamSystem.currentTeamIndex];
+            const playerTeamId = window.roomSystem.playerTeamId;
+            
+            // Verificar se jogador está na equipe de plantão
+            if (currentTeam && playerTeamId === currentTeam.id) {
+                console.log(`✅ Jogador pode responder - equipe de plantão: ${currentTeam.name}`);
+                ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
+                    const btn = document.getElementById(id);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    }
+                });
+            } else {
+                console.log(`🚫 Jogador não pode responder - aguardando equipe ${currentTeam?.name}`);
+                ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
+                    const btn = document.getElementById(id);
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                    }
+                });
             }
-        });
+        }
+        // OFFLINE: sempre pode responder
+        else {
+            ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+        }
         
         const nextBtn = document.getElementById('next-btn');
         const podiumBtn = document.getElementById('podium-btn');
@@ -117,8 +145,13 @@ const GameSystem = {
     
     checkAnswer(answer) {
         if (window.roomSystem && !window.roomSystem.isMaster) {
-            Utils.notify('Apenas o mestre responde', 'warning');
-            return;
+            const currentTeam = window.TeamSystem.teams[window.TeamSystem.currentTeamIndex];
+            const playerTeamId = window.roomSystem.playerTeamId;
+            
+            if (!currentTeam || playerTeamId !== currentTeam.id) {
+                Utils.notify('Aguarde sua equipe ser chamada', 'warning');
+                return;
+            }
         }
         
         console.log('🎯 Verificando resposta:', answer);
