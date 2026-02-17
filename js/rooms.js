@@ -96,12 +96,11 @@ class RoomSystem {
             console.log('✅ Sala criada:', roomCode);
             this.updateRoomCodeDisplay(roomCode);
             
-            // Copiar código automaticamente
             try {
                 await navigator.clipboard.writeText(roomCode);
-                Utils.notify(`🎉 Sala ${roomCode} criada e copiada!`, 'success');
+                Utils.notify(`Sala ${roomCode}`, 'success');
             } catch {
-                Utils.notify(`🎉 Sala criada: ${roomCode}`, 'success');
+                Utils.notify(`Sala: ${roomCode}`, 'success');
             }
             
             setTimeout(() => {
@@ -153,7 +152,7 @@ class RoomSystem {
             
             console.log('✅ Entrou na sala');
             this.updateRoomCodeDisplay(this.currentRoom);
-            Utils.notify(`✅ Aguarde o mestre iniciar o jogo...`, 'info');
+            Utils.notify(`Aguarde o mestre...`, 'info');
             
             this.setupRoomListeners();
             
@@ -194,47 +193,82 @@ class RoomSystem {
         });
         this.listeners.push({ ref: roomRef.child('gameData'), listener: gameDataListener });
         
-        const currentQuestionListener = roomRef.child('currentQuestionIndex').on('value', (snapshot) => {
-            const index = snapshot.val();
-            if (!this.isMaster && index !== null && window.GameSystem) {
-                window.GameSystem.currentQuestionIndex = index;
-                window.GameSystem.showQuestion();
+        const gameStateListener = roomRef.child('gameState').on('value', (snapshot) => {
+            const state = snapshot.val();
+            if (state && !this.isMaster) {
+                this.syncGameState(state);
             }
         });
-        this.listeners.push({ ref: roomRef.child('currentQuestionIndex'), listener: currentQuestionListener });
+        this.listeners.push({ ref: roomRef.child('gameState'), listener: gameStateListener });
     }
     
     handleStatusChange(status) {
         console.log('📊 Status da sala:', status);
         
-        if (status === 'playing') {
+        if (status === 'playing' && !this.isMaster) {
             Utils.showScreen('game-screen');
-            if (!this.isMaster && window.GameSystem) {
-                setTimeout(() => {
-                    window.GameSystem.showQuestion();
-                    window.TeamSystem.updateDisplay();
-                }, 500);
-            }
         }
     }
     
     syncGameData(gameData) {
-        if (gameData.questions) {
+        if (gameData.questions && Array.isArray(gameData.questions)) {
             window.QuestionSystem.questions = gameData.questions;
             console.log('📚 Perguntas sincronizadas:', gameData.questions.length);
         }
         
-        if (gameData.teams) {
+        if (gameData.teams && Array.isArray(gameData.teams)) {
             window.TeamSystem.teams = gameData.teams;
+            this.assignPlayerToTeam();
             console.log('👥 Equipes sincronizadas:', gameData.teams.length);
         }
-        
-        if (typeof gameData.currentQuestionIndex === 'number') {
-            window.GameSystem.currentQuestionIndex = gameData.currentQuestionIndex;
+    }
+    
+    syncGameState(state) {
+        if (typeof state.currentQuestionIndex === 'number') {
+            window.GameSystem.currentQuestionIndex = state.currentQuestionIndex;
         }
         
-        if (typeof gameData.currentTeamIndex === 'number') {
-            window.TeamSystem.currentTeamIndex = gameData.currentTeamIndex;
+        if (typeof state.currentTeamIndex === 'number') {
+            window.TeamSystem.currentTeamIndex = state.currentTeamIndex;
+        }
+        
+        if (state.teams && Array.isArray(state.teams)) {
+            window.TeamSystem.teams = state.teams;
+        }
+        
+        if (typeof state.consecutiveCorrect === 'number') {
+            window.GameSystem.consecutiveCorrect = state.consecutiveCorrect;
+        }
+        
+        window.GameSystem.showQuestion();
+        window.TeamSystem.updateDisplay();
+    }
+    
+    assignPlayerToTeam() {
+        if (!window.TeamSystem.teams || window.TeamSystem.teams.length === 0) return;
+        
+        const teams = window.TeamSystem.teams;
+        let smallestTeam = teams[0];
+        
+        teams.forEach(team => {
+            if (!team.assignedPlayers) team.assignedPlayers = [];
+            const hasPlayer = team.assignedPlayers.some(p => p.includes(this.playerName));
+            if (hasPlayer) {
+                this.playerTeamId = team.id;
+                return;
+            }
+            if (team.assignedPlayers.length < smallestTeam.assignedPlayers.length) {
+                smallestTeam = team;
+            }
+        });
+        
+        if (!this.playerTeamId) {
+            if (!smallestTeam.assignedPlayers) smallestTeam.assignedPlayers = [];
+            if (!smallestTeam.assignedPlayers.some(p => p.includes(this.playerName))) {
+                smallestTeam.assignedPlayers.push(this.playerName);
+                this.playerTeamId = smallestTeam.id;
+                console.log(`👤 Atribuído à equipe: ${smallestTeam.name}`);
+            }
         }
     }
     
@@ -262,14 +296,20 @@ class RoomSystem {
             
             const gameData = {
                 questions: questions,
-                teams: teams,
+                teams: teams
+            };
+            
+            const gameState = {
                 currentQuestionIndex: 0,
-                currentTeamIndex: 0
+                currentTeamIndex: 0,
+                teams: teams,
+                consecutiveCorrect: 0
             };
             
             await firebase.database().ref('rooms/' + this.currentRoom).update({
                 status: 'playing',
                 gameData: gameData,
+                gameState: gameState,
                 gameStartedAt: Date.now()
             });
             
@@ -291,15 +331,20 @@ class RoomSystem {
         }
     }
     
-    async broadcastQuestionIndex(index) {
+    async broadcastGameState() {
         if (!this.isMaster || !this.currentRoom) return;
         
         try {
-            await firebase.database().ref('rooms/' + this.currentRoom).update({
-                currentQuestionIndex: index
-            });
+            const gameState = {
+                currentQuestionIndex: window.GameSystem.currentQuestionIndex,
+                currentTeamIndex: window.TeamSystem.currentTeamIndex,
+                teams: window.TeamSystem.teams,
+                consecutiveCorrect: window.GameSystem.consecutiveCorrect
+            };
+            
+            await firebase.database().ref('rooms/' + this.currentRoom + '/gameState').set(gameState);
         } catch (error) {
-            console.error('❌ Erro ao atualizar índice:', error);
+            console.error('❌ Erro ao atualizar estado:', error);
         }
     }
     

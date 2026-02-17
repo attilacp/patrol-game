@@ -53,8 +53,8 @@ const GameSystem = {
             
             if (question.assuntoInfo || question.assunto) {
                 html = `<div class="assunto-container">
-                    <div class="assunto-icon">📚</div>
-                    <div class="assunto-text">${question.assuntoInfo || question.assunto}</div>
+                    <span class="assunto-icon">📚</span>
+                    <span class="assunto-text">${question.assuntoInfo || question.assunto}</span>
                 </div>`;
             }
             
@@ -70,7 +70,7 @@ const GameSystem = {
         if (answerResult) answerResult.innerHTML = '';
         if (commentary) {
             commentary.innerHTML = '';
-            commentary.style.display = 'none';
+            commentary.classList.remove('active');
         }
         
         this.enableAnswerButtons();
@@ -80,6 +80,17 @@ const GameSystem = {
     },
     
     enableAnswerButtons() {
+        if (window.roomSystem && !window.roomSystem.isMaster) {
+            ['certo-btn', 'errado-btn', 'skip-btn', 'next-btn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                }
+            });
+            return;
+        }
+        
         ['certo-btn', 'errado-btn', 'skip-btn'].forEach(id => {
             const btn = document.getElementById(id);
             if (btn) {
@@ -105,6 +116,11 @@ const GameSystem = {
     },
     
     checkAnswer(answer) {
+        if (window.roomSystem && !window.roomSystem.isMaster) {
+            Utils.notify('Apenas o mestre responde', 'warning');
+            return;
+        }
+        
         console.log('🎯 Verificando resposta:', answer);
         
         this.disableAnswerButtons();
@@ -129,6 +145,9 @@ const GameSystem = {
         if (result.winner) {
             this.winnerTeam = result.winner;
             this.showWinnerMessage();
+            if (window.roomSystem && window.roomSystem.isMaster) {
+                window.roomSystem.broadcastGameState();
+            }
             return;
         }
         
@@ -151,6 +170,8 @@ const GameSystem = {
         if (nextBtn) {
             nextBtn.style.display = 'inline-block';
             nextBtn.textContent = '⏭️ Próxima';
+            nextBtn.disabled = false;
+            nextBtn.style.opacity = '1';
         }
     },
     
@@ -158,7 +179,7 @@ const GameSystem = {
         const answerResult = document.getElementById('answer-result');
         if (answerResult) {
             answerResult.innerHTML = `
-                <div class="${isCorrect ? 'correct-answer' : 'wrong-answer'}">
+                <div id="correct-answer" class="${isCorrect ? 'correct-answer' : 'wrong-answer'}">
                     ${isCorrect ? '✅ ACERTOU' : '❌ ERROU'} - GABARITO: ${question.gabarito}
                 </div>
             `;
@@ -173,12 +194,17 @@ const GameSystem = {
             
             if (comments) {
                 commentary.innerHTML = comments;
-                commentary.style.display = 'block';
+                commentary.classList.add('active');
             }
         }
     },
     
     nextQuestion() {
+        if (window.roomSystem && !window.roomSystem.isMaster) {
+            Utils.notify('Apenas o mestre avança', 'warning');
+            return;
+        }
+        
         console.log('⏭️ Avançando para próxima pergunta...');
         
         if (this.nextTeamRotation) {
@@ -189,13 +215,18 @@ const GameSystem = {
         this.currentQuestionIndex++;
         
         if (window.roomSystem && window.roomSystem.isMaster) {
-            window.roomSystem.broadcastQuestionIndex(this.currentQuestionIndex);
+            window.roomSystem.broadcastGameState();
         }
         
         this.showQuestion();
     },
     
     skipQuestion() {
+        if (window.roomSystem && !window.roomSystem.isMaster) {
+            Utils.notify('Apenas o mestre pode pular', 'warning');
+            return;
+        }
+        
         if (!confirm('⚠️ Pular esta questão?\n\nNão contará para pontuação.')) {
             return;
         }
@@ -222,7 +253,7 @@ const GameSystem = {
             
             if (comments) {
                 commentary.innerHTML = comments;
-                commentary.style.display = 'block';
+                commentary.classList.add('active');
             }
         }
         
@@ -230,6 +261,8 @@ const GameSystem = {
         if (nextBtn) {
             nextBtn.style.display = 'inline-block';
             nextBtn.textContent = '⏭️ Continuar';
+            nextBtn.disabled = false;
+            nextBtn.style.opacity = '1';
         }
     },
     
