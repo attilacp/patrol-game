@@ -207,8 +207,8 @@ const GameSystem = {
             nextBtn.style.opacity = '1';
         }
         
-        // TODOS transmitem estado após responder (não só mestre)
-        if (window.roomSystem && window.roomSystem.currentRoom) {
+        // APENAS mestre transmite após responder
+        if (window.roomSystem && window.roomSystem.isMaster) {
             window.roomSystem.broadcastGameState();
         }
     },
@@ -247,8 +247,8 @@ const GameSystem = {
         
         this.currentQuestionIndex++;
         
-        // TODOS transmitem estado (não só mestre)
-        if (window.roomSystem && window.roomSystem.currentRoom) {
+        // APENAS mestre transmite
+        if (window.roomSystem && window.roomSystem.isMaster) {
             window.roomSystem.broadcastGameState();
         }
         
@@ -294,8 +294,8 @@ const GameSystem = {
             nextBtn.style.opacity = '1';
         }
         
-        // Transmitir pulo para todos
-        if (window.roomSystem && window.roomSystem.currentRoom) {
+        // APENAS mestre transmite
+        if (window.roomSystem && window.roomSystem.isMaster) {
             window.roomSystem.broadcastGameState();
         }
     },

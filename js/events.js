@@ -32,11 +32,19 @@ const EventSystem = {
         });
         
         document.getElementById('skip-btn')?.addEventListener('click', () => {
+            if (window.roomSystem && !window.roomSystem.isMaster) {
+                Utils.notify('⛔ Apenas o mestre pode pular', 'warning');
+                return;
+            }
             console.log('⏭️ Botão PULAR clicado');
             window.GameSystem.skipQuestion();
         });
         
         document.getElementById('next-btn')?.addEventListener('click', () => {
+            if (window.roomSystem && !window.roomSystem.isMaster) {
+                Utils.notify('⛔ Apenas o mestre pode avançar', 'warning');
+                return;
+            }
             console.log('⏭️ Botão PRÓXIMA clicado');
             window.GameSystem.nextQuestion();
         });
@@ -47,6 +55,10 @@ const EventSystem = {
         });
         
         document.getElementById('team-turn')?.addEventListener('click', () => {
+            if (window.roomSystem && !window.roomSystem.isMaster) {
+                Utils.notify('⛔ Apenas o mestre pode fazer rodízio', 'warning');
+                return;
+            }
             if (confirm('🔄 Deseja rotacionar para a próxima equipe?')) {
                 window.TeamSystem.rotateTeam();
             }

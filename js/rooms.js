@@ -222,31 +222,39 @@ class RoomSystem {
         }
         
         if (gameData.teams && Array.isArray(gameData.teams)) {
-            // Pegar jogadores já atribuídos localmente
-            const localPlayers = {};
-            if (window.TeamSystem.teams) {
+            // Se ainda não tem equipes localmente, usar as do Firebase
+            if (!window.TeamSystem.teams || window.TeamSystem.teams.length === 0) {
+                window.TeamSystem.teams = gameData.teams;
+                // Garantir que assignedPlayers existe
                 window.TeamSystem.teams.forEach(team => {
-                    if (team.assignedPlayers && team.assignedPlayers.length > 0) {
-                        localPlayers[team.id] = [...team.assignedPlayers];
+                    if (!team.assignedPlayers) team.assignedPlayers = [];
+                });
+            } else {
+                // Já tem equipes - fazer merge de pontuações mas preservar jogadores locais
+                gameData.teams.forEach((newTeam, index) => {
+                    const localTeam = window.TeamSystem.teams.find(t => t.id === newTeam.id);
+                    if (localTeam) {
+                        // Atualizar pontuação
+                        localTeam.score = newTeam.score || 0;
+                        localTeam.questionsAnswered = newTeam.questionsAnswered || 0;
+                        localTeam.questionsCorrect = newTeam.questionsCorrect || 0;
+                        localTeam.questionsWrong = newTeam.questionsWrong || 0;
+                        
+                        // MERGE de jogadores (sem duplicatas)
+                        if (!localTeam.assignedPlayers) localTeam.assignedPlayers = [];
+                        if (newTeam.assignedPlayers && newTeam.assignedPlayers.length > 0) {
+                            newTeam.assignedPlayers.forEach(player => {
+                                if (!localTeam.assignedPlayers.includes(player)) {
+                                    localTeam.assignedPlayers.push(player);
+                                }
+                            });
+                        }
                     }
                 });
             }
             
-            // Aplicar equipes do Firebase
-            window.TeamSystem.teams = gameData.teams;
-            
-            // Restaurar jogadores locais
-            window.TeamSystem.teams.forEach(team => {
-                if (!team.assignedPlayers) team.assignedPlayers = [];
-                if (localPlayers[team.id]) {
-                    // Mesclar sem duplicatas
-                    const allPlayers = new Set([...team.assignedPlayers, ...localPlayers[team.id]]);
-                    team.assignedPlayers = Array.from(allPlayers);
-                }
-            });
-            
             this.assignPlayerToTeam();
-            console.log('👥 Equipes sincronizadas:', gameData.teams.length);
+            console.log('👥 Equipes sincronizadas:', window.TeamSystem.teams.length);
             
             // Log da distribuição
             window.TeamSystem.teams.forEach(team => {
@@ -270,26 +278,25 @@ class RoomSystem {
         }
         
         if (state.teams && Array.isArray(state.teams)) {
-            // Pegar jogadores já atribuídos localmente
-            const localPlayers = {};
-            if (window.TeamSystem.teams) {
-                window.TeamSystem.teams.forEach(team => {
-                    if (team.assignedPlayers && team.assignedPlayers.length > 0) {
-                        localPlayers[team.id] = [...team.assignedPlayers];
+            // Preservar jogadores locais, atualizar pontuações
+            state.teams.forEach((newTeam) => {
+                const localTeam = window.TeamSystem.teams.find(t => t.id === newTeam.id);
+                if (localTeam) {
+                    // Atualizar pontuação
+                    localTeam.score = newTeam.score || 0;
+                    localTeam.questionsAnswered = newTeam.questionsAnswered || 0;
+                    localTeam.questionsCorrect = newTeam.questionsCorrect || 0;
+                    localTeam.questionsWrong = newTeam.questionsWrong || 0;
+                    
+                    // MERGE de jogadores (sem duplicatas)
+                    if (!localTeam.assignedPlayers) localTeam.assignedPlayers = [];
+                    if (newTeam.assignedPlayers && newTeam.assignedPlayers.length > 0) {
+                        newTeam.assignedPlayers.forEach(player => {
+                            if (!localTeam.assignedPlayers.includes(player)) {
+                                localTeam.assignedPlayers.push(player);
+                            }
+                        });
                     }
-                });
-            }
-            
-            // Aplicar equipes do estado
-            window.TeamSystem.teams = state.teams;
-            
-            // Restaurar jogadores locais
-            window.TeamSystem.teams.forEach(team => {
-                if (!team.assignedPlayers) team.assignedPlayers = [];
-                if (localPlayers[team.id]) {
-                    // Mesclar sem duplicatas
-                    const allPlayers = new Set([...team.assignedPlayers, ...localPlayers[team.id]]);
-                    team.assignedPlayers = Array.from(allPlayers);
                 }
             });
         }
@@ -434,7 +441,7 @@ class RoomSystem {
     }
     
     async broadcastGameState() {
-        if (!this.currentRoom) return;
+        if (!this.isMaster || !this.currentRoom) return;
         
         try {
             const gameState = {
@@ -445,7 +452,7 @@ class RoomSystem {
             };
             
             await firebase.database().ref('rooms/' + this.currentRoom + '/gameState').set(gameState);
-            console.log('📡 Estado transmitido para Firebase');
+            console.log('📡 Estado transmitido para Firebase (mestre)');
         } catch (error) {
             console.error('❌ Erro ao atualizar estado:', error);
         }
