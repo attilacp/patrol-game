@@ -3,39 +3,48 @@
 1.1- Sincronização:
 
 a) Para cada ação no jogo, deve haver sincronização e atualização para os participantes. Exemplo: entrada de participante no jogo, resposta de participante, pular, rodízio de equipes. E isso faz a tela dos participantes mostrar a nova situação do jogo. 
-Status: Erro: as informações e as telas não estão sendo sincronizadas.
+Status: Erro: as informações e as telas não estão sendo sincronizadas. O Jogador entrou na partida na Alfa, acertou uma pergunta, e foi incrementado 1 ponto somente na tela do Jogador, não na do mestre (e nem apareceu o nome do jogador na Alfa na tela do mestre).
+Solução: O mestre precisa receber as transmissões dos jogadores que vão para o Firebase.
 
 1.2- Participantes:
 
 a) Mestre: o mestre é quem cria a sala e tem poderes para mexer em quase tudo no jogo. O mestre também é um jogador e é integrado a alguma equipe.
+Status: OK.
 
 b) Jogador: o jogador é outro participante que entra na sala pelo código enviado pelo mestre.
+Status: OK.
 
 c) Cada participante ao entrar na sala, será atribuído automaticamente em alguma equipe vazia. 
-Status: Erro: O mestre e o jogador estão sendo atribuídos na mesma equipe (Alfa). Solução: corrija para que, antes da atribuição, haja uma sincronização de equipes, e então a verificação, e só após isso, a atribuição;
+Status: Erro: O mestre e o jogador estão sendo atribuídos na mesma equipe (Alfa). 
+Solução: Mande uma mensagem no console no momento exato que está tendo verificação de equipes, para saber se está ocorrendo antes ou depois da sincronização de equipes;
 
 d) O nome do usuário deve constar abaixo do nome da equipe no card.
-Status: Erro: está sendo exibido o email. Solução: Coloque apenas o nome do usuário, ou seja, não exiba o "@domínio".
+Status: OK.
 
 1.3- Botões:
 
 a) Pular: Somente o mestre e a equipe de plantão podem apertar;
+Status: Erro: Bloqueado para todo mundo.
 
 b) Próxima: Somente o mestre e a equipe de plantão podem apertar;
+Status: OK.
 
 c) Rodízio: Todos podem apertar;
+Status: OK.
 
 d) Responder (CERTO/ERRADO): Apenas a equipe de plantão que pode responder;
-
+Status: OK.
 
 1.4- Pontuação:
 
-a) Incremento: Para cada acerto da equipe, é incrementado 1 ponto para a equipe. Status: OK
+a) Incremento: Para cada acerto da equipe, é incrementado 1 ponto para a equipe.
+Status: OK.
 
-b) Pontuação é mostrada nos cards das equipes. Status: OK
+b) Pontuação é mostrada nos cards das equipes.
+Status: OK.
 
 1.5- Fim do Jogo:
 
 a) Fim da partida: Quando alguma equipe chegar a 15 pontos, o jogo encerra e é mostrado o botão de pódio onde geralmente é mostrado o botão de "Próxima".
-
+Status: OK.
 
