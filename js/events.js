@@ -33,7 +33,15 @@ const EventSystem = {
         
         document.getElementById('skip-btn')?.addEventListener('click', () => {
             // Pular: Mestre OU equipe de plantão
-            if (window.roomSystem && !window.roomSystem.isMaster) {
+            if (window.roomSystem) {
+                // Se for mestre, sempre pode
+                if (window.roomSystem.isMaster) {
+                    console.log('⏭️ Botão PULAR clicado (mestre)');
+                    window.GameSystem.skipQuestion();
+                    return;
+                }
+                
+                // Se não for mestre, verificar se está na equipe de plantão
                 const currentTeam = window.TeamSystem.teams[window.TeamSystem.currentTeamIndex];
                 const playerTeamId = window.roomSystem.playerTeamId;
                 
@@ -41,14 +49,27 @@ const EventSystem = {
                     Utils.notify('⛔ Apenas mestre ou equipe de plantão podem pular', 'warning');
                     return;
                 }
+                
+                console.log('⏭️ Botão PULAR clicado (equipe de plantão)');
+                window.GameSystem.skipQuestion();
+            } else {
+                // Modo offline
+                console.log('⏭️ Botão PULAR clicado');
+                window.GameSystem.skipQuestion();
             }
-            console.log('⏭️ Botão PULAR clicado');
-            window.GameSystem.skipQuestion();
         });
         
         document.getElementById('next-btn')?.addEventListener('click', () => {
             // Próxima: Mestre OU equipe de plantão
-            if (window.roomSystem && !window.roomSystem.isMaster) {
+            if (window.roomSystem) {
+                // Se for mestre, sempre pode
+                if (window.roomSystem.isMaster) {
+                    console.log('⏭️ Botão PRÓXIMA clicado (mestre)');
+                    window.GameSystem.nextQuestion();
+                    return;
+                }
+                
+                // Se não for mestre, verificar se está na equipe de plantão
                 const currentTeam = window.TeamSystem.teams[window.TeamSystem.currentTeamIndex];
                 const playerTeamId = window.roomSystem.playerTeamId;
                 
@@ -56,9 +77,14 @@ const EventSystem = {
                     Utils.notify('⛔ Apenas mestre ou equipe de plantão podem avançar', 'warning');
                     return;
                 }
+                
+                console.log('⏭️ Botão PRÓXIMA clicado (equipe de plantão)');
+                window.GameSystem.nextQuestion();
+            } else {
+                // Modo offline
+                console.log('⏭️ Botão PRÓXIMA clicado');
+                window.GameSystem.nextQuestion();
             }
-            console.log('⏭️ Botão PRÓXIMA clicado');
-            window.GameSystem.nextQuestion();
         });
         
         document.getElementById('podium-btn')?.addEventListener('click', () => {
