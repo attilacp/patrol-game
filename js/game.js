@@ -207,8 +207,8 @@ const GameSystem = {
             nextBtn.style.opacity = '1';
         }
         
-        // APENAS mestre transmite após responder
-        if (window.roomSystem && window.roomSystem.isMaster) {
+        // Mestre OU equipe de plantão transmite após responder
+        if (window.roomSystem && (window.roomSystem.isMaster || this.isPlayerOnDuty())) {
             window.roomSystem.broadcastGameState();
         }
     },
@@ -247,12 +247,18 @@ const GameSystem = {
         
         this.currentQuestionIndex++;
         
-        // APENAS mestre transmite
-        if (window.roomSystem && window.roomSystem.isMaster) {
+        // Mestre OU equipe de plantão transmite
+        if (window.roomSystem && (window.roomSystem.isMaster || this.isPlayerOnDuty())) {
             window.roomSystem.broadcastGameState();
         }
         
         this.showQuestion();
+    },
+    
+    isPlayerOnDuty() {
+        if (!window.roomSystem || !window.TeamSystem.teams) return false;
+        const currentTeam = window.TeamSystem.teams[window.TeamSystem.currentTeamIndex];
+        return currentTeam && window.roomSystem.playerTeamId === currentTeam.id;
     },
     
     skipQuestion() {
@@ -294,8 +300,8 @@ const GameSystem = {
             nextBtn.style.opacity = '1';
         }
         
-        // APENAS mestre transmite
-        if (window.roomSystem && window.roomSystem.isMaster) {
+        // Mestre OU equipe de plantão transmite
+        if (window.roomSystem && (window.roomSystem.isMaster || this.isPlayerOnDuty())) {
             window.roomSystem.broadcastGameState();
         }
     },

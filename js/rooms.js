@@ -27,7 +27,15 @@ class RoomSystem {
     getCurrentPlayerName() {
         const user = firebase.auth().currentUser;
         if (user) {
-            return user.displayName || user.email || 'Jogador';
+            // Prioridade: displayName > parte antes do @ do email > 'Jogador'
+            if (user.displayName) {
+                return user.displayName;
+            }
+            if (user.email) {
+                // Extrair apenas o nome (antes do @)
+                return user.email.split('@')[0];
+            }
+            return 'Jogador';
         }
         return 'Convidado';
     }
@@ -222,38 +230,30 @@ class RoomSystem {
         }
         
         if (gameData.teams && Array.isArray(gameData.teams)) {
-            // Se ainda não tem equipes localmente, usar as do Firebase
-            if (!window.TeamSystem.teams || window.TeamSystem.teams.length === 0) {
-                window.TeamSystem.teams = gameData.teams;
-                // Garantir que assignedPlayers existe
-                window.TeamSystem.teams.forEach(team => {
-                    if (!team.assignedPlayers) team.assignedPlayers = [];
-                });
-            } else {
-                // Já tem equipes - fazer merge de pontuações mas preservar jogadores locais
-                gameData.teams.forEach((newTeam, index) => {
-                    const localTeam = window.TeamSystem.teams.find(t => t.id === newTeam.id);
-                    if (localTeam) {
-                        // Atualizar pontuação
-                        localTeam.score = newTeam.score || 0;
-                        localTeam.questionsAnswered = newTeam.questionsAnswered || 0;
-                        localTeam.questionsCorrect = newTeam.questionsCorrect || 0;
-                        localTeam.questionsWrong = newTeam.questionsWrong || 0;
-                        
-                        // MERGE de jogadores (sem duplicatas)
-                        if (!localTeam.assignedPlayers) localTeam.assignedPlayers = [];
-                        if (newTeam.assignedPlayers && newTeam.assignedPlayers.length > 0) {
-                            newTeam.assignedPlayers.forEach(player => {
-                                if (!localTeam.assignedPlayers.includes(player)) {
-                                    localTeam.assignedPlayers.push(player);
-                                }
-                            });
-                        }
-                    }
-                });
+            // Verificar se jogador local JÁ está atribuído
+            let playerTeamId = this.playerTeamId;
+            let playerName = this.playerName;
+            
+            // Aplicar equipes do Firebase
+            window.TeamSystem.teams = JSON.parse(JSON.stringify(gameData.teams)); // Deep copy
+            
+            // Garantir assignedPlayers existe
+            window.TeamSystem.teams.forEach(team => {
+                if (!team.assignedPlayers) team.assignedPlayers = [];
+            });
+            
+            // Se jogador local já estava atribuído, manter na mesma equipe
+            if (playerTeamId && playerName) {
+                const team = window.TeamSystem.teams.find(t => t.id === playerTeamId);
+                if (team && !team.assignedPlayers.includes(playerName)) {
+                    team.assignedPlayers.push(playerName);
+                    console.log(`🔄 Restaurando ${playerName} na equipe ${team.name}`);
+                }
             }
             
+            // Atribuir jogador se ainda não está em nenhuma equipe
             this.assignPlayerToTeam();
+            
             console.log('👥 Equipes sincronizadas:', window.TeamSystem.teams.length);
             
             // Log da distribuição
@@ -278,7 +278,11 @@ class RoomSystem {
         }
         
         if (state.teams && Array.isArray(state.teams)) {
-            // Preservar jogadores locais, atualizar pontuações
+            // Verificar se jogador local JÁ está atribuído
+            let playerTeamId = this.playerTeamId;
+            let playerName = this.playerName;
+            
+            // Atualizar pontuações e dados das equipes
             state.teams.forEach((newTeam) => {
                 const localTeam = window.TeamSystem.teams.find(t => t.id === newTeam.id);
                 if (localTeam) {
@@ -288,14 +292,12 @@ class RoomSystem {
                     localTeam.questionsCorrect = newTeam.questionsCorrect || 0;
                     localTeam.questionsWrong = newTeam.questionsWrong || 0;
                     
-                    // MERGE de jogadores (sem duplicatas)
-                    if (!localTeam.assignedPlayers) localTeam.assignedPlayers = [];
-                    if (newTeam.assignedPlayers && newTeam.assignedPlayers.length > 0) {
-                        newTeam.assignedPlayers.forEach(player => {
-                            if (!localTeam.assignedPlayers.includes(player)) {
-                                localTeam.assignedPlayers.push(player);
-                            }
-                        });
+                    // Atualizar lista de jogadores do Firebase
+                    localTeam.assignedPlayers = newTeam.assignedPlayers ? [...newTeam.assignedPlayers] : [];
+                    
+                    // Se jogador local não está na lista, adicionar
+                    if (playerTeamId === localTeam.id && playerName && !localTeam.assignedPlayers.includes(playerName)) {
+                        localTeam.assignedPlayers.push(playerName);
                     }
                 }
             });
@@ -441,8 +443,9 @@ class RoomSystem {
     }
     
     async broadcastGameState() {
-        if (!this.isMaster || !this.currentRoom) return;
+        if (!this.currentRoom) return;
         
+        // Qualquer participante pode transmitir (não apenas mestre)
         try {
             const gameState = {
                 currentQuestionIndex: window.GameSystem.currentQuestionIndex,
@@ -452,7 +455,7 @@ class RoomSystem {
             };
             
             await firebase.database().ref('rooms/' + this.currentRoom + '/gameState').set(gameState);
-            console.log('📡 Estado transmitido para Firebase (mestre)');
+            console.log('📡 Estado transmitido para Firebase');
         } catch (error) {
             console.error('❌ Erro ao atualizar estado:', error);
         }

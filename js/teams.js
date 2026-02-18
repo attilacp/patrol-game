@@ -164,6 +164,11 @@ const TeamSystem = {
         
         this.updateDisplay();
         Utils.notify(`🔄 Rodízio: ${newTeam} agora está de plantão`, 'info');
+        
+        // TODOS transmitem rodízio
+        if (window.roomSystem && window.roomSystem.currentRoom) {
+            window.roomSystem.broadcastGameState();
+        }
     },
     
     updateScore(teamIndex, points) {
