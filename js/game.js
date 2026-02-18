@@ -206,6 +206,11 @@ const GameSystem = {
             nextBtn.disabled = false;
             nextBtn.style.opacity = '1';
         }
+        
+        // TODOS transmitem estado após responder (não só mestre)
+        if (window.roomSystem && window.roomSystem.currentRoom) {
+            window.roomSystem.broadcastGameState();
+        }
     },
     
     showResult(isCorrect, question) {
@@ -242,7 +247,8 @@ const GameSystem = {
         
         this.currentQuestionIndex++;
         
-        if (window.roomSystem && window.roomSystem.isMaster) {
+        // TODOS transmitem estado (não só mestre)
+        if (window.roomSystem && window.roomSystem.currentRoom) {
             window.roomSystem.broadcastGameState();
         }
         
@@ -286,6 +292,11 @@ const GameSystem = {
             nextBtn.textContent = '⏭️ Continuar';
             nextBtn.disabled = false;
             nextBtn.style.opacity = '1';
+        }
+        
+        // Transmitir pulo para todos
+        if (window.roomSystem && window.roomSystem.currentRoom) {
+            window.roomSystem.broadcastGameState();
         }
     },
     

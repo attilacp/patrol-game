@@ -222,11 +222,38 @@ class RoomSystem {
         }
         
         if (gameData.teams && Array.isArray(gameData.teams)) {
+            // Pegar jogadores já atribuídos localmente
+            const localPlayers = {};
+            if (window.TeamSystem.teams) {
+                window.TeamSystem.teams.forEach(team => {
+                    if (team.assignedPlayers && team.assignedPlayers.length > 0) {
+                        localPlayers[team.id] = [...team.assignedPlayers];
+                    }
+                });
+            }
+            
+            // Aplicar equipes do Firebase
             window.TeamSystem.teams = gameData.teams;
+            
+            // Restaurar jogadores locais
+            window.TeamSystem.teams.forEach(team => {
+                if (!team.assignedPlayers) team.assignedPlayers = [];
+                if (localPlayers[team.id]) {
+                    // Mesclar sem duplicatas
+                    const allPlayers = new Set([...team.assignedPlayers, ...localPlayers[team.id]]);
+                    team.assignedPlayers = Array.from(allPlayers);
+                }
+            });
+            
             this.assignPlayerToTeam();
             console.log('👥 Equipes sincronizadas:', gameData.teams.length);
             
-            // Atualizar display para mostrar jogadores
+            // Log da distribuição
+            window.TeamSystem.teams.forEach(team => {
+                console.log(`   ${team.name}: ${team.assignedPlayers.length} jogador(es) - [${team.assignedPlayers.join(', ')}]`);
+            });
+            
+            // Atualizar display
             if (window.TeamSystem.updateDisplay) {
                 window.TeamSystem.updateDisplay();
             }
@@ -243,7 +270,28 @@ class RoomSystem {
         }
         
         if (state.teams && Array.isArray(state.teams)) {
+            // Pegar jogadores já atribuídos localmente
+            const localPlayers = {};
+            if (window.TeamSystem.teams) {
+                window.TeamSystem.teams.forEach(team => {
+                    if (team.assignedPlayers && team.assignedPlayers.length > 0) {
+                        localPlayers[team.id] = [...team.assignedPlayers];
+                    }
+                });
+            }
+            
+            // Aplicar equipes do estado
             window.TeamSystem.teams = state.teams;
+            
+            // Restaurar jogadores locais
+            window.TeamSystem.teams.forEach(team => {
+                if (!team.assignedPlayers) team.assignedPlayers = [];
+                if (localPlayers[team.id]) {
+                    // Mesclar sem duplicatas
+                    const allPlayers = new Set([...team.assignedPlayers, ...localPlayers[team.id]]);
+                    team.assignedPlayers = Array.from(allPlayers);
+                }
+            });
         }
         
         if (typeof state.consecutiveCorrect === 'number') {
@@ -255,39 +303,55 @@ class RoomSystem {
     }
     
     assignPlayerToTeam() {
-        if (!window.TeamSystem.teams || window.TeamSystem.teams.length === 0) return;
+        if (!window.TeamSystem.teams || window.TeamSystem.teams.length === 0) {
+            console.log('⚠️ Nenhuma equipe disponível para atribuição');
+            return;
+        }
         
         const teams = window.TeamSystem.teams;
-        let smallestTeam = teams[0];
         
+        // Inicializar assignedPlayers se não existir
         teams.forEach(team => {
             if (!team.assignedPlayers) team.assignedPlayers = [];
-            const hasPlayer = team.assignedPlayers.some(p => p.includes(this.playerName));
+        });
+        
+        // Verificar se jogador já está em alguma equipe
+        for (let team of teams) {
+            const hasPlayer = team.assignedPlayers.some(p => p === this.playerName);
             if (hasPlayer) {
                 this.playerTeamId = team.id;
                 console.log(`ℹ️ JOGADOR JÁ ESTAVA NA EQUIPE:`);
                 console.log(`   👤 Jogador: ${this.playerName}`);
                 console.log(`   🏁 Equipe: ${team.name} (ID: ${team.id})`);
+                console.log(`   👥 Jogadores na equipe: ${team.assignedPlayers.join(', ')}`);
                 return;
             }
-            if (team.assignedPlayers.length < smallestTeam.assignedPlayers.length) {
-                smallestTeam = team;
-            }
-        });
+        }
         
+        // Se não está em nenhuma equipe, encontrar a com MENOS jogadores
         if (!this.playerTeamId) {
-            if (!smallestTeam.assignedPlayers) smallestTeam.assignedPlayers = [];
-            if (!smallestTeam.assignedPlayers.some(p => p.includes(this.playerName))) {
-                smallestTeam.assignedPlayers.push(this.playerName);
-                this.playerTeamId = smallestTeam.id;
-                console.log(`✅ ATRIBUIÇÃO DE EQUIPE:`);
-                console.log(`   👤 Jogador: ${this.playerName}`);
-                console.log(`   🏁 Equipe: ${smallestTeam.name} (ID: ${smallestTeam.id})`);
-                console.log(`   👥 Total de jogadores na equipe: ${smallestTeam.assignedPlayers.length}`);
-                
-                // Salvar no Firebase para sincronizar com todos
-                this.syncTeamsToFirebase();
-            }
+            // Ordenar por quantidade de jogadores (menor primeiro)
+            teams.sort((a, b) => a.assignedPlayers.length - b.assignedPlayers.length);
+            const smallestTeam = teams[0];
+            
+            // Adicionar jogador à equipe
+            smallestTeam.assignedPlayers.push(this.playerName);
+            this.playerTeamId = smallestTeam.id;
+            
+            console.log(`✅ ATRIBUIÇÃO DE EQUIPE:`);
+            console.log(`   👤 Jogador: ${this.playerName}`);
+            console.log(`   🏁 Equipe: ${smallestTeam.name} (ID: ${smallestTeam.id})`);
+            console.log(`   👥 Total de jogadores na equipe: ${smallestTeam.assignedPlayers.length}`);
+            console.log(`   📋 Jogadores: ${smallestTeam.assignedPlayers.join(', ')}`);
+            
+            // Mostrar distribuição de todas as equipes
+            console.log(`   📊 DISTRIBUIÇÃO GERAL:`);
+            teams.forEach(t => {
+                console.log(`      ${t.name}: ${t.assignedPlayers.length} jogador(es) - [${t.assignedPlayers.join(', ')}]`);
+            });
+            
+            // Salvar no Firebase para sincronizar com todos
+            this.syncTeamsToFirebase();
         }
     }
     
@@ -370,7 +434,7 @@ class RoomSystem {
     }
     
     async broadcastGameState() {
-        if (!this.isMaster || !this.currentRoom) return;
+        if (!this.currentRoom) return;
         
         try {
             const gameState = {
@@ -381,6 +445,7 @@ class RoomSystem {
             };
             
             await firebase.database().ref('rooms/' + this.currentRoom + '/gameState').set(gameState);
+            console.log('📡 Estado transmitido para Firebase');
         } catch (error) {
             console.error('❌ Erro ao atualizar estado:', error);
         }

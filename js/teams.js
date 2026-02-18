@@ -164,6 +164,11 @@ const TeamSystem = {
         
         this.updateDisplay();
         Utils.notify(`🔄 Rodízio: ${newTeam} agora está de plantão`, 'info');
+        
+        // Transmitir rodízio para todos
+        if (window.roomSystem && window.roomSystem.currentRoom) {
+            window.roomSystem.broadcastGameState();
+        }
     },
     
     updateScore(teamIndex, points) {
@@ -180,6 +185,11 @@ const TeamSystem = {
         }
         
         this.updateDisplay();
+        
+        // Transmitir pontuação para todos
+        if (window.roomSystem && window.roomSystem.currentRoom) {
+            window.roomSystem.broadcastGameState();
+        }
         
         if (team.score >= CONFIG.game.winningScore) {
             return { winner: team };
